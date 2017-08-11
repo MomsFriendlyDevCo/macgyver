@@ -1,0 +1,317 @@
+{
+	"type": "mgContainer",
+	"items": [
+		{
+			"id": "demoHeading",
+			"type": "mgHeading",
+			"text": "Simple inputs",
+			"showTitle": false
+		},
+		{
+			"id": "demoText",
+			"type": "mgText",
+			"title": "Text"
+		},
+		{
+			"id": "demoTextArea",
+			"type": "mgTextArea",
+			"title": "Textarea"
+		},
+		{
+			"id": "demoNumber",
+			"type": "mgNumber",
+			"title": "Number"
+		},
+		{
+			"id": "demoNumberRange",
+			"type": "mgNumber",
+			"title": "Number (with slider)",
+			"min": 1,
+			"max": 3,
+			"slider": true
+		},
+		{
+			"id": "demoDate",
+			"type": "mgDate",
+			"title": "Date"
+		},
+		{
+			"id": "demoTime",
+			"type": "mgTime",
+			"title": "Time"
+		},
+		{
+			"id": "demoEmail",
+			"type": "mgEmail",
+			"title": "Email"
+		},
+		{
+			"id": "demoUrl",
+			"type": "mgUrl",
+			"title": "URL"
+		},
+		{
+			"id": "demoToggle",
+			"type": "mgToggle",
+			"title": "Toggle"
+		},
+		{
+			"id": "demoCheckBox",
+			"type": "mgCheckBox",
+			"title": "Check box"
+		},
+		{
+			"id": "demoList",
+			"type": "mgList",
+			"title": "List"
+		},
+
+		{
+			"id": "demoHeading2",
+			"type": "mgHeading",
+			"text": "Choice Selectors",
+			"showTitle": false
+		},
+		{
+			"id": "demoChoiceButtons",
+			"type": "mgChoiceButtons",
+			"title": "Choice Buttons",
+			"enum": ["Foo", "Bar", "Baz"]
+		},
+		{
+			"id": "demoChoiceButtonsStyles",
+			"type": "mgChoiceButtons",
+			"title": "Choice Buttons (as styles)",
+			"iconSelected": "fa fa-fw fa-check",
+			"iconDefault": "fa fa-fw",
+			"enum": [
+				{"id": "btn-primary", "class": "btn-primary"},
+				{"id": "btn-info", "class": "btn-info"},
+				{"id": "btn-success", "class": "btn-success"},
+				{"id": "btn-warning", "class": "btn-warning"},
+				{"id": "btn-danger", "class": "btn-danger"}
+			]
+		},
+		{
+			"id": "demoChoiceDropdown",
+			"type": "mgChoiceDropdown",
+			"title": "Choice Dropdown",
+			"enum": ["Foo", "Bar", "Baz"]
+		},
+		{
+			"id": "demoChoiceDropdownGroup",
+			"type": "mgChoiceDropdown",
+			"title": "Choice Dropdown (via JSON feed + group by)",
+			"url": "/api/assetTrees/flat",
+			"idField": "_id",
+			"groupBy": "path"
+		},
+		{
+			"id": "demoChoiceRadio",
+			"type": "mgChoiceRadio",
+			"title": "Choice Radio",
+			"enum": ["Foo", "Bar", "Baz"]
+		},
+		{
+			"id": "demoHeading3",
+			"type": "mgHeading",
+			"text": "Containers",
+			"showTitle": false
+		},
+		{
+			"id": "demoTable",
+			"type": "mgTable",
+			"title": "Table",
+			"items": [
+				{
+					"id": "foo",
+					"title": "Foo",
+					"type": "mgText",
+					"showTitle": false
+				},
+				{
+					"id": "bar",
+					"title": "Bar",
+					"type": "mgText",
+					"showTitle": false
+				},
+				{
+					"id": "baz",
+					"title": "Baz",
+					"type": "mgText",
+					"showTitle": false
+				}
+			]
+		},
+		{
+			"id": "demoGrid",
+			"type": "mgGrid",
+			"title": "Grid",
+			"items": [
+				{
+					"id": "demoGrid1",
+					"type": "mgGridRow",
+					"items": [
+						{
+							"id": "demoGrid11",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row1Foo",
+									"title": "Foo",
+									"type": "mgText",
+									"showTitle": false
+								}
+							]
+						},
+						{
+							"id": "demoGrid12",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row1Bar",
+									"title": "Bar",
+									"type": "mgToggle",
+									"showTitle": false
+								}
+							]
+						},
+						{
+							"id": "demoGrid12",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row1Baz",
+									"title": "Baz",
+									"type": "mgNumber",
+									"showTitle": false
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "demoGrid2",
+					"type": "mgGridRow",
+					"items":  [
+						{
+							"id": "demoGrid21",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row2Quz",
+									"title": "Quz",
+									"type": "mgHtml",
+									"text": "H<strong>T</strong><em>M</em><u>L</u>",
+									"showTitle": false
+								}
+							]
+						},
+						{
+							"id": "demoGrid22",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row2Flarp",
+									"title": "Flarp",
+									"type": "mgEmail",
+									"showTitle": false
+								}
+							]
+						},
+						{
+							"id": "demoGrid23",
+							"type": "mgContainer",
+							"items": [
+								{
+									"id": "row2Pronk",
+									"title": "Pronk",
+									"type": "mgToggle",
+									"showTitle": false
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "demoHeading4",
+			"type": "mgHeading",
+			"text": "Files and uploads",
+			"showTitle": false
+		},
+		{
+			"id": "demoFile",
+			"type": "mgFileUpload",
+			"title": "File upload",
+			"urlQuery": "/api/forms.filings/example/images",
+			"urlDelete": "/api/debug/403",
+			"urlUpload": "/api/debug/403"
+		},
+		{
+			"id": "demoFileList",
+			"type": "mgFileList",
+			"title": "File list",
+			"urlQuery": "/api/forms.filings/example/images",
+			"urlDelete": "/api/debug/403",
+			"urlUpload": "/api/debug/403"
+		},
+		{
+			"id": "demoSignature",
+			"type": "mgSignature",
+			"title": "Signature",
+			"urlQuery": "/api/forms.filings/example/images",
+			"urlDelete": "/api/debug/403",
+			"urlUpload": "/api/debug/403"
+		},
+		{
+			"id": "demoImage",
+			"type": "mgImage",
+			"title": "Image",
+			"urlQuery": "/api/forms.filings/example/images",
+			"urlDelete": "/api/debug/403",
+			"urlUpload": "/api/debug/403"
+		},
+
+		{
+			"id": "demoHeading5",
+			"type": "mgHeading",
+			"text": "General Decoration",
+			"showTitle": false
+		},
+		{
+			"id": "demoAlert",
+			"type": "mgAlert",
+			"style": "alert-danger",
+			"title": "Alert",
+			"text": "This is an alert!"
+		},
+		{
+			"id": "demoLabel",
+			"type": "mgLabel",
+			"title": "Label",
+			"text": "Hello world!"
+		},
+		{
+			"id": "demoHtml",
+			"type": "mgHtml",
+			"title": "HTML",
+			"text": "Hello <strong>World</strong>"
+		},
+
+		{
+			"id": "demoHeading6",
+			"type": "mgHeading",
+			"text": "Rockjaw Specific",
+			"showTitle": false
+		},
+		{
+			"id": "demoSignoff",
+			"type": "mgSignoff",
+			"title": "Signoff"
+		}
+
+	]
+}
