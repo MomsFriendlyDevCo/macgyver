@@ -4,6 +4,8 @@ Dynamic form widgets for Angular.
 
 MacGyver is a form designer for Angular that works by being given a form definition and a data set.
 
+[LIVE DEMO](https://momsfriendlydevco.github.io/macgyver)
+
 
 Example
 -------
