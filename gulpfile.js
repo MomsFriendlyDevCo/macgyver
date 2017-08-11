@@ -63,3 +63,43 @@ gulp.task('css', ()=>
 		.pipe(cleanCSS())
 		.pipe(gulp.dest('./dist'))
 );
+
+gulp.task('gh-pages', ['build'], function() {
+	rimraf.sync('./gh-pages');
+
+	return gulp.src([
+		'./LICENSE',
+		'./demo/_config.yml',
+		'./demo/app.js',
+		'./demo/index.html',
+		'./demo/style.css',
+		'./dist/**/*',
+		'./examples/**/*',
+		'./node_modules/angular/angular.min.js',
+		'./node_modules/angular-gravatar/build/angular-gravatar.min.js',
+		'./node_modules/angular-relative-date/dist/angular-relative-date.min.js',
+		'./node_modules/angular-sanitize/angular-sanitize.js',
+		'./node_modules/angular-sanitize/angular-sanitize.js',
+		'./node_modules/bootstrap/dist/css/bootstrap.min.css',
+		'./node_modules/bootstrap/dist/js/bootstrap.min.js',
+		'./node_modules/filesize/lib/filesize.js',
+		'./node_modules/font-awesome/css/font-awesome.min.css',
+		'./node_modules/font-awesome/fonts/fontawesome-webfont.ttf',
+		'./node_modules/font-awesome/fonts/fontawesome-webfont.woff',
+		'./node_modules/font-awesome/fonts/fontawesome-webfont.woff2',
+		'./node_modules/jquery/dist/jquery.min.js',
+		'./node_modules/lodash/lodash.min.js',
+		'./node_modules/ui-select/dist/select.css',
+		'./node_modules/ui-select/dist/select.js',
+	], {base: __dirname})
+		.pipe(rename(function(path) {
+			if (path.dirname == 'demo') { // Move all demo files into root
+				path.dirname = '.';
+			}
+			return path;
+		}))
+		.pipe(ghPages({
+			cacheDir: 'gh-pages',
+			push: true, // Change to false for dryrun (files dumped to cacheDir)
+		}))
+});
