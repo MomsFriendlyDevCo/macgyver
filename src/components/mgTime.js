@@ -7,10 +7,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgTime', {
-		title: 'Time Selection',
+		title: 'Time selection',
 		icon: 'fa fa-clock-o',
+		category: 'Simple Inputs',
 		config: {
 			min: {type: 'mgTime', title: 'Earliest time'},
 			max: {type: 'mgNumber', title: 'Latest time'},

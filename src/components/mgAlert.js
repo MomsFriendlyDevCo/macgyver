@@ -6,10 +6,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgAlert', {
 		title: 'Alert Box',
 		icon: 'fa fa-exclamation-triangle',
+		category: 'General Decoration',
 		config: {
 			text: {type: 'mgText', default: 'This is an alert!'},
 			style: {
@@ -30,8 +31,9 @@ angular
 		bindings: {
 			config: '<',
 		},
-		controller: function($scope) {
+		controller: function($macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
 		},
 		template: `
 			<div class="alert" ng-class="$ctrl.config.style">{{$ctrl.config.text || $scope.data}}</div>

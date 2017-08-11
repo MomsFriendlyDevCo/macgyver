@@ -3,7 +3,7 @@
 * Meta component to edit a form
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.component('mgFormEditor', {
 		templateUrl: '/units/macgyver/mgFormEditor.tmpl.html',
 		bindings: {
@@ -26,6 +26,15 @@ angular
 			// }}}
 
 			// Widget Creation {{{
+			$ctrl.categories = _($macgyver.widgets)
+				.filter(w => w.userPlaceable)
+				.map('category')
+				.sort()
+				.uniq()
+				.value();
+
+			$ctrl.category = $ctrl.categories[0];
+
 			/**
 			* Container for the element we're going to create
 			* @var {Object}
@@ -38,11 +47,18 @@ angular
 			/**
 			* Add a new widget
 			* @param {string} direction The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
-			* @param {Object} [widget] Optional widget to add relative to, if omitted the currently selected DOM element is used
+			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
 			*/
 			$ctrl.widgetAdd = function(direction, widget) {
-				// Work out what item we are currently hovering over
-				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				var node;
+				if (_.isString(widget)) {
+					debugger;
+					node = TreeTools.find($ctrl.config, {id: widget}, {childNode: 'items'});
+				} else if (_.isObject(widget)) {
+					node = widget;
+				} else { // Work out what item we are currently hovering over
+					node = TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				}
 				if (!node) return; // Didn't find anything - do nothing
 
 				$ctrl.widgetAddDetails = {
@@ -52,6 +68,10 @@ angular
 
 				$('#modal-mgFormEditor-add').modal('show');
 			};
+
+			// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
+			$scope.$on('mg.mgFormEditor.widgetAdd', (e, direction, widget) => $ctrl.widgetAdd(direction, widget));
+
 
 			/**
 			* Finalize the state of $ctrl.widgetAddDetails and make the object
@@ -69,18 +89,24 @@ angular
 
 				// Insert new widget into parents items collection
 				var prototypeWidget = {
-					id: _.times(10, i => _.sample('abcdefghijklmnopqrstuvwxyz').split('')).join(''), // Generate a random ID
+					id: $ctrl.widgetAddDetails.type + '-' + _.times(5, i => _.sample('abcdefghijklmnopqrstuvwxyz').split('')).join(''), // Generate a random ID
 					type: $ctrl.widgetAddDetails.type,
 				};
 
 				switch ($ctrl.widgetAddDetails.direction) {
 					case 'above':
-						nodeParent.items.splice(nodeIndex - 1, 0, prototypeWidget);
-						$ctrl.widgetEdit(nodeParent.items[nodeIndex - 1]);
+						//if inserting above an index 0, need to ensure index is not -ve
+						var insertedIndex = (nodeIndex - 1) < 0 ? 0 : nodeIndex - 1;
+						//actually insert the prototypeWidget
+						nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
+						$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
 						break;
 					case 'below':
-						nodeParent.items.splice(nodeIndex, 0, prototypeWidget);
-						$ctrl.widgetEdit(nodeParent.items[nodeIndex]);
+						//Insert below the current widget (increment by 1)
+						var insertedIndex = nodeIndex + 1;
+						//actually insert the prototypeWidget
+						nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
+						$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
 						break;
 					case 'inside':
 						node.items.push(prototypeWidget);
@@ -103,11 +129,19 @@ angular
 			* @param {Object} [widget] An optional widget to edit, if omitted the widget is calculated from the currently selected DOM element
 			*/
 			$ctrl.widgetEdit = function(widget) {
-				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				var node;
+				if (_.isObject(widget)) {
+					node = widget;
+				} else if ($ctrl.selectedWidget) { // Try to determine from currently selected widget if we have one
+					node = TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				} else { // Can't do anything - cancel action
+					return;
+				}
+
 				if (!node) return; // Didn't find anything - do nothing
 
-				//Get Human Readable Name for the edit widget. If error jsut use vanilla display
-				if(node.type && typeof node.type == 'string'){
+				// Get Human Readable Name for the edit widget. If error jsut use vanilla display
+				if (node.type && typeof node.type == 'string') {
 					$ctrl.widgetName = ' - '+node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim()
 				}
 
@@ -177,7 +211,9 @@ angular
 
 				$ctrl.setEditing(false);
 				$('#modal-mgFormEditor-edit').modal('show')
-					.one('hidden.bs.modal', ()=> $ctrl.setEditing(true));
+					.one('hidden.bs.modal', ()=> {
+						$ctrl.setEditing(true); // Restore editing ability to editor (i.e. click will open the edit page)
+					});
 			};
 
 			// Clicking on any widget when the mask is enabled should open an editor {{{
@@ -273,7 +309,7 @@ angular
 				};
 				$element.children('.mgFormEditor-mask-background').css(setCSS);
 
-				var verbWidth = 190;
+				var verbWidth = 250;
 				$element.children('.mgFormEditor-mask-verbs').css({
 					left: setCSS.left + setCSS.width - verbWidth - 5,
 					top: setCSS.top,

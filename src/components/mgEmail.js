@@ -6,12 +6,13 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgEmail', {
-		title: 'Textbox',
+		title: 'Email address',
 		icon: 'fa fa-envelope-o',
+		category: 'Simple Inputs',
 		config: {
-			placeholder: {type: 'mgEmail', help: 'Ghost text to display when the text box has no value'},
+			placeholder: {type: 'mgText', help: 'Ghost text to display when the text box has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
 	}))

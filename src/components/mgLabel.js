@@ -6,10 +6,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgLabel', {
-		title: 'Read-only Label',
+		title: 'Read-only label',
 		icon: 'fa fa-font',
+		category: 'General Decoration',
 		config: {
 			text: {type: 'mgText'},
 		},
@@ -19,8 +20,9 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function() {
+		controller: function($macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
 		},
 		template: `
 			<div class="form-control-static">{{$ctrl.data || $ctrl.config.text}}</div>

@@ -6,10 +6,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgToggle', {
 		title: 'Switch',
 		icon: 'fa fa-toggle-on',
+		category: 'Simple Inputs',
 		config: {
 			onText: {type: 'mgText', default: 'On'},
 			offText: {type: 'mgText', default: 'Off'},
@@ -20,8 +21,10 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function($scope) {
+		controller: function($macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
+
 			// Adopt default if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
 			// }}}

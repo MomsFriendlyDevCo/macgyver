@@ -10,10 +10,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgNumber', {
 		title: 'Number',
-		icon: 'fa fa-pencil-square-o',
+		icon: 'fa fa-sort-numeric-asc',
+		category: 'Simple Inputs',
 		config: {
 			min: {type: 'mgNumber', title: 'Minimum value'},
 			max: {type: 'mgNumber', title: 'Maximum value'},
@@ -38,11 +39,20 @@ angular
 				$ctrl.config.max && $ctrl.data > $ctrl.config.max && `${$ctrl.config.title} is too large (maximum value is ${$ctrl.config.max})`,
 			];
 
+			$ctrl.add = steps => $ctrl.data += steps * ($ctrl.step || 1);
+
 			// Adopt default  if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
 			// }}}
 		},
 		template: `
-			<input ng-model="$ctrl.data" type="{{$ctrl.config.slider ? 'range' : 'number'}}" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
+			<div ng-if="$ctrl.config.slider">
+				<input ng-model="$ctrl.data" type="range" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
+			</div>
+			<div ng-if="!$ctrl.config.slider" class="input-group">
+				<a ng-click="$ctrl.add(-1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-down"></i></a>
+				<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
+				<a ng-click="$ctrl.add(1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-up"></i></a>
+			</div>
 		`,
 	})

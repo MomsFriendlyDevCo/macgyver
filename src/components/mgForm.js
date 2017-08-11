@@ -3,7 +3,7 @@
 * This should be the topmost item within a MacGyver form. It loads the actual form display and the data associated with it
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.component('mgForm', {
 		bindings: {
 			config: '<',
@@ -14,7 +14,10 @@ angular
 			$ctrl.errors;
 
 			// MacGyver integration {{{
-			$scope.$on('mg.getForm', (e, f) => f.form = $ctrl)
+			$scope.$on('mg.getForm', (e, f) => {
+				f.$ctrl = $ctrl;
+				f.$scope = $scope;
+			})
 			// }}}
 
 			/**

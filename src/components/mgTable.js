@@ -14,10 +14,11 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgTable', {
 		title: 'Table layout',
 		icon: 'fa fa-table',
+		category: 'Layout',
 		isContainer: true,
 		isContainerArray: true,
 		config: {
@@ -25,14 +26,13 @@ angular
 			allowDelete: {type: 'mgToggle', title: 'Allow Row Deletion', default: true},
 			textEmpty: {type: 'mgText', title: 'No data message', default: 'No data'},
 			items: {
-				type: 'array',
+				type: 'mgTableEditor',
 				default: [
-					{id: 'col1', title: 'Col1'},
-					{id: 'col2', title: 'Col2'},
-					{id: 'col3', title: 'Col3'},
+					{id: 'col1', type: 'mgText'},
+					{id: 'col2', title: 'mgText'},
+					{id: 'col3', title: 'mgText'},
 				],
 			},
-			default: {type: 'array', title: 'Default data'},
 		},
 		configChildren: {
 			showTitle: {type: 'mgToggle', default: false, title: 'Show Title'},
@@ -43,8 +43,9 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function($element, $scope) {
+		controller: function($element, $macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
 			$ctrl.isEditing = !! $element.closest('mg-form-editor').length;
 
 			// Adopt default data (if provided) / fake data (when editing) {{{
@@ -144,7 +145,7 @@ angular
 						</td>
 					</tr>
 				</tbody>
-				<tbody ng-if="!$ctrl.isEditing">
+				<tbody ng-if="!$ctrl.isEditing" class="hidden-print">
 					<tr ng-if="!$ctrl.data">
 						<td colspan="{{$ctrl.config.items.length + ($ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers ? 1 : 0}}">
 							<div class="alert alert-warning m-10">{{$ctrl.config.textEmpty || 'No data'}}</div>

@@ -15,19 +15,16 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgChoiceButtons', {
-		title: 'Multiple-choice (Buttons)',
+		title: 'Button multiple-choice',
 		icon: 'fa fa-check-square',
+		category: 'Choice Selectors',
 		config: {
 			enum: {
-				type: 'array',
+				type: 'mgList',
 				title: 'The list of items to display',
-				default: [
-					{id: 'foo', title: 'Foo'},
-					{id: 'bar', title: 'Bar'},
-					{id: 'baz', title: 'Baz'},
-				],
+				default: ['Foo', 'Bar', 'Baz'],
 			},
 			classWrapper: {type: 'mgText', default: 'btn-group', title: 'Group CSS class'},
 			classItem: {type: 'mgText', default: 'btn', title: 'Item CSS class'},
@@ -42,15 +39,19 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function($scope) {
+		controller: function($macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
 
 			// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
 			$ctrl.enumIter = []; // Cleaned up version of enum
 			$scope.$watch('$ctrl.config.enum', ()=> {
 				if (!$ctrl.config.enum) return; // No data yet
 				if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) { // Array of strings
-					$ctrl.enumIter = $ctrl.config.enum.map(i => ({id: i}));
+					$ctrl.enumIter = $ctrl.config.enum.map(i => ({
+						id: _.camelCase(i),
+						title: i,
+					}));
 				} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) { // Collection
 					$ctrl.enumIter = $ctrl.config.enum;
 				}

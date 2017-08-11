@@ -4,18 +4,20 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgSeperator', {
 		title: 'Seperator',
 		icon: 'fa fa-minus',
+		category: 'General Decoration',
 	}))
 	.component('mgSeperator', {
 		bindings: {
 			config: '<',
 			data: '=',
 		},
-		controller: function($scope) {
+		controller: function($macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
 		},
 		template: `
 			<hr/>

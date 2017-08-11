@@ -1,25 +1,28 @@
 /**
-* MacGyver text input
+* MacGyver free text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
 * @param {string} [config.placeholder] Placeholder text to display when the widget is empty
 * @param {Date} [config.lengthMin] The minimum allowable length
 * @param {Date} [config.lengthMax] The maximum allowable length
+* @param {number} [config.rows=3] How many row's in height to draw the widget
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
-	.config($macgyverProvider => $macgyverProvider.register('mgText', {
-		title: 'Textbox',
-		icon: 'fa fa-pencil-square-o',
+	.module('app')
+	.config($macgyverProvider => $macgyverProvider.register('mgTextArea', {
+		title: 'Multi-line text',
+		icon: 'fa fa-align-justify',
+		category: 'Simple Inputs',
 		config: {
+			rows: {type: 'mgNumber', title: 'Line height', default: 3},
 			lengthMin: {type: 'mgNumber', title: 'Minimum Length'},
 			lengthMax: {type: 'mgNumber', title: 'Maximum Length'},
-			placeholder: {type: 'mgText', help: 'Ghost text to display when the textbox has no value'},
+			placeholder: {type: 'mgTextArea', help: 'Ghost text to display when the textbox has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
 	}))
-	.component('mgText', {
+	.component('mgTextArea', {
 		bindings: {
 			config: '<',
 			data: '=',
@@ -39,6 +42,6 @@ angular
 			// }}}
 		},
 		template: `
-			<input ng-model="$ctrl.data" type="text" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>
+			<textarea ng-model="$ctrl.data" class="form-control" placeholder="{{$ctrl.config.placeholder}}" minlength="{{$ctrl.config.lengthMin}}" maxlength="{{$ctrl.config.lengthMin}}" rows="{{$ctrl.config.rows || 3}}"/>
 		`,
 	})

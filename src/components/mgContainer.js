@@ -12,14 +12,15 @@
 * @param {*} data The state data
 */
 angular
-	.module('macgyver')
+	.module('app')
 	.config($macgyverProvider => $macgyverProvider.register('mgContainer', {
-		title: 'Container',
+		title: 'Container layout',
 		icon: 'fa fa-dropbox',
+		category: 'Layout',
 		isContainer: true,
 		template: '<mg-container config="w" data="w.ignoreScope ? $ctrl.data : $ctrl.data[w.id]"></mg-container>', // Special template for containers to bypass scoping if ignoreScope is true
 		config: {
-			items: {type: 'array', default: []},
+			// items: undefined, // Intentionally hidden - mgFormEditor provides functionality to edit this
 			ignoreScope: {type: 'mgToggle', default: false, title: 'Ignore Scope', help: 'Flatten the data scope with the parent level - i.e. dont nest any child element inside an object when saving data'},
 		},
 		configChildren: {
@@ -33,17 +34,24 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function() {
+		controller: function($element, $macgyver, $scope) {
 			var $ctrl = this;
+			$macgyver.inject($scope, $ctrl);
+			$ctrl.isEditing = !! $element.closest('mg-form-editor').length;
+
+			$ctrl.widgetAddChild = ()=> $scope.$emit('mg.mgFormEditor.widgetAdd', 'inside', $ctrl.config.id);
 		},
-		template: $macgyver =>
-			'<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group" ng-class="w.mgValidation == \'error\' && \'has-error\'">' +
-				'<label ng-if="w.showTitle || w.showTitle===undefined" class="col-sm-3 control-label">{{w.title}}</label>' +
-				'<div ng-class="w.showTitle  || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">' +
-					_.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') +
-					'<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>' +
-					'<div ng-if="w.help" class="help-block">{{w.help}}</div>' +
-				'</div>' +
-			'</div>'
-		,
+		template: $macgyver =>  `
+			<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
+				<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
+			</div>
+			<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group" ng-class="w.mgValidation == 'error' && 'has-error'">
+				<label ng-if="w.showTitle || w.showTitle===undefined" class="col-sm-3 control-label">{{w.title}}</label>
+				<div ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
+			` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+					<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
+					<div ng-if="w.help" class="help-block">{{w.help}}</div>
+				</div>
+			</div>
+		`,
 	})
