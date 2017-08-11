@@ -299,19 +299,6 @@
 			"type": "mgHtml",
 			"title": "HTML",
 			"text": "Hello <strong>World</strong>"
-		},
-
-		{
-			"id": "demoHeading6",
-			"type": "mgHeading",
-			"text": "Rockjaw Specific",
-			"showTitle": false
-		},
-		{
-			"id": "demoSignoff",
-			"type": "mgSignoff",
-			"title": "Signoff"
 		}
-
 	]
 }
