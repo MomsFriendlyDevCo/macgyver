@@ -9,7 +9,7 @@ Example
 -------
 ```javascript
 angular
-	.module('app')
+	.module('macgyver')
 	.component('myComponent', {
 		controller: function() {
 			var $ctrl = this;
@@ -59,7 +59,7 @@ Each MagGyver widget begins with `mg` and should be registered via `$macgyver.re
 
 ```javascript
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgText', {
 		title: 'Textbox',
 		icon: 'fa fa-pencil-square-o',
