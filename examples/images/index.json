@@ -1,0 +1,23 @@
+[
+	{
+		"name": "bernard.jpg",
+		"url": "examples/images/bernard.jpg",
+		"thumbnail": "examples/images/bernard.jpg",
+		"icon": "fa fa-file-image-o",
+		"size": 5697
+	},
+	{
+		"name": "boris.jpg",
+		"url": "examples/images/boris.jpg",
+		"thumbnail": "examples/images/boris.jpg",
+		"icon": "fa fa-file-image-o",
+		"size": 43546
+	},
+	{
+		"name": "it_guy.jpg",
+		"url": "examples/images/it_guy.png",
+		"thumbnail": "examples/images/it_guy.png",
+		"icon": "fa fa-file-image-o",
+		"size": 25449
+	}
+]

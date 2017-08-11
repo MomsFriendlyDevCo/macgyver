@@ -1,5 +1,8 @@
 angular
-	.module('macgyver', [])
+	.module('macgyver', [
+		'ngSanitize',
+		'ui.select',
+	])
 	.provider('$macgyver', function() {
 		this.widgets = {};
 
@@ -105,4 +108,5 @@ angular
 		this.$get = function() {
 			return this;
 		};
-	});
+	})
+	.filter('filesize', ()=> filesize)

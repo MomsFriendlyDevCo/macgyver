@@ -102,8 +102,8 @@
 			"id": "demoChoiceDropdownGroup",
 			"type": "mgChoiceDropdown",
 			"title": "Choice Dropdown (via JSON feed + group by)",
-			"url": "/api/assetTrees/flat",
-			"idField": "_id",
+			"url": "examples/dropdowns.json",
+			"idField": "id",
 			"groupBy": "path"
 		},
 		{
@@ -246,7 +246,7 @@
 			"id": "demoFile",
 			"type": "mgFileUpload",
 			"title": "File upload",
-			"urlQuery": "/api/forms.filings/example/images",
+			"urlQuery": "examples/images/index.json",
 			"urlDelete": "/api/debug/403",
 			"urlUpload": "/api/debug/403"
 		},
@@ -254,7 +254,7 @@
 			"id": "demoFileList",
 			"type": "mgFileList",
 			"title": "File list",
-			"urlQuery": "/api/forms.filings/example/images",
+			"urlQuery": "examples/images/index.json",
 			"urlDelete": "/api/debug/403",
 			"urlUpload": "/api/debug/403"
 		},
@@ -262,7 +262,7 @@
 			"id": "demoSignature",
 			"type": "mgSignature",
 			"title": "Signature",
-			"urlQuery": "/api/forms.filings/example/images",
+			"urlQuery": "examples/images/index.json",
 			"urlDelete": "/api/debug/403",
 			"urlUpload": "/api/debug/403"
 		},
@@ -270,7 +270,7 @@
 			"id": "demoImage",
 			"type": "mgImage",
 			"title": "Image",
-			"urlQuery": "/api/forms.filings/example/images",
+			"urlQuery": "examples/images/index.json",
 			"urlDelete": "/api/debug/403",
 			"urlUpload": "/api/debug/403"
 		},

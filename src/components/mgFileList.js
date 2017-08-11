@@ -65,7 +65,7 @@ angular
 				} else { // Fetch data via URL
 					$http.get($ctrl.getUrl('query'))
 						.then(data => $ctrl.data = data.data.map(file => {
-							file.thumbnail = $ctrl.thumbnailAble.includes(file.ext);
+							if (!_.isString(file.thumbnail)) file.thumbnail = $ctrl.thumbnailAble.includes(file.ext);
 							return file;
 						}));
 				}
