@@ -12,7 +12,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgContainer', {
 		title: 'Container layout',
 		icon: 'fa fa-dropbox',

@@ -6,7 +6,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgUrl', {
 		title: 'URL',
 		icon: 'fa fa-globe',

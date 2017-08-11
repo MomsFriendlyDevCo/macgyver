@@ -9,7 +9,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgTextArea', {
 		title: 'Multi-line text',
 		icon: 'fa fa-align-justify',

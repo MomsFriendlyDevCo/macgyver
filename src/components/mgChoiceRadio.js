@@ -9,7 +9,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgChoiceRadio', {
 		title: 'Radio multiple-choice',
 		icon: 'fa fa-list-ul',

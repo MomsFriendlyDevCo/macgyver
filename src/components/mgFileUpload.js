@@ -16,7 +16,7 @@
 * @emits mg.refreshUploads Fired when all upload lists should refresh their contents as a file upload has just taken place
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgFileUpload', {
 		title: 'File upload',
 		icon: 'fa fa-file-o',

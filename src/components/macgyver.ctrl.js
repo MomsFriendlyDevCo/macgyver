@@ -1,5 +1,5 @@
 angular
-	.module('app')
+	.module('macgyver')
 	.provider('$macgyver', function() {
 		var $macgyver = this;
 		$macgyver.widgets = {};

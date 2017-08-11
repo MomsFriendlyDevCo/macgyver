@@ -6,7 +6,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgLabel', {
 		title: 'Read-only label',
 		icon: 'fa fa-font',

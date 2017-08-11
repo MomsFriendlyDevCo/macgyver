@@ -9,7 +9,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgChoiceDropdown', {
 		title: 'Dropdown multiple-choice',
 		icon: 'fa fa-chevron-circle-down',

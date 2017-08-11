@@ -6,7 +6,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgToggle', {
 		title: 'Switch',
 		icon: 'fa fa-toggle-on',

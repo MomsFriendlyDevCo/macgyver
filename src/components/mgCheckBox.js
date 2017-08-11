@@ -4,7 +4,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgCheckBox', {
 		title: 'Check Box',
 		icon: 'fa fa-check-square-o',

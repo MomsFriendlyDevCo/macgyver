@@ -10,7 +10,7 @@
 * @param {Array} [data] Optional array of files, if this is not set data will be populated via config.urlQuery instead
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgFileList', {
 		title: 'File list',
 		icon: 'fa fa-files-o',

@@ -5,7 +5,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgSignature', {
 		title: 'Signature input',
 		icon: 'fa fa-picture-o',

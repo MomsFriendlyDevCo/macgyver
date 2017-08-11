@@ -6,7 +6,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgAlert', {
 		title: 'Alert Box',
 		icon: 'fa fa-exclamation-triangle',

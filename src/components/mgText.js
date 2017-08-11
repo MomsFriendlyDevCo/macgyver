@@ -8,7 +8,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgText', {
 		title: 'Textbox',
 		icon: 'fa fa-pencil-square-o',

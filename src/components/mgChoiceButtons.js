@@ -15,7 +15,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgChoiceButtons', {
 		title: 'Button multiple-choice',
 		icon: 'fa fa-check-square',

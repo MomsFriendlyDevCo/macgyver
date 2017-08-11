@@ -3,7 +3,7 @@
 * Meta component to edit a form
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.component('mgFormEditor', {
 		templateUrl: '/units/macgyver/mgFormEditor.tmpl.html',
 		bindings: {

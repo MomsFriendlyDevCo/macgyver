@@ -3,7 +3,7 @@
 * This should be the topmost item within a MacGyver form. It loads the actual form display and the data associated with it
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.component('mgForm', {
 		bindings: {
 			config: '<',

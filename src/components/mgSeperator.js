@@ -4,7 +4,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgSeperator', {
 		title: 'Seperator',
 		icon: 'fa fa-minus',

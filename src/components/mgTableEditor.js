@@ -6,7 +6,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgTableEditor', {
 		title: 'Table Editor',
 		icon: 'fa fa-pencil-square-o',

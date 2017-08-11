@@ -10,7 +10,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgNumber', {
 		title: 'Number',
 		icon: 'fa fa-sort-numeric-asc',

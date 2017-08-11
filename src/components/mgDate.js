@@ -7,7 +7,7 @@
 * @param {*} data The state data
 */
 angular
-	.module('app')
+	.module('macgyver')
 	.config($macgyverProvider => $macgyverProvider.register('mgDate', {
 		title: 'Date selection',
 		icon: 'fa fa-calendar',
