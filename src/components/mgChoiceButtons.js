@@ -3,6 +3,7 @@
 * @param {Object} config The config specification
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
 * @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
 * @param {string} [config.enum[].icon] Optional icon to display for each item
 * @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
 * @param {string} [config.enum[].title] Optional title to display within each element
@@ -63,10 +64,14 @@ angular
 		},
 		template: `
 			<div ng-class="$ctrl.config.classWrapper || 'btn-group'">
-				<div ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || 'btn', item.class || ($ctrl.data == item.id ? $ctrl.config.itemClassSelected  || 'btn-primary': $ctrl.config.itemClassDefault)]" ng-click="$ctrl.data = item.id">
+				<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || 'btn',
+					$ctrl.data == item.id
+					? item.classSelected || $ctrl.config.itemClassSelected || 'btn-primary'
+					: item.class || $ctrl.config.itemClassDefault || 'btn-default'
+				]" ng-click="$ctrl.data = item.id">
 					<i ng-class="$ctrl.data == item.id ? (item.iconSelected || $ctrl.config.iconSelected) : (item.icon || $ctrl.config.iconDefault)"></i>
 					{{item.title}}
-				</div>
+				</a>
 			</div>
 		`,
 	})
