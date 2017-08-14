@@ -5,6 +5,7 @@ var concat = require('gulp-concat');
 var ghPages = require('gulp-gh-pages');
 var gulp = require('gulp');
 var nodemon = require('gulp-nodemon');
+var preprocess = require('gulp-preprocess');
 var rename = require('gulp-rename');
 var rimraf = require('rimraf');
 var uglify = require('gulp-uglify');
@@ -45,6 +46,7 @@ gulp.task('js', ()=>
 		'./src/components/*.js',
 	])
 		.pipe(concat('macgyver.js'))
+		.pipe(preprocess({includeBase: `${__dirname}/src`}))
 		.pipe(babel({
 			presets: ['es2015'],
 			plugins: ['angularjs-annotate'],

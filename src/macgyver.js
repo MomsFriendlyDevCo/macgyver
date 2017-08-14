@@ -1,10 +1,14 @@
 angular
-	.module('macgyver', [
-		'ngSanitize',
-		'ui.select',
-	])
+	.module('macgyver')
 	.provider('$macgyver', function() {
-		this.widgets = {};
+		var $macgyver = this;
+		$macgyver.widgets = {};
+
+		// Settings {{{
+		$macgyver.settings = {
+			urlResolver: undefined, // Used by mgFile and other uploaders to determine its URL
+		};
+		// }}}
 
 		/**
 		* Add a known widget to the widgets lookup object
@@ -16,18 +20,22 @@ angular
 		* @param {string} [properties.template] Rendering template to be used to draw the element (`w` is the currently rendering widget within the template i.e. `w.id` is the widget ID)
 		* @param {string} [properties.icon] Optional icon to display in the form editor
 		* @param {Object} [properties.config] Optional list of configuration the widget takes, this is in the form of a MacGyver item collection
+		* @param {boolean} [properties.userPlaceable=true] Whether this component should be listed as placeable by the user (if false, its hidden in the mgFormEditor UI)
+		* @param {string} [properties.category="Misc"] Which category this widget fits into when displaying the 'Add widget' dialog in mgFormEditor
 		*/
-		this.register = function(id, properties) {
-			this.widgets[id] = properties || {};
-			this.widgets[id].id = id;
+		$macgyver.register = function(id, properties) {
+			$macgyver.widgets[id] = properties || {};
+			$macgyver.widgets[id].id = id;
 
 			var domName = _.kebabCase(id);
-			_.defaults(this.widgets[id], {
+			_.defaults($macgyver.widgets[id], {
 				template: `<${domName} config="w" data="$ctrl.data[w.id]"></${domName}>`,
 				title: _.startCase(id),
+				userPlaceable: true,
+				category: 'Misc',
 			});
 
-			return this;
+			return $macgyver;
 		};
 
 
@@ -36,22 +44,22 @@ angular
 		* @params {array} layout The root node to generate from
 		* @params {boolean} [useDefaults] Whether to adopt control defaults when generating the tree
 		*/
-		this.getDataTree = function(root, useDefaults) {
+		$macgyver.getDataTree = function(root, useDefaults) {
 			if (!root) {
 				console.warn('Empty MacGyver form tree');
-			} else if (!this.widgets[root.type]) {
+			} else if (!$macgyver.widgets[root.type]) {
 				console.warn('Unknown widget type "' + root.type + '" for item ID "' + root.id + '" - assuming is not a container');
 				return (useDefaults ? root.default : null);
-			} else if (this.widgets[root.type].isContainer && !this.widgets[root.type].isContainerArray) {
+			} else if ($macgyver.widgets[root.type].isContainer && !$macgyver.widgets[root.type].isContainerArray) {
 				return _(root.items)
 					.mapKeys('id')
-					.mapValues(i => this.getDataTree(i))
+					.mapValues(i => $macgyver.getDataTree(i))
 					.value();
-			} else if (this.widgets[root.type].isContainer && this.widgets[root.type].isContainerArray) {
+			} else if ($macgyver.widgets[root.type].isContainer && $macgyver.widgets[root.type].isContainerArray) {
 				return [
 					_(root.items)
 						.mapKeys('id')
-						.mapValues(i => this.getDataTree(i))
+						.mapValues(i => $macgyver.getDataTree(i))
 						.value()
 				];
 			} else {
@@ -61,18 +69,28 @@ angular
 
 
 		/**
-		* Returns the first found form under a scope
+		* Returns the first found form in the search direction
 		* @param {Object} $scope The scope of the calling component
+		* @param {string} [direction="downwards"] What direction to search for the form element in. ENUM: 'upwards', 'downwards'
+		* @param {string} [want="$ctrl"] What aspect of the form is sought. ENUM: '$ctrl', '$scope'
 		* @example
 		* // In a controller / component
 		* $macgyver.getForm($scope);
 		* // => The scope instance of the form (i.e. the inside of the mg-form component)
 		*/
-		this.getForm = function($scope) {
+		$macgyver.getForm = function($scope, direction = 'downwards', want = '$ctrl') {
 			// Make an empty object, broadcast and expect the first reciever to populate the `form` key which we can then use to reference the form
 			var form = {};
-			$scope.$broadcast('mg.getForm', form);
-			return form.form;
+
+			if (direction == 'downwards') {
+				$scope.$broadcast('mg.getForm', form);
+			} else if (direction == 'upwards') {
+				$scope.$emit('mg.getForm', form);
+			} else {
+				throw new Error('Unknown form search direction: ' + direction);
+			}
+
+			return form[want]
 		};
 
 
@@ -83,10 +101,34 @@ angular
 		* $macgyver.getAll($scope);
 		* // => {foo: <fooController>, bar: <barController>, ...}
 		*/
-		this.getAll = function($scope) {
+		$macgyver.getAll = function($scope) {
 			var components = {};
 			$scope.$broadcast('mg.get', components);
 			return components;
+		};
+
+
+		/**
+		* Get the array path of a component
+		* This is calculated as:
+		* 1. If the $ctrl.config.mgPath value is set (strings will automatically be transformed into arrays) OR
+		* 2. Using all parents IDs as an array
+		* @return {array} The path segments as an array of strings
+		*/
+		$macgyver.getPath = function($scope) {
+			var overridePath = _.get($scope, ['$ctrl', 'config', 'mgPath'])
+
+			if (overridePath && _.isArray(overridePath)) {
+				return overridePath;
+			} else if (_.isString(overridePath)) {
+				return overridePath.split('.');
+			} else { // Determine from parent segments
+				var stack = [];
+				$scope.$emit('mg.getStack', stack);
+				return stack
+					.map(i => i.id) // Return only the ID segment
+					.filter(i => !! i); // Remove empty items
+			}
 		};
 
 
@@ -97,16 +139,69 @@ angular
 		* // In a controller / component
 		* $macgyver.inject($scope, $ctrl);
 		*/
-		this.inject = function($scope, $ctrl) {
+		$macgyver.inject = function($scope, $ctrl) {
 			$scope.$on('mg.get', (e, c) => c[$ctrl.config.id] = $ctrl);
+			$scope.$on('mg.getStack', function(e, c) {
+				c.push({
+					id: $ctrl.config.id,
+					$ctrl: $ctrl,
+					$scope: $scope,
+				});
+				return c;
+			});
+		};
+
+
+		/**
+		* Broadcast a message to all MacGyver components under the first form found as the parent of the given scope
+		* Messages should always begin with the 'mg.' prefix
+		* @param {Object} $scope The scope of the widget to search from
+		* @param {*} message,... The message to broadcast
+		* @returns {*} The return value of the broadcast event
+		*/
+		$macgyver.broadcast = function($scope, ...message) {
+			var mgForm = $macgyver.getForm($scope, 'upwards', '$scope');
+			return mgForm ? mgForm.$broadcast(...message) : undefined;
+		};
+
+
+		/**
+		* Executes a callback on each item in a spec tree
+		* @param {Object} spec The spec tree to operate on
+		* @param {function} cb The callback to trigger as ({node, path})
+		*/
+		$macgyver.forEach = function(spec, cb) {
+			var forEachScanner = (root, path) => {
+				var rootPath = (path ? path + '.' : '') + (root.id || '');
+				cb(root, rootPath);
+				if (_.isArray(root.items)) root.items.forEach(i => forEachScanner(i, rootPath));
+			};
+			forEachScanner(spec);
+		},
+
+		/**
+		* Flatten a spec tree and return a key/val object of all fields
+		* NOTE: This is really just a shorthand of the $macgyver.forEach() function
+		* @param {Object} spec The specification Object to flatten
+		* @returns {Object} A key/val flattened object where the keys are the dotted notation path of the ID's and the values are the pointer to the object
+		* @see $macgyver.forEach()
+		*
+		* @example
+		* var spec = $macgyver.flattenSpec(mySpec);
+		* spec['foo.bar.baz'].value = '123'; // Set {foo: {bar: {baz: {value: '123'}}}}
+		*/
+		$macgyver.flattenSpec = function(spec) {
+			var res = {};
+			$macgyver.forEach(spec, (widget, path) => res[path] = widget);
+			return res;
 		};
 
 
 		/**
 		* Angular nonsense function to get this instance
 		*/
-		this.$get = function() {
-			return this;
+		$macgyver.$get = function() {
+			return $macgyver;
 		};
 	})
-	.filter('filesize', ()=> filesize)
+	.filter('mgFilterObject', ()=> (value, filter) => _.pickBy(value, i => _.isMatch(i, filter)))
