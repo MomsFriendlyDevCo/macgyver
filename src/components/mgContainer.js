@@ -45,7 +45,7 @@ angular
 			<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
 				<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
 			</div>
-			<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group" ng-class="w.mgValidation == 'error' && 'has-error'">
+			<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row" ng-class="w.mgValidation == 'error' && 'has-error'">
 				<label ng-if="w.showTitle || w.showTitle===undefined" class="col-sm-3 control-label">{{w.title}}</label>
 				<div ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
 			` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
