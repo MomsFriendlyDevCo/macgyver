@@ -28,6 +28,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
+    "tree-tools": "^1.1.2",
     "ui-select": "^0.19.8"
   },
   "devDependencies": {

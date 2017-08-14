@@ -1,5 +1,9 @@
 angular
-	.module('macgyver')
+	.module('macgyver', [
+		'ngSanitize',
+		'ngTreeTools',
+		'ui.select',
+	])
 	.provider('$macgyver', function() {
 		var $macgyver = this;
 		$macgyver.widgets = {};
@@ -204,4 +208,5 @@ angular
 			return $macgyver;
 		};
 	})
+	.filter('filesize', ()=> filesize)
 	.filter('mgFilterObject', ()=> (value, filter) => _.pickBy(value, i => _.isMatch(i, filter)))
