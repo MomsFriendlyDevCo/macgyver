@@ -1,6 +1,7 @@
 /**
 * MacGyver form editor
 * Meta component to edit a form
+* @param {Object} [$macgyver.settings.mgFormEditor.maskPosition] Optional object containing left, top, width, height relative positions (e.g. left=1 will use the position + 1px)
 */
 angular
 	.module('macgyver')
@@ -302,12 +303,12 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				var pos = elem.offset();
+				var pos = elem.position();
 				var setCSS = {
-					left: pos.left,
-					top: pos.top - 3,
-					width: elem.width(),
-					height: elem.height() + 6,
+					left: pos.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
+					top: pos.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
+					width: elem.width() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
+					height: elem.height() + 6 + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
 				};
 				$element.children('.mgFormEditor-mask-background').css(setCSS);
 
