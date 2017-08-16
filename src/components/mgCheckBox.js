@@ -1,7 +1,7 @@
 /**
 * MacGyver toggle
 * @param {Object} config The config specification
-* @param {*} data The state data
+* @param {boolean} data The state of the checkbox
 */
 angular
 	.module('macgyver')

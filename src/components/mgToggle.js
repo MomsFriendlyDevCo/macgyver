@@ -3,7 +3,7 @@
 * @param {Object} config The config specification
 * @param {string} [config.onText='On'] The text to display when the widget has a true value
 * @param {string} [config.offText='Off'] The text to display when the widget has a false value
-* @param {*} data The state data
+* @param {boolean} data The state of the toggle
 */
 angular
 	.module('macgyver')

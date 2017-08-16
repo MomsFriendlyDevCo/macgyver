@@ -117,7 +117,7 @@ angular
 						break;
 				}
 
-				// Open edit dialog
+				$scope.$broadcast('mg.mgFormEditor.change');
 			};
 			// }}}
 
