@@ -46,7 +46,12 @@ gulp.task('js', ()=>
 		'./src/components/*.js',
 	])
 		.pipe(concat('macgyver.js'))
-		.pipe(preprocess({includeBase: `${__dirname}/src`}))
+		.pipe(preprocess({
+			context: {
+				angular: true,
+			},
+			includeBase: `${__dirname}/src`,
+		}))
 		.pipe(babel({
 			presets: ['es2015'],
 			plugins: ['angularjs-annotate'],

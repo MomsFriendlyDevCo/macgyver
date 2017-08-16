@@ -2,7 +2,7 @@
   "name": "macgyver",
   "version": "0.0.0",
   "description": "Dynamic form widgets for Angular",
-  "main": "dist/macgyver.js",
+  "main": "src/shared.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MomsFriendlyDevCo/macgyver.git"
