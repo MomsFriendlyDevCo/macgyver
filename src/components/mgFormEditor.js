@@ -249,7 +249,7 @@ angular
 				// }}}
 
 				// Position a dropdown under the mouse {{{
-				var pos = elem.offset();
+				var pos = this.getBoundingClientRect();
 				angular.element('#mgFormEditor-dropdown-widget')
 					.css({
 						left: pos.left + _.get($macgyver.settings, 'mgFormEditor.menuPosition.left', 0),
@@ -301,7 +301,7 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				var pos = elem.offset();
+				var pos = this.getBoundingClientRect();
 				var setCSS = {
 					left: pos.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
 					top: pos.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
