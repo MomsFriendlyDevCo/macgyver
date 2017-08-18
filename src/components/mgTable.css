@@ -1,0 +1,15 @@
+mg-table td {
+	padding: 0 !important;
+}
+
+mg-table td > mg-container > .form-group {
+	margin: 0 !important;
+}
+
+mg-table td > mg-container > .form-group .col-sm-12 {
+	padding: 0 !important;
+}
+
+mg-table td > mg-container > .form-group .col-sm-12 .form-control {
+	border: none;
+}

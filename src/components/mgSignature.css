@@ -1,0 +1,18 @@
+mg-signature .form-control-static {
+	display: block;
+	width: 250px;
+	height: 50px;
+	border: 1px solid #e9e9e9;
+	background: #FFF;
+}
+
+mg-signature .form-control-static::after {
+	content: '';
+	display: block;
+	position: relative;
+	top: 30px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+	border-bottom: 1px dashed #e9e9e9;
+}

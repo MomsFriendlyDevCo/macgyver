@@ -1,0 +1,7 @@
+mg-list td {
+	padding: 0 !important;
+}
+
+mg-list td input.form-control {
+	border: none;
+}
