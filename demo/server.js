@@ -25,6 +25,10 @@ app.get('/', function(req, res) {
 	res.sendFile('index.html', {root: __dirname});
 });
 
+app.get('/editor.html', function(req, res) {
+	res.sendFile('editor.html', {root: __dirname});
+});
+
 app.get('/app.js', function(req, res) {
 	res.sendFile('app.js', {root: root + '/demo'});
 });

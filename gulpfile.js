@@ -78,6 +78,7 @@ gulp.task('gh-pages', ['build'], function() {
 		'./LICENSE',
 		'./demo/_config.yml',
 		'./demo/app.js',
+		'./demo/editor.html',
 		'./demo/index.html',
 		'./demo/style.css',
 		'./dist/**/*',
