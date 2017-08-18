@@ -249,13 +249,11 @@ angular
 				// }}}
 
 				// Position a dropdown under the mouse {{{
-				var thisOffset = angular.element(this).offset();
+				var pos = elem.offset();
 				angular.element('#mgFormEditor-dropdown-widget')
 					.css({
-						position: 'absolute',
-						display: 'block',
-						left: thisOffset.left + event.offsetX - 220,
-						top: thisOffset.top + event.offsetY - 35,
+						left: pos.left + _.get($macgyver.settings, 'mgFormEditor.menuPosition.left', 0),
+						top: pos.top + _.get($macgyver.settings, 'mgFormEditor.menuPosition.top', 0),
 					});
 				// }}}
 			});
@@ -310,8 +308,6 @@ angular
 					width: elem.width() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
 					height: elem.height() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
 				};
-				console.log('POS', setCSS);
-
 				$element.children('.mgFormEditor-mask-background').css(setCSS);
 
 				var verbWidth = 250;
