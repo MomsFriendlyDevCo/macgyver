@@ -303,13 +303,15 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				var pos = elem.position();
+				var pos = elem.offset();
 				var setCSS = {
 					left: pos.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
 					top: pos.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
 					width: elem.width() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
-					height: elem.height() + 6 + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
+					height: elem.height() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
 				};
+				console.log('POS', setCSS);
+
 				$element.children('.mgFormEditor-mask-background').css(setCSS);
 
 				var verbWidth = 250;
