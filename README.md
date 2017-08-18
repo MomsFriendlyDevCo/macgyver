@@ -71,8 +71,8 @@ angular
 	}))
 	.component('mgText', {
 		bindings: {
-			config: '<',
-			data: '=',
+			config: '<', // Config for this widget
+			data: '=', // Data state for this widget
 		},
 		controller: function($macgyver, $scope) {
 			var $ctrl = this;
@@ -104,7 +104,17 @@ $macgyver.register(id, [properties])
 ------------------------------------
 Register a widget for use by name. Each id should begin with `id` and be in camelCase form.
 
-Properties can contain an optional `title`, `icon` and a `config` object detailing the options available for that widget.
+Widgets can contain the following meta properties:
+
+| Property           | Type      | Default                    | Description                                                                                      |
+|--------------------|-----------|----------------------------|--------------------------------------------------------------------------------------------------|
+| `config`           | `Object`  | *none*                     | Object detailing each optional property the widget can take as a `mgContainer` specification     |
+| `icon`             | `string`  | *none*                     | The icon CSS class to use in the `mgFormEditor` UI                                               |
+| `isContainer`      | `boolean` | `false`                    | Indicates that the widget can contain other widgets (under the `items` array)                    |
+| `isContainerArray` | `boolean` | `false`                    | Addition to `isContainer` that indicates the widget will contain an array of rows (like a table) |
+| `template`         | `string`  | `<COMPONENT_NAME/>`        | Rendering template to be used to draw the element                                                |
+| `title`            | `string`  | The ID via `_.startCase()` | The human friendly title of the widget                                                           |
+| `userPlaceable`    | `boolean` | `false`                    | Whether to hide the object from the user in the `mgFormEditor` UI                                |
 
 
 $macgyver.getForm($scope)
