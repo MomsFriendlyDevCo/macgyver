@@ -10,7 +10,7 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 	_.merge($macgyver.settings, {
 		mgFormEditor: {
 			maskPosition: {
-				left: -13,
+				left: 2,
 				width: -5,
 				top: -2,
 				height: 6,
