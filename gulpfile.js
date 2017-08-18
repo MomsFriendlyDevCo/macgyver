@@ -43,7 +43,7 @@ gulp.task('serve', ['build'], function() {
 gulp.task('js', ()=>
 	gulp.src([
 		'./src/macgyver.js',
-		'./src/components/*.js',
+		'./src/components/**/*.js',
 	])
 		.pipe(concat('macgyver.js'))
 		.pipe(preprocess({

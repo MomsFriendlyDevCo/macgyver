@@ -7,7 +7,7 @@ angular
 	.module('macgyver')
 	.component('mgFormEditor', {
 		template: `
-			// @include components/mgFormEditor.tmpl.html
+			// @include components/mgFormEditor/mgFormEditor.tmpl.html
 		`,
 		bindings: {
 			config: '<',

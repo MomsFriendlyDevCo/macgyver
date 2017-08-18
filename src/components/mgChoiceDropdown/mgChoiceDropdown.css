@@ -1,0 +1,6 @@
+@media print {
+	/* Disable dropdown icons when printing */
+	mg-choice-dropdown .selectize-input::after {
+		display: none !important;
+	}
+}
