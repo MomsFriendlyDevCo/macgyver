@@ -1,0 +1,76 @@
+<html>
+	<head>
+		<title>$macgyver - mgFormEditor</title>
+
+		<!-- Font-awesome -->
+		<link href="node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+
+		<!-- Lodash -->
+		<script src="node_modules/lodash/lodash.min.js"></script>
+
+		<!-- jQuery -->
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+
+		<!-- Bootstrap -->
+		<link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+		<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+		<!-- Angular -->
+		<script src="node_modules/angular/angular.min.js"></script>
+
+		<!-- MacGyver 3rd party dependencies -->
+		<script src="node_modules/angular-sanitize/angular-sanitize.js"></script>
+		<script src="node_modules/ui-select/dist/select.js"></script>
+		<link href="node_modules/ui-select/dist/select.css" rel="stylesheet" type="text/css"/>
+		<script src="node_modules/filesize/lib/filesize.js"></script>
+		<script src="node_modules/tree-tools/dist/ngTreeTools.js"></script>
+
+		<!-- MacGyver -->
+		<script src="dist/macgyver.js"></script>
+		<link href="dist/macgyver.css" rel="stylesheet" type="text/css"/>
+
+		<!-- Demo files -->
+		<script src="app.js"></script>
+		<link href="app.css" rel="stylesheet" type="text/css"/>
+	</head>
+	<body ng-app="app">
+		<a href="https://github.com/MomsFriendlyDevCo/macgyver"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 10000" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+		<div ng-controller="macgyverExampleCtrl" class="container-fluid">
+
+			<div class="row">
+				<div class="col-md-6">
+					<div class="panel panel-primary">
+						<div class="panel-heading">
+							<h4 class="panel-title">Config</h4>
+						</div>
+						<div class="panel-body" style="height: 200px; overflow-y: scroll">
+							<pre>{{config | json}}</pre>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="panel panel-primary">
+						<div class="panel-heading">
+							<h4 class="panel-title">Data</h4>
+						</div>
+						<div class="panel-body" style="height: 200px; overflow-y: scroll">
+							<pre>{{data | json}}</pre>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-primary">
+						<div class="panel-heading">
+							<h4 class="panel-title">Example Form</h4>
+						</div>
+						<div class="panel-body">
+							<mg-form-editor config="config" data="data"></mg-form-editor>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
