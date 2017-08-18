@@ -144,7 +144,10 @@ angular
 		* $macgyver.inject($scope, $ctrl);
 		*/
 		$macgyver.inject = function($scope, $ctrl) {
-			$scope.$on('mg.get', (e, c) => c[$ctrl.config.id] = $ctrl);
+			$scope.$on('mg.get', (e, c) => {
+				if (!$ctrl.config) return;
+				c[$ctrl.config.id] = $ctrl;
+			});
 			$scope.$on('mg.getStack', function(e, c) {
 				c.push({
 					id: $ctrl.config.id,
