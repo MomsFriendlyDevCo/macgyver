@@ -1,5 +1,5 @@
 {
-  "name": "macgyver",
+  "name": "@momsfriendlydevco/macgyver",
   "version": "0.0.0",
   "description": "Dynamic form widgets for Angular",
   "main": "src/shared.js",
