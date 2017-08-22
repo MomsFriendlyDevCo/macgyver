@@ -74,7 +74,7 @@ angular
 					<tfoot class="hidden-print">
 						<tr>
 							<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center" width="30px">
-								<button type="submit" class="btn" ng-class="$ctrl.isAdding ? 'btn-success' : 'btn-disabled'">
+								<button type="submit" class="btn" ng-class="$ctrl.listNewItem.text ? 'btn-success' : 'btn-disabled'">
 									<i class="fa fa-plus"></i>
 								</button>
 							</td>

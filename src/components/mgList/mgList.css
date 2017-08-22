@@ -5,3 +5,15 @@ mg-list td {
 mg-list td input.form-control {
 	border: none;
 }
+
+mg-list td .btn {
+	height: 35px;
+}
+
+mg-list td .btn > i {
+	padding-top: 4px;
+}
+
+mg-list td:first-child.text-center {
+	vertical-align: middle;
+}
