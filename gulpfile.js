@@ -5,6 +5,7 @@ var concat = require('gulp-concat');
 var ghPages = require('gulp-gh-pages');
 var gulp = require('gulp');
 var nodemon = require('gulp-nodemon');
+var plumber = require('gulp-plumber');
 var preprocess = require('gulp-preprocess');
 var rename = require('gulp-rename');
 var rimraf = require('rimraf');
@@ -45,6 +46,13 @@ gulp.task('js', ()=>
 		'./src/macgyver.js',
 		'./src/components/**/*.js',
 	])
+		.pipe(plumber({
+			errorHandler: function(err) {
+				console.log('ERROR DURING JS BUILD');
+				process.stdout.write(err.stack);
+				this.emit('end');
+			},
+		}))
 		.pipe(concat('macgyver.js'))
 		.pipe(preprocess({
 			context: {
