@@ -1,5 +1,7 @@
 angular
 	.module('macgyver', [
+		'angular-bs-tooltip',
+		'dragularModule',
 		'ngSanitize',
 		'ngTreeTools',
 		'ui.select',

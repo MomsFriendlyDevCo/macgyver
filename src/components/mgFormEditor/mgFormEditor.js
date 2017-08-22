@@ -13,7 +13,7 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function($element, $macgyver, $scope, TreeTools) {
+		controller: function($element, $macgyver, $scope, $timeout, dragularService, TreeTools) {
 			var $ctrl = this;
 			$ctrl.$macgyver = $macgyver;
 
@@ -319,6 +319,48 @@ angular
 				$scope.$apply(() => {
 					$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: elem.attr('data-path')}, {childNode: 'items'});
 				});
+			});
+			// }}}
+
+			// Drag + Drop via Dragular {{{
+			// Dragular has to be re-init each time the items array changes as it attaches to jQuery hooks and not Angular
+			$scope.$watchCollection('$ctrl.config.items', ()=> $timeout(()=> {
+				if ($ctrl.drake) $ctrl.drake.remove();
+
+				try {
+					$ctrl.drake = dragularService('mg-container', {
+						classes: {
+							mirror: 'gu-mirror form-horizontal', // BS insists that the dragging mirror have the correct form helper
+						},
+						scope: $scope,
+						direction: 'vertical',
+						lockY: true,
+					});
+				} catch (e) {
+					// NOTE: Dragular complains about multiple event handlers being attached but we don't really care about that
+					// Disabled the following line (or remove the entire try-catch block) if you need to see the error
+					// console.error(e);
+				}
+			}));
+
+			// Handle the drop condition - splice the moved item back into the parent items array, removing the original
+			$scope.$on('dragulardrop', (e, el, targetContainer, sourceContainer, conModel, elIndex, targetModel, dropIndex) => {
+				var parents = TreeTools.parents($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				var parent = parents[parents.length-2];
+
+				parent.items = _(parent.items)
+					.map((i, idx, items) => {
+						if (idx == dropIndex) { // Is this the drop position?
+							return [items[elIndex], i];
+						} else if (idx == elIndex) { // Is this the source position?
+							return undefined;
+						} else { // Everything else gets passed though
+							return i;
+						}
+					})
+					.filter()
+					.flatten()
+					.value();
 			});
 			// }}}
 		},
