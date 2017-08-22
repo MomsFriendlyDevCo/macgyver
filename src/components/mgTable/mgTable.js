@@ -153,8 +153,8 @@ angular
 					</tr>
 					<tr ng-repeat="row in $ctrl.data">
 						<td ng-if="$ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers" class="text-center">
-							<div class="btn-group">
-								<a class="btn btn-ellipsis btn-ellipsis-sm dropdown-toggle" data-toggle="dropdown">{{$index + 1 | number}}</a>
+							<div class="btn-group btn-block">
+								<a class="btn btn-block btn-ellipsis btn-ellipsis-sm dropdown-toggle" data-toggle="dropdown">{{$index + 1 | number}}</a>
 								<ul class="dropdown-menu">
 									<li ng-if="$ctrl.allowDelete"><a ng-click="$ctrl.deleteRow($index)"><i class="fa fa-trash-o"></i> Delete</a></li>
 								</ul>
@@ -166,9 +166,9 @@ angular
 					</tr>
 					<tr class="mgTable-append" ng-if="$ctrl.allowAdd">
 						<td class="text-center">
-							<a ng-click="$ctrl.createRow()" class="btn" ng-class="$ctrl.isAdding ? 'btn-success' : 'btn-disabled'">
+							<button ng-click="$ctrl.createRow()" type="button" class="btn btn-block" ng-class="$ctrl.isAdding ? 'btn-success' : 'btn-disabled'">
 								<i class="fa fa-plus"></i>
-							</a>
+							</button>
 						</td>
 						<td ng-repeat="col in $ctrl.config.items track by col.id">
 							<mg-container config="{items: [col]}" data="$ctrl.newRow"></mg-container>

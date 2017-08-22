@@ -2,6 +2,10 @@ mg-table td {
 	padding: 0 !important;
 }
 
+mg-table td > .btn {
+	height: 35px;
+}
+
 mg-table td > mg-container > .form-group {
 	margin: 0 !important;
 }
