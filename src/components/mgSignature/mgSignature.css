@@ -20,7 +20,7 @@ mg-signature .form-control-static::after {
 mg-signature .btn.btn-fab {
 	position: absolute;
 	left: 0;
-	bottom: 10;
+	bottom: 10px;
 }
 
 mg-signature .btn.btn-fab > i.fa {

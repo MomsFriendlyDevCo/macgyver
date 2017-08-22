@@ -87,7 +87,7 @@ angular
 		template: `
 			<div ng-if="$ctrl.files && $ctrl.files.length" class="visible-parent-hover-target">
 				<img ng-src="{{$ctrl.files[0].url}}" class="img-responsive"/>
-				<a ng-click="$ctrl.delete()" class="btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover" tooltip="Delete the signature"><i class="fa fa-fw fa-trash"></i></a>
+				<a ng-click="$ctrl.delete()" class="btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover" tooltip="Delete the signature" tooltip-tether="true"><i class="fa fa-fw fa-trash"></i></a>
 			</div>
 			<div ng-if="!$ctrl.files || !$ctrl.files.length">
 				<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">
