@@ -2,6 +2,8 @@
 * MacGyver form editor
 * Meta component to edit a form
 * @param {Object} [$macgyver.settings.mgFormEditor.maskPosition] Optional object containing left, top, width, height relative positions (e.g. left=1 will use the position + 1px)
+* @param {Object} [$macgyver.settings.mgFormEditor.menuPosition] Optional object containing left, top (e.g. left=1 will use the position + 1px)
+* @param {Object} [$macgyver.settings.mgFormEditor.maskVerbs] Optional collection of buttons to display when hovering over a component (see the 'Defaults' section in the code for the default contents)
 */
 angular
 	.module('macgyver')
@@ -320,6 +322,58 @@ angular
 					$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: elem.attr('data-path')}, {childNode: 'items'});
 				});
 			});
+			// }}}
+
+			// Mask verbs (i.e. buttons that appear on hover) {{{
+			/**
+			* Execute a verb action
+			* The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
+			* or a string
+			* @param {Object} verb The verb to execute
+			*/
+			$ctrl.verbAction = verb => {
+				if (angular.isFunction(verb.action)) {
+					verb.action($ctrl.selectedWidget, verb);
+				} else if (angular.isString(verb.action)) {
+					switch (verb.action) {
+						case 'toggleTitle':
+							$ctrl.widgetToggle('showTitle', true);
+							break;
+						case 'delete':
+							$ctrl.widgetDelete();
+							break;
+					}
+				}
+			};
+
+			/**
+			* Return the evaulated property of a mask verb
+			* If the verbs property is a function it is invoked with ({$ctrl.selectedWidget, verb})
+			* If its a string it is used as is
+			* @param {Object} verb The verb to examine
+			* @param {string} prop The property to evaluate and return
+			* @returns {*} The evaluated return value
+			*/
+			$ctrl.verbProperty = (verb, prop) => {
+				if (!$ctrl.selectedWidget) return;
+
+				if (angular.isFunction(verb[prop])) {
+					return verb[prop]($ctrl.selectedWidget);
+				} else {
+					return verb[prop];
+				}
+			};
+			// }}}
+
+			// Init + Set Defaults {{{
+			$ctrl.$onInit = ()=> {
+				_.defaults($macgyver.settings.mgFormEditor, {
+					maskVerbs: [
+						{action: 'toggleTitle', class: 'btn btn-default btn-sm', icon: 'fa fa-fw fa-arrows-h', tooltip: 'Toggle the title visibility of this element'},
+						{action: 'delete', class: 'btn btn-danger btn-sm', icon: 'fa fa-fw fa-trash', tooltip: 'Delete this widget'},
+					],
+				});
+			};
 			// }}}
 		},
 	})
