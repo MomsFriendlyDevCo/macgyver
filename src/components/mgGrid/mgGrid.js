@@ -30,8 +30,9 @@ angular
 
 			$ctrl.$onInit = ()=> {
 				// Populate rows + cols when we boot
-				$ctrl.config.rows = $ctrl.config.items.length;
-				$ctrl.config.cols = Math.max(...$ctrl.config.items.map(i => i.items.length));
+				if (!$ctrl.config.items) $ctrl.config.items = [];
+				if (!$ctrl.config.rows) $ctrl.config.rows = $ctrl.config.items.length;
+				if (!$ctrl.config.cols) $ctrl.config.cols = Math.max(...$ctrl.config.items.map(i => i.items.length));
 			};
 
 			$scope.$watchGroup(['$ctrl.config.rows', '$ctrl.config.cols'], ()=> {
