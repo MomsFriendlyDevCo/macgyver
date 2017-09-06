@@ -72,7 +72,8 @@ angular
 			<table class="table table-striped table-bordered">
 				<tr ng-repeat="row in $ctrl.config.items">
 					<td ng-repeat="w in row.items" ng-switch="w.type">
-						` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+						<mg-container ng-if="w.type=='mgContainer'" data="$ctrl.data[w.id]" config="w"></mg-container>
+						<div ng-if="w.type!='mgContainer'" class="alert alert-danger">Child cell elements within a mgGrid must always be an mgContainer</div>
 					</td>
 				</tr>
 			</table>
