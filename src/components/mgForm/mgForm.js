@@ -1,6 +1,7 @@
 /**
 * MacGyver form
 * This should be the topmost item within a MacGyver form. It loads the actual form display and the data associated with it
+* @emits mgValidate Indicates that all child items should return their validation state
 */
 angular
 	.module('macgyver')
@@ -65,7 +66,7 @@ angular
 			});
 
 			$scope.$watch('$ctrl.config', ()=> {
-				if (!$ctrl.config) return; // Form not loaded yet
+				if (!$ctrl.config || _.isEmpty($ctrl.config)) return; // Form not loaded yet
 				// Force showTitle to be false on the root element if its not already set
 				if (_.isUndefined($ctrl.config.showTitle)) $ctrl.config.showTitle = false;
 			});

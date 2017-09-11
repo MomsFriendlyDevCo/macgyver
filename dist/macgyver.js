@@ -291,6 +291,78 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
+* @param {string} [config.enum[].icon] Optional icon to display for each item
+* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {string} [config.itemIconDefault='fa fa-fw'] Default item to use per item (unless an override is present in the item object)
+* @param {string} [config.itemIconSelected='fa fa-check fa-lg'] Icon to use when item is selected
+* @param {string} [config.itemClassDefault='btn-default'] Default item class to use per item (unless an override is present in the item object)
+* @param {string} [config.itemClassSelected='btn-primary'] Item class to use when item is selected
+* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
+* @param {string} [config.classItem='btn'] The class definition of each item (as well as each items id
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgChoiceButtons', {
+		title: 'Button multiple-choice',
+		icon: 'fa fa-check-square',
+		category: 'Choice Selectors',
+		config: {
+			enum: {
+				type: 'mgList',
+				title: 'The list of items to display',
+				default: ['Foo', 'Bar', 'Baz']
+			},
+			classWrapper: { type: 'mgText', default: 'btn-group', title: 'Group CSS class' },
+			classItem: { type: 'mgText', default: 'btn', title: 'Item CSS class' },
+			itemIconDefault: { type: 'mgText' },
+			itemIconSelected: { type: 'mgText' },
+			itemClassDefault: { type: 'mgText', default: 'btn-default' },
+			itemClassSelected: { type: 'mgText', default: 'btn-primary' }
+		}
+	});
+}]).component('mgChoiceButtons', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+		$ctrl.enumIter = []; // Cleaned up version of enum
+		$scope.$watch('$ctrl.config.enum', function () {
+			if (!$ctrl.config.enum) return; // No data yet
+			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
+				// Array of strings
+				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
+					return {
+						id: _.camelCase(i),
+						title: i
+					};
+				});
+			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
+				// Collection
+				$ctrl.enumIter = $ctrl.config.enum;
+			}
+		});
+		// }}}
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<div ng-class="$ctrl.config.classWrapper || \'btn-group\'">\n\t\t\t\t<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || \'btn\',\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassSelected || \'btn-primary\'\n\t\t\t\t\t: item.class || $ctrl.config.itemClassDefault || \'btn-default\'\n\t\t\t\t]" ng-click="$ctrl.data = item.id">\n\t\t\t\t\t<i ng-class="$ctrl.data == item.id ? (item.iconSelected || $ctrl.config.iconSelected) : (item.icon || $ctrl.config.iconDefault)"></i>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
+});
+
+/**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
 * @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automatically
@@ -374,78 +446,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 * @param {Object} config The config specification
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
 * @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {string} [config.itemIconDefault='fa fa-fw'] Default item to use per item (unless an override is present in the item object)
-* @param {string} [config.itemIconSelected='fa fa-check fa-lg'] Icon to use when item is selected
-* @param {string} [config.itemClassDefault='btn-default'] Default item class to use per item (unless an override is present in the item object)
-* @param {string} [config.itemClassSelected='btn-primary'] Item class to use when item is selected
-* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
-* @param {string} [config.classItem='btn'] The class definition of each item (as well as each items id
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgChoiceButtons', {
-		title: 'Button multiple-choice',
-		icon: 'fa fa-check-square',
-		category: 'Choice Selectors',
-		config: {
-			enum: {
-				type: 'mgList',
-				title: 'The list of items to display',
-				default: ['Foo', 'Bar', 'Baz']
-			},
-			classWrapper: { type: 'mgText', default: 'btn-group', title: 'Group CSS class' },
-			classItem: { type: 'mgText', default: 'btn', title: 'Item CSS class' },
-			itemIconDefault: { type: 'mgText' },
-			itemIconSelected: { type: 'mgText' },
-			itemClassDefault: { type: 'mgText', default: 'btn-default' },
-			itemClassSelected: { type: 'mgText', default: 'btn-primary' }
-		}
-	});
-}]).component('mgChoiceButtons', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watch('$ctrl.config.enum', function () {
-			if (!$ctrl.config.enum) return; // No data yet
-			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
-				// Array of strings
-				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
-					return {
-						id: _.camelCase(i),
-						title: i
-					};
-				});
-			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
-				// Collection
-				$ctrl.enumIter = $ctrl.config.enum;
-			}
-		});
-		// }}}
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<div ng-class="$ctrl.config.classWrapper || \'btn-group\'">\n\t\t\t\t<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || \'btn\',\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassSelected || \'btn-primary\'\n\t\t\t\t\t: item.class || $ctrl.config.itemClassDefault || \'btn-default\'\n\t\t\t\t]" ng-click="$ctrl.data = item.id">\n\t\t\t\t\t<i ng-class="$ctrl.data == item.id ? (item.iconSelected || $ctrl.config.iconSelected) : (item.icon || $ctrl.config.iconDefault)"></i>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
-});
-
-/**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
 * @param {string} [config.enum[].icon] Optional icon to display for each item
 * @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
 * @param {string} [config.enum[].title] Optional title to display within each element
@@ -519,7 +519,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		icon: 'fa fa-dropbox',
 		category: 'Layout',
 		isContainer: true,
-		template: '<mg-container config="w" data="w.ignoreScope ? $ctrl.data : $ctrl.data[w.id]"></mg-container>', // Special template for containers to bypass scoping if ignoreScope is true
+		template: '<mg-container config="w" data="w.ignoreScope ? $ctrl.data : $ctrl.data[w.id]"></mg-container>', // Overriding template for containers to bypass scoping if ignoreScope is true
 		config: {
 			// items: undefined, // Intentionally hidden - mgFormEditor provides functionality to edit this
 			ignoreScope: { type: 'mgToggle', default: false, title: 'Ignore Scope', help: 'Flatten the data scope with the parent level - i.e. dont nest any child element inside an object when saving data' }
@@ -590,45 +590,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<input ng-model="$ctrl.data" type="date" class="form-control"/>\n\t\t'
-});
-
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text when the textbox is empty
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgEmail', {
-		title: 'Email address',
-		icon: 'fa fa-envelope-o',
-		category: 'Simple Inputs',
-		config: {
-			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgEmail', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
 });
 
 /**
@@ -838,12 +799,142 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text when the textbox is empty
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgEmail', {
+		title: 'Email address',
+		icon: 'fa fa-envelope-o',
+		category: 'Simple Inputs',
+		config: {
+			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
+			required: { type: 'mgToggle', default: false }
+		}
+	});
+}]).component('mgEmail', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
+});
+
+/**
+* MacGyver form
+* This should be the topmost item within a MacGyver form. It loads the actual form display and the data associated with it
+* @emits mgValidate Indicates that all child items should return their validation state
+*/
+angular.module('macgyver').component('mgForm', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$q', '$scope', function controller($macgyver, $q, $scope) {
+		var $ctrl = this;
+		$ctrl.errors;
+
+		// MacGyver integration {{{
+		$scope.$on('mg.getForm', function (e, f) {
+			f.$ctrl = $ctrl;
+			f.$scope = $scope;
+		});
+		// }}}
+
+		/**
+  * Broadcasts 'mgValidate' to all child controls and collections responses
+  * Each child control can respond by decorating the 'response' object with its
+  * The resolution of this promise will be a collection where each element will be of the form {id: <component ID>, err: <string>}
+  * @return {Promise} A promise which will resolve if everything validates, a collection of errors if not
+  */
+		$ctrl.validate = function () {
+			return $q(function (resolve, reject) {
+				$q.all( // Compose into promises then wait for them to resolve
+				_($macgyver.getAll($scope)) // Get all MacGyver components
+				.pickBy(function (c, k) {
+					return _.isFunction(c.validate);
+				}) // Filter by components with a validate method
+				.mapValues(function (c, k) {
+					return c.validate();
+				}).value()).then(function (res) {
+					var errs = _.reduce(res, function (errs, err, id) {
+						// Convert compound errors into a simple collection
+						if (!err) {// Undefined - assume all ok
+							// Do nothing
+						} else if (_.isArray(err)) {
+							// Multiple errors
+							err.filter(function (e) {
+								return !!e;
+							}) // Remove all falsy elements
+							.forEach(function (e) {
+								return errs.push({ id: id, err: e });
+							});
+						} else if (_.isString(err)) {
+							// Single error
+							errs.push({ id: id, err: err });
+						} else if (v === false) {
+							// Generic error
+							errs.push({ id: id, err: 'is not valid' });
+						}
+
+						return errs;
+					}, []);
+
+					// Populate the 'mgValidation' variable
+					_.forEach($macgyver.getAll($scope), function (component, id) {
+						return component.config.mgValidation = errs.some(function (e) {
+							return e.id == id;
+						}) ? 'error' : 'success';
+					});
+
+					if (_.isEmpty(errs)) {
+						$ctrl.errors = undefined;
+						resolve();
+					} else {
+						$ctrl.errors = errs;
+						reject(errs);
+					}
+				}).catch(function (e) {
+					return reject(e);
+				});
+			});
+		};
+
+		$scope.$watch('$ctrl.config', function () {
+			if (!$ctrl.config || _.isEmpty($ctrl.config)) return; // Form not loaded yet
+			// Force showTitle to be false on the root element if its not already set
+			if (_.isUndefined($ctrl.config.showTitle)) $ctrl.config.showTitle = false;
+		});
+	}],
+	template: '\n\t\t\t<form submit="$ctrl.submit" class="form-horizontal">\n\t\t\t\t<div ng-show="$ctrl.errors" class="alert alert-warning animate fadeInDown">\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li ng-repeat="err in $ctrl.errors">{{err.err}}</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\n\t\t\t\t<mg-container config="$ctrl.config" data="$ctrl.data"></mg-container>\n\t\t\t</form>\n\t\t'
+});
+
+/**
 * MacGyver form editor
 * Meta component to edit a form
 * @param {Object} [$macgyver.settings.mgFormEditor.maskPosition] Optional object containing left, top, width, height relative positions (e.g. left=1 will use the position + 1px)
+* @param {Object} [$macgyver.settings.mgFormEditor.menuPosition] Optional object containing left, top (e.g. left=1 will use the position + 1px)
+* @param {Object} [$macgyver.settings.mgFormEditor.maskVerbs] Optional collection of buttons to display when hovering over a component (see the 'Defaults' section in the code for the default contents)
 */
 angular.module('macgyver').component('mgFormEditor', {
-	template: '\n\t\t\t<!-- Widget Add modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-add" class="modal fade">\n\t\t\t\t<div class="modal-dialog" style="width: 50%">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Add Widget</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t\t<div class="col-md-3">\n\t\t\t\t\t\t\t\t\t<ul class="nav nav-pills nav-stacked">\n\t\t\t\t\t\t\t\t\t\t<li ng-repeat="cat in $ctrl.categories" ng-class="cat == $ctrl.category && \'active\'" ng-click="$ctrl.category = cat">\n\t\t\t\t\t\t\t\t\t\t\t<a>{{cat}}</a>\n\t\t\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="col-md-9">\n\t\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetAddSubmit({type: widget.id})" ng-repeat="widget in $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable:true, category: $ctrl.category} track by widget.id" class="col-md-4 pad-top-sm">\n\t\t\t\t\t\t\t\t\t\t<div class="btn btn-default btn-xlg btn-block text-center">\n\t\t\t\t\t\t\t\t\t\t\t<div><i ng-class="widget.icon" class="fa-4x"></i></div>\n\t\t\t\t\t\t\t\t\t\t\t<div class="pad-top-sm">{{widget.title}}</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget Edit modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-edit" class="modal fade">\n\t\t\t\t<div class="modal-dialog">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Edit Widget {{$ctrl.widgetName}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body form-horizontal">\n\t\t\t\t\t\t\t<mg-form config="$ctrl.selectedWidgetForm" data="$ctrl.selectedWidgetData"></mg-form>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<div class="pull-left">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetDelete()" type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-trash"></i> Delete</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class="pull-right">\n\t\t\t\t\t\t\t\t<a type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i> Save &amp; Close</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Form editing hover mask {{{ -->\n\t\t\t<div class="mgFormEditor-mask-background">\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'above\')" class="mgFormEditor-mask-add-above"><i class="fa fa-2x fa-arrow-up"></i></a>\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'below\')" class="mgFormEditor-mask-add-below"><i class="fa fa-2x fa-arrow-down"></i></a>\n\t\t\t</div>\n\t\t\t<div class="mgFormEditor-mask-verbs">\n\t\t\t\t<div class="pull-right">\n\t\t\t\t\t<a ng-show="$ctrl.$macgyver.widgets[$ctrl.selectedWidget.type].isContainer" ng-click="$ctrl.widgetAdd(\'inside\'); $event.stopPropagation()" class="btn btn-success btn-sm" tooltip="Insert new widget inside this container" tooltip-container="body"><i class="fa fa-fw fa-indent"></i></a>\n\t\t\t\t\t<a ng-click="$ctrl.widgetToggle(\'showTitle\', true)" class="btn btn-default btn-sm" tooltip="Toggle the title visibility of this element" tooltip-container="body"><i class="fa fa-fw fa-arrows-h"></i></a>\n\t\t\t\t\t<a ng-click="$ctrl.widgetDelete(); $event.stopPropagation()" class="btn btn-danger btn-sm" tooltip="Delete this widget" tooltip-container="body"><i class="fa fa-fw fa-trash"></i></a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget context menu {{{ -->\n\t\t\t<ul id="mgFormEditor-dropdown-widget" class="dropdown-menu">\n\t\t\t\t<li><a ng-click="$ctrl.widgetEdit()"><i class="fa fa-fw fa-pencil"></i> Edit</a></li>\n\t\t\t\t<li class="dropdown-submenu">\n\t\t\t\t\t<a tabindex="-1"><i class="fa fa-fw fa-plus"></i> Add widget...</a>\n\t\t\t\t\t<ul class="dropdown-menu">\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'above\')"><i class="fa fa-fw fa-arrow-up"></i> Above</a></li>\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'below\')"><i class="fa fa-fw fa-arrow-down"></i> Below</a></li>\n\t\t\t\t\t</ul>\n\t\t\t\t</li>\n\t\t\t\t<li class="divider"></li>\n\t\t\t\t<li><a ng-click="$ctrl.widgetDelete()"><i class="fa fa-fw fa-trash"></i> Delete</a></li>\n\t\t\t</ul>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<mg-form config="$ctrl.config" data="$ctrl.data"></mg-form>\n\t\t\t\n\t\t',
+	template: '\n\t\t\t<!-- Widget Add modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-add" class="modal fade">\n\t\t\t\t<div class="modal-dialog" style="width: 50%">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Add Widget</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t\t<div class="col-md-3">\n\t\t\t\t\t\t\t\t\t<ul class="nav nav-pills nav-stacked">\n\t\t\t\t\t\t\t\t\t\t<li ng-repeat="cat in $ctrl.categories" ng-class="cat == $ctrl.category && \'active\'" ng-click="$ctrl.category = cat">\n\t\t\t\t\t\t\t\t\t\t\t<a>{{cat}}</a>\n\t\t\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="col-md-9">\n\t\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetAddSubmit({type: widget.id})" ng-repeat="widget in $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable:true, category: $ctrl.category} track by widget.id" class="col-md-4 pad-top-sm">\n\t\t\t\t\t\t\t\t\t\t<div class="btn btn-default btn-xlg btn-block text-center">\n\t\t\t\t\t\t\t\t\t\t\t<div><i ng-class="widget.icon" class="fa-4x"></i></div>\n\t\t\t\t\t\t\t\t\t\t\t<div class="pad-top-sm">{{widget.title}}</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget Edit modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-edit" class="modal fade">\n\t\t\t\t<div class="modal-dialog">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Edit Widget {{$ctrl.widgetName}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body form-horizontal">\n\t\t\t\t\t\t\t<mg-form config="$ctrl.selectedWidgetForm" data="$ctrl.selectedWidgetData"></mg-form>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<div class="pull-left">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetDelete()" type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-trash"></i> Delete</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class="pull-right">\n\t\t\t\t\t\t\t\t<a type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i> Save &amp; Close</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Form editing hover mask {{{ -->\n\t\t\t<div class="mgFormEditor-mask-background">\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'above\')" class="mgFormEditor-mask-add-above"><i class="fa fa-2x fa-arrow-up"></i></a>\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'below\')" class="mgFormEditor-mask-add-below"><i class="fa fa-2x fa-arrow-down"></i></a>\n\t\t\t</div>\n\t\t\t<div class="mgFormEditor-mask-verbs">\n\t\t\t\t<div class="pull-right">\n\t\t\t\t\t<a ng-show="$ctrl.$macgyver.widgets[$ctrl.selectedWidget.type].isContainer" ng-click="$ctrl.widgetAdd(\'inside\'); $event.stopPropagation()" class="btn btn-success btn-sm" tooltip="Insert new widget inside this container" tooltip-container="body"><i class="fa fa-fw fa-indent"></i></a>\n\t\t\t\t\t<a\n\t\t\t\t\t\tng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.maskVerbs"\n\t\t\t\t\t\tng-click="$ctrl.verbAction(verb); $event.stopPropagation()"\n\t\t\t\t\t\tng-class="$ctrl.verbProperty(verb, \'class\')"\n\t\t\t\t\t\ttooltip="{{verb.tooltip}}"\n\t\t\t\t\t\ttooltip-container="body">\n\t\t\t\t\t\t\t<i ng-class="$ctrl.verbProperty(verb, \'icon\')"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget context menu {{{ -->\n\t\t\t<ul id="mgFormEditor-dropdown-widget" class="dropdown-menu">\n\t\t\t\t<li><a ng-click="$ctrl.widgetEdit()"><i class="fa fa-fw fa-pencil"></i> Edit</a></li>\n\t\t\t\t<li class="dropdown-submenu">\n\t\t\t\t\t<a tabindex="-1"><i class="fa fa-fw fa-plus"></i> Add widget...</a>\n\t\t\t\t\t<ul class="dropdown-menu">\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'above\')"><i class="fa fa-fw fa-arrow-up"></i> Above</a></li>\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'below\')"><i class="fa fa-fw fa-arrow-down"></i> Below</a></li>\n\t\t\t\t\t</ul>\n\t\t\t\t</li>\n\t\t\t\t<li class="divider"></li>\n\t\t\t\t<li><a ng-click="$ctrl.widgetDelete()"><i class="fa fa-fw fa-trash"></i> Delete</a></li>\n\t\t\t</ul>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<mg-form config="$ctrl.config" data="$ctrl.data"></mg-form>\n\t\t\t\n\t\t',
 	bindings: {
 		config: '<',
 		data: '='
@@ -1162,95 +1253,56 @@ angular.module('macgyver').component('mgFormEditor', {
 			});
 		});
 		// }}}
-	}]
-});
 
-/**
-* MacGyver form
-* This should be the topmost item within a MacGyver form. It loads the actual form display and the data associated with it
-*/
-angular.module('macgyver').component('mgForm', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$q', '$scope', function controller($macgyver, $q, $scope) {
-		var $ctrl = this;
-		$ctrl.errors;
-
-		// MacGyver integration {{{
-		$scope.$on('mg.getForm', function (e, f) {
-			f.$ctrl = $ctrl;
-			f.$scope = $scope;
-		});
-		// }}}
-
+		// Mask verbs (i.e. buttons that appear on hover) {{{
 		/**
-  * Broadcasts 'mgValidate' to all child controls and collections responses
-  * Each child control can respond by decorating the 'response' object with its
-  * The resolution of this promise will be a collection where each element will be of the form {id: <component ID>, err: <string>}
-  * @return {Promise} A promise which will resolve if everything validates, a collection of errors if not
+  * Execute a verb action
+  * The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
+  * or a string
+  * @param {Object} verb The verb to execute
   */
-		$ctrl.validate = function () {
-			return $q(function (resolve, reject) {
-				$q.all( // Compose into promises then wait for them to resolve
-				_($macgyver.getAll($scope)) // Get all MacGyver components
-				.pickBy(function (c, k) {
-					return _.isFunction(c.validate);
-				}) // Filter by components with a validate method
-				.mapValues(function (c, k) {
-					return c.validate();
-				}).value()).then(function (res) {
-					var errs = _.reduce(res, function (errs, err, id) {
-						// Convert compound errors into a simple collection
-						if (!err) {// Undefined - assume all ok
-							// Do nothing
-						} else if (_.isArray(err)) {
-							// Multiple errors
-							err.filter(function (e) {
-								return !!e;
-							}) // Remove all falsy elements
-							.forEach(function (e) {
-								return errs.push({ id: id, err: e });
-							});
-						} else if (_.isString(err)) {
-							// Single error
-							errs.push({ id: id, err: err });
-						} else if (v === false) {
-							// Generic error
-							errs.push({ id: id, err: 'is not valid' });
-						}
-
-						return errs;
-					}, []);
-
-					// Populate the 'mgValidation' variable
-					_.forEach($macgyver.getAll($scope), function (component, id) {
-						return component.config.mgValidation = errs.some(function (e) {
-							return e.id == id;
-						}) ? 'error' : 'success';
-					});
-
-					if (_.isEmpty(errs)) {
-						$ctrl.errors = undefined;
-						resolve();
-					} else {
-						$ctrl.errors = errs;
-						reject(errs);
-					}
-				}).catch(function (e) {
-					return reject(e);
-				});
-			});
+		$ctrl.verbAction = function (verb) {
+			if (angular.isFunction(verb.action)) {
+				verb.action($ctrl.selectedWidget, verb);
+			} else if (angular.isString(verb.action)) {
+				switch (verb.action) {
+					case 'toggleTitle':
+						$ctrl.widgetToggle('showTitle', true);
+						break;
+					case 'delete':
+						$ctrl.widgetDelete();
+						break;
+				}
+			}
 		};
 
-		$scope.$watch('$ctrl.config', function () {
-			if (!$ctrl.config) return; // Form not loaded yet
-			// Force showTitle to be false on the root element if its not already set
-			if (_.isUndefined($ctrl.config.showTitle)) $ctrl.config.showTitle = false;
-		});
-	}],
-	template: '\n\t\t\t<form submit="$ctrl.submit" class="form-horizontal">\n\t\t\t\t<div ng-show="$ctrl.errors" class="alert alert-warning animate fadeInDown">\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li ng-repeat="err in $ctrl.errors">{{err.err}}</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\n\t\t\t\t<mg-container config="$ctrl.config" data="$ctrl.data"></mg-container>\n\t\t\t</form>\n\t\t'
+		/**
+  * Return the evaulated property of a mask verb
+  * If the verbs property is a function it is invoked with ({$ctrl.selectedWidget, verb})
+  * If its a string it is used as is
+  * @param {Object} verb The verb to examine
+  * @param {string} prop The property to evaluate and return
+  * @returns {*} The evaluated return value
+  */
+		$ctrl.verbProperty = function (verb, prop) {
+			if (!$ctrl.selectedWidget) return;
+
+			if (angular.isFunction(verb[prop])) {
+				return verb[prop]($ctrl.selectedWidget);
+			} else {
+				return verb[prop];
+			}
+		};
+		// }}}
+
+		// Init + Set Defaults {{{
+		$ctrl.$onInit = function () {
+			_.defaults($macgyver.settings.mgFormEditor, {
+				maskVerbs: [{ action: 'toggleTitle', class: 'btn btn-default btn-sm', icon: 'fa fa-fw fa-arrows-h', tooltip: 'Toggle the title visibility of this element' }, { action: 'delete', class: 'btn btn-danger btn-sm', icon: 'fa fa-fw fa-trash', tooltip: 'Delete this widget' }]
+			});
+		};
+		// }}}
+	}]
 });
 
 /**
@@ -1284,8 +1336,9 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 
 		$ctrl.$onInit = function () {
 			// Populate rows + cols when we boot
-			$ctrl.config.rows = $ctrl.config.items.length;
-			$ctrl.config.cols = Math.max.apply(Math, _toConsumableArray($ctrl.config.items.map(function (i) {
+			if (!$ctrl.config.items) $ctrl.config.items = [];
+			if (!$ctrl.config.rows) $ctrl.config.rows = $ctrl.config.items.length;
+			if (!$ctrl.config.cols) $ctrl.config.cols = Math.max.apply(Math, _toConsumableArray($ctrl.config.items.map(function (i) {
 				return i.items.length;
 			})));
 		};
@@ -1330,9 +1383,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		});
 	}],
 	template: ['$macgyver', function template($macgyver) {
-		return '\n\t\t\t<table class="table table-striped table-bordered">\n\t\t\t\t<tr ng-repeat="row in $ctrl.config.items">\n\t\t\t\t\t<td ng-repeat="w in row.items" ng-switch="w.type">\n\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
-			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
-		}).join('\n') + '\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t';
+		return '\n\t\t\t<table class="table table-striped table-bordered">\n\t\t\t\t<tr ng-repeat="row in $ctrl.config.items">\n\t\t\t\t\t<td ng-repeat="w in row.items" ng-switch="w.type">\n\t\t\t\t\t\t<mg-container ng-if="w.type==\'mgContainer\'" data="$ctrl.data[w.id]" config="w"></mg-container>\n\t\t\t\t\t\t<div ng-if="w.type!=\'mgContainer\'" class="alert alert-danger">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t';
 	}]
 });
 

@@ -62,8 +62,14 @@
 <div class="mgFormEditor-mask-verbs">
 	<div class="pull-right">
 		<a ng-show="$ctrl.$macgyver.widgets[$ctrl.selectedWidget.type].isContainer" ng-click="$ctrl.widgetAdd('inside'); $event.stopPropagation()" class="btn btn-success btn-sm" tooltip="Insert new widget inside this container" tooltip-container="body"><i class="fa fa-fw fa-indent"></i></a>
-		<a ng-click="$ctrl.widgetToggle('showTitle', true)" class="btn btn-default btn-sm" tooltip="Toggle the title visibility of this element" tooltip-container="body"><i class="fa fa-fw fa-arrows-h"></i></a>
-		<a ng-click="$ctrl.widgetDelete(); $event.stopPropagation()" class="btn btn-danger btn-sm" tooltip="Delete this widget" tooltip-container="body"><i class="fa fa-fw fa-trash"></i></a>
+		<a
+			ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.maskVerbs"
+			ng-click="$ctrl.verbAction(verb); $event.stopPropagation()"
+			ng-class="$ctrl.verbProperty(verb, 'class')"
+			tooltip="{{verb.tooltip}}"
+			tooltip-container="body">
+				<i ng-class="$ctrl.verbProperty(verb, 'icon')"></i>
+		</a>
 	</div>
 </div>
 <!-- }}} -->

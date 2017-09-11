@@ -4,6 +4,7 @@ var cleanCSS = require('gulp-clean-css');
 var concat = require('gulp-concat');
 var ghPages = require('gulp-gh-pages');
 var gulp = require('gulp');
+var gutil = require('gulp-util');
 var nodemon = require('gulp-nodemon');
 var plumber = require('gulp-plumber');
 var preprocess = require('gulp-preprocess');
@@ -48,7 +49,7 @@ gulp.task('js', ()=>
 	])
 		.pipe(plumber({
 			errorHandler: function(err) {
-				console.log('ERROR DURING JS BUILD');
+				gutil.log(gutil.colors.red('ERROR DURING JS BUILD'));
 				process.stdout.write(err.stack);
 				this.emit('end');
 			},
