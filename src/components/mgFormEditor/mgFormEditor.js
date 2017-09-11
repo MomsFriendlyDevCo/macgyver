@@ -366,7 +366,6 @@ angular
 			});
 			// }}}
 
-
 			// Mask verbs (i.e. buttons that appear on hover) {{{
 			/**
 			* Execute a verb action
