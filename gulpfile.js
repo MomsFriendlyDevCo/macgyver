@@ -87,6 +87,7 @@ gulp.task('gh-pages', ['build'], function() {
 		'./LICENSE',
 		'./demo/_config.yml',
 		'./demo/app.js',
+		'./demo/app.css',
 		'./demo/editor.html',
 		'./demo/index.html',
 		'./demo/style.css',
@@ -109,6 +110,7 @@ gulp.task('gh-pages', ['build'], function() {
 		'./node_modules/jquery/dist/jquery.min.js',
 		'./node_modules/lodash/lodash.min.js',
 		'./node_modules/signature_pad/dist/signature_pad.min.js',
+		'./node_modules/tree-tools/dist/ngTreeTools.js',
 		'./node_modules/ui-select/dist/select.css',
 		'./node_modules/ui-select/dist/select.js',
 	], {base: __dirname})
