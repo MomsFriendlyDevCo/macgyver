@@ -2010,47 +2010,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
-* MacGyver time input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {Date} [config.lengthMin] The minimum allowable time
-* @param {Date} [config.lengthMax] The maximum allowable time
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgTime', {
-		title: 'Time selection',
-		icon: 'fa fa-clock-o',
-		category: 'Simple Inputs',
-		config: {
-			min: { type: 'mgTime', title: 'Earliest time' },
-			max: { type: 'mgNumber', title: 'Latest time' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgTime', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && $ctrl.config.title + ' is too early (earliest time is ' + $ctrl.config.min + ')', $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && $ctrl.config.title + ' is too late (latest time is ' + $ctrl.config.max + ')'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<input ng-model="$ctrl.data" type="time" class="form-control"/>\n\t\t'
-});
-
-/**
 * MacGyver free text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -2093,6 +2052,47 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<textarea ng-model="$ctrl.data" class="form-control" placeholder="{{$ctrl.config.placeholder}}" minlength="{{$ctrl.config.lengthMin}}" maxlength="{{$ctrl.config.lengthMin}}" rows="{{$ctrl.config.rows || 3}}"/>\n\t\t'
+});
+
+/**
+* MacGyver time input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {Date} [config.lengthMin] The minimum allowable time
+* @param {Date} [config.lengthMax] The maximum allowable time
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgTime', {
+		title: 'Time selection',
+		icon: 'fa fa-clock-o',
+		category: 'Simple Inputs',
+		config: {
+			min: { type: 'mgTime', title: 'Earliest time' },
+			max: { type: 'mgNumber', title: 'Latest time' },
+			required: { type: 'mgToggle', default: false }
+		}
+	});
+}]).component('mgTime', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && $ctrl.config.title + ' is too early (earliest time is ' + $ctrl.config.min + ')', $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && $ctrl.config.title + ' is too late (latest time is ' + $ctrl.config.max + ')'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<input ng-model="$ctrl.data" type="time" class="form-control"/>\n\t\t'
 });
 
 /**
