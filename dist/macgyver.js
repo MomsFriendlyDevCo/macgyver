@@ -2,7 +2,7 @@
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-angular.module('macgyver', ['ngSanitize', 'ngTreeTools', 'ui.select']).provider('$macgyver', function () {
+angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 'ui.select']).provider('$macgyver', function () {
 	var $macgyver = this;
 	$macgyver.widgets = {};
 
@@ -593,6 +593,45 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text when the textbox is empty
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgEmail', {
+		title: 'Email address',
+		icon: 'fa fa-envelope-o',
+		category: 'Simple Inputs',
+		config: {
+			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
+			required: { type: 'mgToggle', default: false }
+		}
+	});
+}]).component('mgEmail', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
+});
+
+/**
 * MacGyver file list display
 * This is an optional component inside mgFileList - if you just want a simple uploader you should see that component instead
 * @param {Object} config The config specification
@@ -796,45 +835,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<a ng-click="$ctrl.click()" class="btn btn-primary hidden-print" style="margin-bottom:10px">\n\t\t\t\t<i ng-class="$ctrl.icon || \'fa fa-file\'"></i>\n\t\t\t\t{{$ctrl.selectedFile || $ctrl.placeholder || \'Upload file...\'}}\n\t\t\t</a>\n\t\t\t<div ng-if="$ctrl.config.showList === undefined || $ctrl.config.showList">\n\t\t\t\t<mg-file-list config="$ctrl.listConfig" data="$ctrl.data"></mg-file-list>\n\t\t\t</div>\n\t\t\t<ul ng-if="$ctrl.config.showUploading === undefined || $ctrl.config.showUploading" class="list-group">\n\t\t\t\t<li ng-repeat="file in $ctrl.uploading" class="list-group-item">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div style="display: none"><input type="file" name="file"/></div>\n\t\t'
-});
-
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text when the textbox is empty
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgEmail', {
-		title: 'Email address',
-		icon: 'fa fa-envelope-o',
-		category: 'Simple Inputs',
-		config: {
-			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgEmail', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
 });
 
 /**

@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/MomsFriendlyDevCo/macgyver#readme",
   "dependencies": {
+    "@momsfriendlydevco/angular-ui-scribble": "0.0.2",
     "angular": "^1.6.6",
     "angular-sanitize": "^1.6.6",
     "bootstrap": "^3.3.7",

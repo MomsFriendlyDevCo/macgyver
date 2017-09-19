@@ -1,5 +1,6 @@
 angular
 	.module('macgyver', [
+		'angular-ui-scribble',
 		'ngSanitize',
 		'ngTreeTools',
 		'ui.select',
