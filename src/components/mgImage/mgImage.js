@@ -92,7 +92,7 @@ angular
 		},
 		template: `
 			<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal fade">
-				<div class="modal-dialog" style="width: 830px">
+				<div class="modal-dialog modal-lg">
 					<div class="modal-content">
 						<div class="modal-header">
 							<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>
@@ -100,7 +100,7 @@ angular
 						</div>
 						<div class="modal-body">
 							<div ng-if="$ctrl.modalShown">
-								<ui-scribble editable="true" callback="$ctrl.getImage(dataURI, blob)" width="800" height="600"></ui-scribble>
+								<ui-scribble editable="true" callback="$ctrl.getImage(dataURI, blob)" width="100%" height="600"></ui-scribble>
 							</div>
 						</div>
 						<div class="modal-footer">
