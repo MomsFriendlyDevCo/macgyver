@@ -1444,6 +1444,34 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver static label
+* This is simple display of read-only text. The text content is loaded either from the data feed or the `config.text` property in that order
+* @param {Object} config The config specification
+* @param {string} [config.text] The text to display if the data feed does not provide it
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgLabel', {
+		title: 'Read-only label',
+		icon: 'fa fa-font',
+		category: 'General Decoration',
+		config: {
+			text: { type: 'mgText' }
+		}
+	});
+}]).component('mgLabel', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+	}],
+	template: '\n\t\t\t<div class="form-control-static">{{$ctrl.data || $ctrl.config.text}}</div>\n\t\t'
+});
+
+/**
 * MacGyver Image directive
 * @require angular-ui-scribble
 * @param {Object} config The config specification
@@ -1541,35 +1569,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		};
 		// }}}
 	}],
-	template: '\n\t\t\t<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal fade">\n\t\t\t\t<div class="modal-dialog" style="width: 830px">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">{{$ctrl.config.title || \'Attach image\'}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div ng-if="$ctrl.modalShown">\n\t\t\t\t\t\t\t\t<ui-scribble editable="true" callback="$ctrl.getImage(dataURI, blob)" width="800" height="600"></ui-scribble>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div ng-if="$ctrl.config.showList === undefined || $ctrl.config.showList">\n\t\t\t\t<mg-file-list config="$ctrl.listConfig" data="$ctrl.data"></mg-file-list>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length" class="hidden-print">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<a ng-click="$ctrl.showModal(true)" class="btn btn-success">\n\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\tAdd image\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
-});
-
-/**
-* MacGyver static label
-* This is simple display of read-only text. The text content is loaded either from the data feed or the `config.text` property in that order
-* @param {Object} config The config specification
-* @param {string} [config.text] The text to display if the data feed does not provide it
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgLabel', {
-		title: 'Read-only label',
-		icon: 'fa fa-font',
-		category: 'General Decoration',
-		config: {
-			text: { type: 'mgText' }
-		}
-	});
-}]).component('mgLabel', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-	}],
-	template: '\n\t\t\t<div class="form-control-static">{{$ctrl.data || $ctrl.config.text}}</div>\n\t\t'
+	template: '\n\t\t\t<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal fade">\n\t\t\t\t<div class="modal-dialog modal-lg">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">{{$ctrl.config.title || \'Attach image\'}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div ng-if="$ctrl.modalShown">\n\t\t\t\t\t\t\t\t<ui-scribble editable="true" callback="$ctrl.getImage(dataURI, blob)" width="100%" height="600"></ui-scribble>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div ng-if="$ctrl.config.showList === undefined || $ctrl.config.showList">\n\t\t\t\t<mg-file-list config="$ctrl.listConfig" data="$ctrl.data"></mg-file-list>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length" class="hidden-print">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<a ng-click="$ctrl.showModal(true)" class="btn btn-success">\n\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\tAdd image\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
 });
 
 /**
@@ -1687,6 +1687,29 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver horizontal seperator
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgSeperator', {
+		title: 'Seperator',
+		icon: 'fa fa-minus',
+		category: 'General Decoration'
+	});
+}]).component('mgSeperator', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+	}],
+	template: '\n\t\t\t<hr/>\n\t\t'
+});
+
+/**
 * MacGyver Signature directive
 * @require angular-ui-scribble
 * @param {Object} config The config specification
@@ -1778,29 +1801,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<div ng-if="$ctrl.files && $ctrl.files.length" class="visible-parent-hover-target">\n\t\t\t\t<img ng-src="{{$ctrl.files[0].url}}" class="img-responsive"/>\n\t\t\t\t<a ng-click="$ctrl.delete()" class="btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover" tooltip="Delete the signature" tooltip-tether="true"><i class="fa fa-fw fa-trash"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if="!$ctrl.isUploading">\n\t\t\t\t\t<ui-scribble editable="false" callback="$ctrl.getSignature(dataURI, blob)"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t'
-});
-
-/**
-* MacGyver horizontal seperator
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgSeperator', {
-		title: 'Seperator',
-		icon: 'fa fa-minus',
-		category: 'General Decoration'
-	});
-}]).component('mgSeperator', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-	}],
-	template: '\n\t\t\t<hr/>\n\t\t'
 });
 
 /**
