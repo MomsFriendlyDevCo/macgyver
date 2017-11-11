@@ -30,12 +30,12 @@ gulp.task('serve', ['build'], function() {
 			console.log('Server restarted');
 		});
 
-	watch(['./index.js', 'demo/**/*.js', 'src/**/*.js'], function() {
+	watch(['./index.js', './demo/**/*.js', './src/**/*.js'], function() {
 		console.log('Rebuild client-side JS files...');
 		gulp.start('js');
 	});
 
-	watch(['demo/**/*.css', 'src/**/*.css'], function() {
+	watch(['./demo/**/*.css', './src/**/*.css'], function() {
 		console.log('Rebuild client-side CSS files...');
 		gulp.start('css');
 	});
