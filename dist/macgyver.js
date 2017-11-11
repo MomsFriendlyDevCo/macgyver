@@ -8,7 +8,10 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 
 	// Settings {{{
 	$macgyver.settings = {
-		urlResolver: undefined // Used by mgFile and other uploaders to determine its URL
+		urlResolver: undefined, // Used by mgFile and other uploaders to determine its URL
+		mgContainer: {
+			rowClass: [{ id: '', title: 'Normal' }, { id: 'mgContainerRowLarge', title: 'Large text' }]
+		}
 	};
 	// }}}
 
@@ -227,36 +230,6 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 });
 
 /**
-* MacGyver toggle
-* @param {Object} config The config specification
-* @param {boolean} data The state of the checkbox
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgCheckBox', {
-		title: 'Check Box',
-		icon: 'fa fa-check-square-o',
-		category: 'Simple Inputs',
-		config: {}
-	});
-}]).component('mgCheckBox', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '<div class="text-center">\n\t\t\t<input ng-model="$ctrl.data" type="checkbox"/>\n\t\t</div>'
-});
-
-/**
 * MacGyver alert box
 * @param {Object} config The config specification
 * @param {string} [config.text] The text to display in the alert if data is falsy
@@ -288,6 +261,36 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		$macgyver.inject($scope, $ctrl);
 	}],
 	template: '\n\t\t\t<div class="alert" ng-class="$ctrl.config.style">{{$ctrl.config.text || $scope.data}}</div>\n\t\t'
+});
+
+/**
+* MacGyver toggle
+* @param {Object} config The config specification
+* @param {boolean} data The state of the checkbox
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgCheckBox', {
+		title: 'Check Box',
+		icon: 'fa fa-check-square-o',
+		category: 'Simple Inputs',
+		config: {}
+	});
+}]).component('mgCheckBox', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '<div class="text-center">\n\t\t\t<input ng-model="$ctrl.data" type="checkbox"/>\n\t\t</div>'
 });
 
 /**
@@ -365,7 +368,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 /**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
-* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automatically
+* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
 * @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
 * @param {string} [config.textPrompt] The prompt to display in the select box
 * @param {string} [config.textInnerPrompt] The prompt to display when searching
@@ -527,7 +530,8 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		configChildren: {
 			help: { type: 'mgText', title: 'Help text', help: 'Optional help text for the item - just like what you are reading now' },
 			showTitle: { type: 'mgToggle', default: true, title: 'Show Title', help: 'Whether to show the side title for this element' },
-			title: { type: 'mgText', title: 'Title' }
+			title: { type: 'mgText', title: 'Title' },
+			rowClass: { type: 'mgChoiceDropdown', title: 'Styling', help: 'Additional styling to apply to the widget', default: '', enum: $macgyverProvider.settings.mgContainer.rowClass }
 		}
 	});
 }]).component('mgContainer', {
@@ -545,10 +549,49 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		};
 	}],
 	template: ['$macgyver', function template($macgyver) {
-		return '\n\t\t\t<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>\n\t\t\t</div>\n\t\t\t<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row" ng-class="w.mgValidation == \'error\' && \'has-error\'">\n\t\t\t\t<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text) ? \'col-sm-3\' : \'col-sm-12\'">{{w.title}}</label>\n\t\t\t\t<div ng-if="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">\n\t\t\t' + _.map($macgyver.widgets, function (w) {
+		return '\n\t\t\t<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>\n\t\t\t</div>\n\t\t\t<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text) ? \'col-sm-3\' : \'col-sm-12\'">{{w.title}}</label>\n\t\t\t\t<div ng-if="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">\n\t\t\t' + _.map($macgyver.widgets, function (w) {
 			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
 		}).join('\n') + '\n\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9 col-sm-offset-3\' : \'col-sm-12\'">{{w.help}}</div>\n\t\t\t</div>\n\t\t';
 	}]
+});
+
+/**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text when the textbox is empty
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgEmail', {
+		title: 'Email address',
+		icon: 'fa fa-envelope-o',
+		category: 'Simple Inputs',
+		config: {
+			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
+			required: { type: 'mgToggle', default: false }
+		}
+	});
+}]).component('mgEmail', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
 });
 
 /**
@@ -590,45 +633,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<input ng-model="$ctrl.data" type="date" class="form-control"/>\n\t\t'
-});
-
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text when the textbox is empty
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgEmail', {
-		title: 'Email address',
-		icon: 'fa fa-envelope-o',
-		category: 'Simple Inputs',
-		config: {
-			placeholder: { type: 'mgText', help: 'Ghost text to display when the text box has no value' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgEmail', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<input ng-model="$ctrl.data" type="email" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
 });
 
 /**
@@ -1573,80 +1577,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
-* MacGyver horizontal seperator
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgSeperator', {
-		title: 'Seperator',
-		icon: 'fa fa-minus',
-		category: 'General Decoration'
-	});
-}]).component('mgSeperator', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-	}],
-	template: '\n\t\t\t<hr/>\n\t\t'
-});
-
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
-* @param {Date} [config.min] The minimum allowable value
-* @param {Date} [config.max] The maximum allowable value
-* @param {number} [config.step] The number to increment / decrement by
-* @param {boolean} [config.slider=false] Display the widget as a slider rather than free-text input (requires min/max to work properly)
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgNumber', {
-		title: 'Number',
-		icon: 'fa fa-sort-numeric-asc',
-		category: 'Simple Inputs',
-		config: {
-			min: { type: 'mgNumber', title: 'Minimum value' },
-			max: { type: 'mgNumber', title: 'Maximum value' },
-			step: { type: 'mgNumber', title: 'Value to increment / decrement by' },
-			slider: { type: 'mgToggle', title: 'Display slider', default: false, help: 'Whether to display a fixed slider rather than a free form text input box' },
-			placeholder: { type: 'mgNumber', help: 'Ghost text to display when there is no value' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgNumber', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.min && $ctrl.data < $ctrl.config.min && $ctrl.config.title + ' is too small (minimum value is ' + $ctrl.config.min + ')', $ctrl.config.max && $ctrl.data > $ctrl.config.max && $ctrl.config.title + ' is too large (maximum value is ' + $ctrl.config.max + ')'];
-		};
-
-		$ctrl.add = function (steps) {
-			return $ctrl.data += steps * ($ctrl.step || 1);
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<div ng-if="$ctrl.config.slider">\n\t\t\t\t<input ng-model="$ctrl.data" type="range" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.config.slider" class="input-group">\n\t\t\t\t<a ng-click="$ctrl.add(-1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-down"></i></a>\n\t\t\t\t<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>\n\t\t\t\t<a ng-click="$ctrl.add(1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-up"></i></a>\n\t\t\t</div>\n\t\t'
-});
-
-/**
 * MacGyver list input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -1710,97 +1640,77 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
-* MacGyver Signature directive
-* @require angular-ui-scribble
+* MacGyver text input
 * @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
+* @param {Date} [config.min] The minimum allowable value
+* @param {Date} [config.max] The maximum allowable value
+* @param {number} [config.step] The number to increment / decrement by
+* @param {boolean} [config.slider=false] Display the widget as a slider rather than free-text input (requires min/max to work properly)
 * @param {*} data The state data
 */
 angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgSignature', {
-		title: 'Signature input',
-		icon: 'fa fa-picture-o',
-		category: 'Files and uploads',
+	return $macgyverProvider.register('mgNumber', {
+		title: 'Number',
+		icon: 'fa fa-sort-numeric-asc',
+		category: 'Simple Inputs',
 		config: {
-			allowDelete: { type: 'mgToggle', default: true, help: 'Allow the user to delete the signature and re-sign' }
+			min: { type: 'mgNumber', title: 'Minimum value' },
+			max: { type: 'mgNumber', title: 'Maximum value' },
+			step: { type: 'mgNumber', title: 'Value to increment / decrement by' },
+			slider: { type: 'mgToggle', title: 'Display slider', default: false, help: 'Whether to display a fixed slider rather than a free form text input box' },
+			placeholder: { type: 'mgNumber', help: 'Ghost text to display when there is no value' },
+			required: { type: 'mgToggle', default: false }
 		}
 	});
-}]).component('mgSignature', {
+}]).component('mgNumber', {
 	bindings: {
 		config: '<',
 		data: '='
 	},
-	controller: ['$http', '$macgyver', '$scope', function controller($http, $macgyver, $scope) {
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
 		var $ctrl = this;
 		$macgyver.inject($scope, $ctrl);
 
-		// URL storage {{{
-		$ctrl.urls = {}; // These all get their defaults in $onInit
-
-		$ctrl.getUrl = function (type, context) {
-			if (_.isString($ctrl.urls[type])) {
-				return $ctrl.urls[type]; // Already a string - just return
-			} else if (_.isFunction($ctrl.urls[type])) {
-				// Resolve it using a context
-				return $ctrl.urls[type](Object.assign({}, {
-					type: type,
-					widget: 'mgSignature',
-					path: $macgyver.getPath($scope)
-				}, context));
-			} else {
-				throw new Error('Unknown URL type: ' + type);
-			}
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.min && $ctrl.data < $ctrl.config.min && $ctrl.config.title + ' is too small (minimum value is ' + $ctrl.config.min + ')', $ctrl.config.max && $ctrl.data > $ctrl.config.max && $ctrl.config.title + ' is too large (maximum value is ' + $ctrl.config.max + ')'];
 		};
-		// }}}
 
-		// Init {{{
-		$ctrl.$onInit = function () {
-			$ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
-			$ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
-				return '/api/widgets/' + o.path;
-			};
-			$ctrl.urls.delete = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
-				return '/api/widgets/' + o.path;
-			};
-
-			$ctrl.refresh();
+		$ctrl.add = function (steps) {
+			return $ctrl.data += steps * ($ctrl.step || 1);
 		};
-		// }}}
 
-		// Fetch data from server {{{
-		$ctrl.files;
-		$ctrl.refresh = function () {
-			return $http.get($ctrl.getUrl('query')).then(function (data) {
-				return $ctrl.files = data.data;
-			});
-		};
-		// }}}
-
-		// Deal with uploads {{{
-		$ctrl.isUploading = false;
-		$ctrl.getSignature = function (dataURI, blob) {
-			var sigBlob = new Blob([blob], { type: 'image/png' });
-			var formData = new FormData();
-			formData.append('file', sigBlob);
-
-			$http.post($ctrl.getUrl('upload', { file: 'signature.png' }), formData, {
-				headers: { 'Content-Type': undefined }, // Need to override the headers so that angular changes them over into multipart/mime
-				transformRequest: angular.identity
-			}).then(function () {
-				$ctrl.isUploading = false;
-				$ctrl.refresh();
-			});
-
-			$ctrl.isUploading = true;
-		};
-		// }}}
-
-		// Deletion {{{
-		$ctrl.delete = function (file) {
-			return $http.delete($ctrl.getUrl('delete', { file: 'signature.png' })).then($ctrl.refresh, $ctrl.refresh);
-		}; // Whatever happens - refresh
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
 		// }}}
 	}],
-	template: '\n\t\t\t<div ng-if="$ctrl.files && $ctrl.files.length" class="visible-parent-hover-target">\n\t\t\t\t<img ng-src="{{$ctrl.files[0].url}}" class="img-responsive"/>\n\t\t\t\t<a ng-click="$ctrl.delete()" class="btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover" tooltip="Delete the signature" tooltip-tether="true"><i class="fa fa-fw fa-trash"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if="!$ctrl.isUploading">\n\t\t\t\t\t<ui-scribble editable="false" callback="$ctrl.getSignature(dataURI, blob)"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t'
+	template: '\n\t\t\t<div ng-if="$ctrl.config.slider">\n\t\t\t\t<input ng-model="$ctrl.data" type="range" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.config.slider" class="input-group">\n\t\t\t\t<a ng-click="$ctrl.add(-1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-down"></i></a>\n\t\t\t\t<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>\n\t\t\t\t<a ng-click="$ctrl.add(1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-up"></i></a>\n\t\t\t</div>\n\t\t'
+});
+
+/**
+* MacGyver horizontal seperator
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgSeperator', {
+		title: 'Seperator',
+		icon: 'fa fa-minus',
+		category: 'General Decoration'
+	});
+}]).component('mgSeperator', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+	}],
+	template: '\n\t\t\t<hr/>\n\t\t'
 });
 
 /**
@@ -1935,6 +1845,100 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver Signature directive
+* @require angular-ui-scribble
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgSignature', {
+		title: 'Signature input',
+		icon: 'fa fa-picture-o',
+		category: 'Files and uploads',
+		config: {
+			allowDelete: { type: 'mgToggle', default: true, help: 'Allow the user to delete the signature and re-sign' }
+		}
+	});
+}]).component('mgSignature', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$http', '$macgyver', '$scope', function controller($http, $macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// URL storage {{{
+		$ctrl.urls = {}; // These all get their defaults in $onInit
+
+		$ctrl.getUrl = function (type, context) {
+			if (_.isString($ctrl.urls[type])) {
+				return $ctrl.urls[type]; // Already a string - just return
+			} else if (_.isFunction($ctrl.urls[type])) {
+				// Resolve it using a context
+				return $ctrl.urls[type](Object.assign({}, {
+					type: type,
+					widget: 'mgSignature',
+					path: $macgyver.getPath($scope)
+				}, context));
+			} else {
+				throw new Error('Unknown URL type: ' + type);
+			}
+		};
+		// }}}
+
+		// Init {{{
+		$ctrl.$onInit = function () {
+			$ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
+			$ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
+				return '/api/widgets/' + o.path;
+			};
+			$ctrl.urls.delete = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
+				return '/api/widgets/' + o.path;
+			};
+
+			$ctrl.refresh();
+		};
+		// }}}
+
+		// Fetch data from server {{{
+		$ctrl.files;
+		$ctrl.refresh = function () {
+			return $http.get($ctrl.getUrl('query')).then(function (data) {
+				return $ctrl.files = data.data;
+			});
+		};
+		// }}}
+
+		// Deal with uploads {{{
+		$ctrl.isUploading = false;
+		$ctrl.getSignature = function (dataURI, blob) {
+			var sigBlob = new Blob([blob], { type: 'image/png' });
+			var formData = new FormData();
+			formData.append('file', sigBlob);
+
+			$http.post($ctrl.getUrl('upload', { file: 'signature.png' }), formData, {
+				headers: { 'Content-Type': undefined }, // Need to override the headers so that angular changes them over into multipart/mime
+				transformRequest: angular.identity
+			}).then(function () {
+				$ctrl.isUploading = false;
+				$ctrl.refresh();
+			});
+
+			$ctrl.isUploading = true;
+		};
+		// }}}
+
+		// Deletion {{{
+		$ctrl.delete = function (file) {
+			return $http.delete($ctrl.getUrl('delete', { file: 'signature.png' })).then($ctrl.refresh, $ctrl.refresh);
+		}; // Whatever happens - refresh
+		// }}}
+	}],
+	template: '\n\t\t\t<div ng-if="$ctrl.files && $ctrl.files.length" class="visible-parent-hover-target">\n\t\t\t\t<img ng-src="{{$ctrl.files[0].url}}" class="img-responsive"/>\n\t\t\t\t<a ng-click="$ctrl.delete()" class="btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover" tooltip="Delete the signature" tooltip-tether="true"><i class="fa fa-fw fa-trash"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if="!$ctrl.isUploading">\n\t\t\t\t\t<ui-scribble editable="false" callback="$ctrl.getSignature(dataURI, blob)"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t'
+});
+
+/**
 * MacGyver table editor meta control
 * This control provides very basic functionality to edit the properties of a mgTable by allowing each column to have width, type, title etc.
 * For more complex functionality (e.g. table columns that are nested containers) its probably best to use a JSON editor
@@ -1964,6 +1968,49 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<table class="table table-bordered table-striped">\n\t\t\t</table>\n\t\t'
+});
+
+/**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
+* @param {Date} [config.lengthMin] The minimum allowable length
+* @param {Date} [config.lengthMax] The maximum allowable length
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgText', {
+		title: 'Textbox',
+		icon: 'fa fa-pencil-square-o',
+		category: 'Simple Inputs',
+		config: {
+			lengthMin: { type: 'mgNumber', title: 'Minimum Length' },
+			lengthMax: { type: 'mgNumber', title: 'Maximum Length' },
+			placeholder: { type: 'mgText', help: 'Ghost text to display when the textbox has no value' },
+			required: { type: 'mgToggle', default: false }
+		}
+	});
+}]).component('mgText', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.lengthMin && _.isString($ctrl.data) && $ctrl.data.length < $ctrl.config.lengthMin && $ctrl.config.title + ' is too small (minimum length is ' + $ctrl.config.lengthMin + ')', $ctrl.config.lengthMax && _.isString($ctrl.data) && $ctrl.data.length > $ctrl.config.lengthMax && $ctrl.config.title + ' is too long (maximum length is ' + $ctrl.config.lengthMax + ')'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<input ng-model="$ctrl.data" type="text" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
 });
 
 /**
@@ -2012,49 +2059,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
-* @param {Date} [config.lengthMin] The minimum allowable length
-* @param {Date} [config.lengthMax] The maximum allowable length
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgText', {
-		title: 'Textbox',
-		icon: 'fa fa-pencil-square-o',
-		category: 'Simple Inputs',
-		config: {
-			lengthMin: { type: 'mgNumber', title: 'Minimum Length' },
-			lengthMax: { type: 'mgNumber', title: 'Maximum Length' },
-			placeholder: { type: 'mgText', help: 'Ghost text to display when the textbox has no value' },
-			required: { type: 'mgToggle', default: false }
-		}
-	});
-}]).component('mgText', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.lengthMin && _.isString($ctrl.data) && $ctrl.data.length < $ctrl.config.lengthMin && $ctrl.config.title + ' is too small (minimum length is ' + $ctrl.config.lengthMin + ')', $ctrl.config.lengthMax && _.isString($ctrl.data) && $ctrl.data.length > $ctrl.config.lengthMax && $ctrl.config.title + ' is too long (maximum length is ' + $ctrl.config.lengthMax + ')'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<input ng-model="$ctrl.data" type="text" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
-});
-
-/**
 * MacGyver time input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -2096,6 +2100,41 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver toggle
+* @param {Object} config The config specification
+* @param {string} [config.onText='On'] The text to display when the widget has a true value
+* @param {string} [config.offText='Off'] The text to display when the widget has a false value
+* @param {boolean} data The state of the toggle
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgToggle', {
+		title: 'Switch',
+		icon: 'fa fa-toggle-on',
+		category: 'Simple Inputs',
+		config: {
+			onText: { type: 'mgText', default: 'On' },
+			offText: { type: 'mgText', default: 'Off' }
+		}
+	});
+}]).component('mgToggle', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<div class="btn-group">\n\t\t\t\t<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="!$ctrl.data ? \'btn-danger\' : \'btn-default\'">{{$ctrl.config.offText || \'Off\'}}</a>\n\t\t\t\t<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="$ctrl.data ? \'btn-success\' : \'btn-default\'">{{$ctrl.config.onText || \'On\'}}</a>\n\t\t\t</div>\n\t\t'
+});
+
+/**
 * MacGyver text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -2132,39 +2171,4 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<input ng-model="$ctrl.data" type="url" class="form-control" placeholder="{{$ctrl.config.placeholder}}"/>\n\t\t'
-});
-
-/**
-* MacGyver toggle
-* @param {Object} config The config specification
-* @param {string} [config.onText='On'] The text to display when the widget has a true value
-* @param {string} [config.offText='Off'] The text to display when the widget has a false value
-* @param {boolean} data The state of the toggle
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgToggle', {
-		title: 'Switch',
-		icon: 'fa fa-toggle-on',
-		category: 'Simple Inputs',
-		config: {
-			onText: { type: 'mgText', default: 'On' },
-			offText: { type: 'mgText', default: 'Off' }
-		}
-	});
-}]).component('mgToggle', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<div class="btn-group">\n\t\t\t\t<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="!$ctrl.data ? \'btn-danger\' : \'btn-default\'">{{$ctrl.config.offText || \'Off\'}}</a>\n\t\t\t\t<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="$ctrl.data ? \'btn-success\' : \'btn-default\'">{{$ctrl.config.onText || \'On\'}}</a>\n\t\t\t</div>\n\t\t'
 });

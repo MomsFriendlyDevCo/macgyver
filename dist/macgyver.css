@@ -12,6 +12,16 @@
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
+/* mgContainerRowLarge {{{ */
+.row.mgContainerRowLarge {
+	font-size: 200%;
+}
+
+.row.mgContainerRowLarge input.form-control {
+	height: 48px;
+}
+/* }}} */
+
 mg-form .form-group {
 	margin-bottom: 10px;
 }
