@@ -12,6 +12,12 @@ angular
 		// Settings {{{
 		$macgyver.settings = {
 			urlResolver: undefined, // Used by mgFile and other uploaders to determine its URL
+			mgContainer: {
+				rowClass: [
+					{id: '', title: 'Normal'},
+					{id: 'mgContainerRowLarge', title: 'Large text'},
+				],
+			},
 		};
 		// }}}
 

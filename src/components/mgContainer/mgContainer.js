@@ -27,6 +27,7 @@ angular
 			help: {type: 'mgText', title: 'Help text', help: 'Optional help text for the item - just like what you are reading now'},
 			showTitle: {type: 'mgToggle', default: true, title: 'Show Title', help: 'Whether to show the side title for this element'},
 			title: {type: 'mgText', title: 'Title'},
+			rowClass: {type: 'mgChoiceDropdown', title: 'Styling', help: 'Additional styling to apply to the widget', default: '', enum: $macgyverProvider.settings.mgContainer.rowClass},
 		},
 	}))
 	.component('mgContainer', {
@@ -45,7 +46,7 @@ angular
 			<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
 				<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
 			</div>
-			<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row" ng-class="w.mgValidation == 'error' && 'has-error'">
+			<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 				<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'">{{w.title}}</label>
 				<div ng-if="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
 			` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
