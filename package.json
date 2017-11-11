@@ -25,11 +25,11 @@
     "angular": "^1.6.6",
     "angular-sanitize": "^1.6.6",
     "bootstrap": "^3.3.7",
-    "filesize": "^3.5.10",
+    "filesize": "^3.5.11",
     "font-awesome": "^4.7.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
-    "tree-tools": "^1.1.2",
+    "tree-tools": "^1.2.0",
     "ui-select": "^0.19.8"
   },
   "devDependencies": {
