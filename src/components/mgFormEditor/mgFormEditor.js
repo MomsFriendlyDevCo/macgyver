@@ -298,7 +298,7 @@ angular
 			// }}}
 
 			// Setup a mask over any widget when the user moves their mouse over them {{{
-			$element.on('mouseover', 'mg-container > div', function(event) {
+			$element.on('mouseover', '.mgComponent', function(event) {
 				event.stopPropagation();
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
