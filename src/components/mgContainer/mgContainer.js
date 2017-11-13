@@ -48,7 +48,10 @@ angular
 			help: {type: 'mgText', title: 'Help text', help: 'Optional help text for the item - just like what you are reading now'},
 			showTitle: {type: 'mgToggle', default: true, title: 'Show Title', help: 'Whether to show the side title for this element'},
 			title: {type: 'mgText', title: 'Title'},
-			rowClass: {type: 'mgChoiceDropdown', title: 'Styling', help: 'Additional styling to apply to the widget', default: '', enum: $macgyverProvider.settings.mgContainer.rowClass},
+			rowClass: {type: 'mgChoiceDropdown', title: 'Styling', help: 'Additional styling to apply to the widget', default: '', enum: [
+				{id: '', title: 'Normal'},
+				{id: 'mgContainerRowLarge', title: 'Large text'},
+			]},
 		},
 	}))
 	.component('mgContainer', {
