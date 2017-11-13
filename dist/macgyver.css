@@ -1,3 +1,8 @@
+/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
+mg-choice-buttons .fa.fa-fw {
+	height: 1em;
+}
+
 @media print {
 	/* Disable dropdown icons when printing */
 	mg-choice-dropdown .selectize-input::after {
