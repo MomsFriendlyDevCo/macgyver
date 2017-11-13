@@ -4,6 +4,9 @@
 // @ifndef angular
 var $macgyver = module.exports = {};
 
+// Load our offline copy of the widget spec if we're operating on the backend
+$macgyver.widgets = require('./dist/widgets.json');
+
 var _ = require('lodash');
 // @endif
 

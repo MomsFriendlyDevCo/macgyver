@@ -9,14 +9,18 @@ var nodemon = require('gulp-nodemon');
 var plumber = require('gulp-plumber');
 var preprocess = require('gulp-preprocess');
 var rename = require('gulp-rename');
+var replace = require('gulp-replace');
 var rimraf = require('rimraf');
 var uglify = require('gulp-uglify');
 var watch = require('gulp-watch');
 
 gulp.task('default', ['serve']);
-gulp.task('build', ['js', 'css']);
+gulp.task('build', ['js', 'css', 'spec']);
 
 
+/**
+* Create a Nodemon monitored server and serve the demo project
+*/
 gulp.task('serve', ['build'], function() {
 	var monitor = nodemon({
 		script: './demo/server.js',
@@ -42,6 +46,9 @@ gulp.task('serve', ['build'], function() {
 });
 
 
+/**
+* Compile all JS files (including minified varients)
+*/
 gulp.task('js', ()=>
 	gulp.src([
 		'./src/macgyver.js',
@@ -71,6 +78,10 @@ gulp.task('js', ()=>
 		.pipe(gulp.dest('./dist'))
 );
 
+
+/**
+* Compile all CSS (including minified varients)
+*/
 gulp.task('css', ()=>
 	gulp.src('./src/**/*.css')
 		.pipe(concat('macgyver.css'))
@@ -80,6 +91,34 @@ gulp.task('css', ()=>
 		.pipe(gulp.dest('./dist'))
 );
 
+
+/**
+* Extract the specification parts of all mg* components and create dist/widgets.json as a lookup object of data about each by key
+* NOTE: Yes I know this is bloody awful in how it works, but it works
+*/
+gulp.task('spec', ()=> {
+	var widgets = {};
+
+	return gulp.src('./src/components/**/*.js')
+		.pipe(plumber({
+			errorHandler: function(err) {
+				gutil.log(gutil.colors.red('ERROR DURING SPEC BUILD'));
+				process.stdout.write(err.stack);
+				this.emit('end');
+			},
+		}))
+		.pipe(replace(/\$macgyverProvider\.register\((.+?),\s*((.|[\n\r])+?)\)/gm, (all, id, spec) => {
+			widgets[_.trim(id, "'")] = (new Function('return ' + spec))();
+		}))
+		.pipe(concat('widgets.json'))
+		.pipe(replace(/^(.|[\n\r])+$/m, ()=> JSON.stringify(widgets)))
+		.pipe(gulp.dest('./dist'))
+});
+
+
+/**
+* Compile the gh-pages branch in GitHub
+*/
 gulp.task('gh-pages', ['build'], function() {
 	rimraf.sync('./gh-pages');
 
