@@ -26,6 +26,7 @@ angular
 			layout: {type: 'mgChoiceDropdown', title: 'Layout profile', help: 'How to layout child elements', default: 'form', enum: [
 				{id: 'form', title: 'Standard form layout'},
 				{id: 'panel', title: 'Panel based layout'},
+				{id: 'columns', title: 'Vertical column layout'},
 			]},
 			layoutStyle: {
 				title: 'Layout style',
@@ -75,7 +76,7 @@ angular
 							<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 								<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'">{{w.title}}</label>
 								<div ng-if="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
-							` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+									` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
 									<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
 								</div>
 								<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'">{{w.help}}</div>
@@ -86,6 +87,24 @@ angular
 						</div>
 					</div>
 				</div>
+				<div ng-switch-when="columns">
+					<table class="table table-bordered" style="width: 100%">
+						<thead>
+							<tr>
+								<th ng-repeat="w in $ctrl.config.items track by w.id">{{w.title}}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
+									` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+									<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
+									<div class="help-block" ng-if="w.help">{{w.help}}</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 				<div ng-switch-default>
 					<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
 						<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
@@ -93,7 +112,7 @@ angular
 					<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 						<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'">{{w.title}}</label>
 						<div ng-if="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
-					` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+							` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
 							<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
 						</div>
 						<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'">{{w.help}}</div>
