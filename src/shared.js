@@ -40,3 +40,61 @@ $macgyver.flattenSpec = function(spec) {
 	$macgyver.forEach(spec, (widget, path) => res[path] = widget);
 	return res;
 };
+
+
+/**
+* Attempt to neaten up a 'rough' MacGyver spec into a pristine one
+* This function performs various sanity checks on nested elements e.g. checking each item has a valid ID and if not adding one
+*/
+$macgyver.neatenSpec = function(spec) {
+	// Force showTitle to be false on the root element if its not already set {{{
+	if (_.isUndefined(spec.showTitle)) spec.showTitle = false;
+	if (!spec.id) spec.id = '$ROOT'; // Force root element to have an ID
+	// }}}
+
+	var flatSpec = $macgyver.flattenSpec(spec);
+	$macgyver.forEach(spec, (widget, path) => {
+		// Check that the widget is valid {{{
+		if (!$macgyver.widgets[widget.type]) {
+			console.log("Invalid or unregistered MacGyver widget '" + widget.type + "' - transforming into a mgText for now");
+			widget.type = 'mgText';
+		}
+		// }}}
+
+		// Force all elements to have an ID {{{
+		if (!widget.id) {
+			// Make an ID based on the path {{{
+			var tryNumber = 0;
+			var tryId;
+			do {
+				tryId = '$' + path + '$' + tryNumber++;
+			} while (flatSpec[tryId]);
+			widget.id = tryId;
+			// }}}
+
+			if (widget.type == 'mgContainer') widget.ignoreScope = true; // Containers - enable ignoreScope also
+		}
+		// }}}
+	});
+
+	return spec;
+};
+
+
+/**
+* Create a prototype data object
+* This will create empty objects whenever it encounters a mgContainer, arrays for iterative objects and so on
+*/
+$macgyver.specDataPrototype = function(spec) {
+	var tree = {};
+
+	$macgyver.forEach(spec, (widget, path) => {
+		if ($macgyver.widgets[widget.type].isContainer) {
+			var widgetPath = path.split('.').slice(1);
+			if (!widgetPath.length) return;
+			_.set(tree, widgetPath, $macgyver.widgets[widget.type].isContainerArray ? [] : {});
+		}
+	});
+
+	return tree;
+};
