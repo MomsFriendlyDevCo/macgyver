@@ -41,7 +41,7 @@ angular
 
 			$ctrl.add = steps => $ctrl.data += steps * ($ctrl.step || 1);
 
-			// Adopt default  if no data value is given {{{
+			// Adopt default if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
 			// }}}
 		},
