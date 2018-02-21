@@ -39,7 +39,11 @@ angular
 				$ctrl.config.max && $ctrl.data > $ctrl.config.max && `${$ctrl.config.title} is too large (maximum value is ${$ctrl.config.max})`,
 			];
 
-			$ctrl.add = steps => $ctrl.data += steps * ($ctrl.step || 1);
+			$ctrl.add = steps => {
+				$ctrl.data += steps * ($ctrl.step || 1);
+				if ($ctrl.config.max && $ctrl.data > $ctrl.config.max) $ctrl.data = $ctrl.config.max;
+				if ($ctrl.config.min && $ctrl.data < $ctrl.config.min) $ctrl.data = $ctrl.config.min;
+			};
 
 			// Adopt default if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
