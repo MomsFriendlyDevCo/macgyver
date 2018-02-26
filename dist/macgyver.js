@@ -217,7 +217,7 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 	$macgyver.neatenSpec = function (spec) {
 		// Force showTitle to be false on the root element if its not already set {{{
 		if (_.isUndefined(spec.showTitle)) spec.showTitle = false;
-		if (!spec.id) spec.id = '$ROOT'; // Force root element to have an ID
+		if (!spec.id) spec.id = 'ROOT'; // Force root element to have an ID
 		// }}}
 
 		var flatSpec = $macgyver.flattenSpec(spec);
@@ -498,6 +498,65 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].icon] Optional icon to display for each item
+* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgChoiceRadio', {
+		title: 'Radio multiple-choice',
+		icon: 'fa fa-list-ul',
+		category: 'Choice Selectors',
+		config: {
+			enum: {
+				type: 'mgList',
+				title: 'The list of items to display',
+				default: ['Foo', 'Bar', 'Baz']
+			}
+		}
+	});
+}]).component('mgChoiceRadio', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+		$ctrl.enumIter = []; // Cleaned up version of enum
+		$scope.$watch('$ctrl.config.enum', function () {
+			if (!$ctrl.config.enum) return; // No data yet
+			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
+				// Array of strings
+				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
+					return {
+						id: _.camelCase(i),
+						title: i
+					};
+				});
+			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
+				// Collection
+				$ctrl.enumIter = $ctrl.config.enum;
+			}
+		});
+		// }}}
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<div class="radio" ng-repeat="item in $ctrl.enumIter track by item.id">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model="$ctrl.data" type="radio" name="{{$ctrl.config.id}}" value="{{item.id}}"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t'
+});
+
+/**
 * MacGyver component loader
 * This is a meta component that loads other dynamic components as an array
 * @param {Object} config The config specification
@@ -563,65 +622,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
 		}).join('\n') + '\n\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9 col-sm-offset-3\' : \'col-sm-12\'">{{w.help}}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
 	}]
-});
-
-/**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgChoiceRadio', {
-		title: 'Radio multiple-choice',
-		icon: 'fa fa-list-ul',
-		category: 'Choice Selectors',
-		config: {
-			enum: {
-				type: 'mgList',
-				title: 'The list of items to display',
-				default: ['Foo', 'Bar', 'Baz']
-			}
-		}
-	});
-}]).component('mgChoiceRadio', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watch('$ctrl.config.enum', function () {
-			if (!$ctrl.config.enum) return; // No data yet
-			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
-				// Array of strings
-				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
-					return {
-						id: _.camelCase(i),
-						title: i
-					};
-				});
-			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
-				// Collection
-				$ctrl.enumIter = $ctrl.config.enum;
-			}
-		});
-		// }}}
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<div class="radio" ng-repeat="item in $ctrl.enumIter track by item.id">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model="$ctrl.data" type="radio" name="{{$ctrl.config.id}}" value="{{item.id}}"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t'
 });
 
 /**
@@ -1751,7 +1751,9 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		};
 
 		$ctrl.add = function (steps) {
-			return $ctrl.data += steps * ($ctrl.step || 1);
+			$ctrl.data += steps * ($ctrl.step || 1);
+			if ($ctrl.config.max && $ctrl.data > $ctrl.config.max) $ctrl.data = $ctrl.config.max;
+			if ($ctrl.config.min && $ctrl.data < $ctrl.config.min) $ctrl.data = $ctrl.config.min;
 		};
 
 		// Adopt default if no data value is given {{{
