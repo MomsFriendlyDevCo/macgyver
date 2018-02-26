@@ -217,7 +217,7 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 	$macgyver.neatenSpec = function (spec) {
 		// Force showTitle to be false on the root element if its not already set {{{
 		if (_.isUndefined(spec.showTitle)) spec.showTitle = false;
-		if (!spec.id) spec.id = '$ROOT'; // Force root element to have an ID
+		if (!spec.id) spec.id = 'ROOT'; // Force root element to have an ID
 		// }}}
 
 		var flatSpec = $macgyver.flattenSpec(spec);
