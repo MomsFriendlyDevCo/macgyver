@@ -51,10 +51,21 @@ app.get('/dist/macgyver.css', function(req, res) {
 
 app.use(function(err, req, res, next){
 	console.error(err.stack);
-	res.status(500).send('Something broke!').end();
+	res.send(500, 'Something broke!').end();
 });
 
 var port = process.env.PORT || process.env.VMC_APP_PORT || 8080;
 var server = app.listen(port, function() {
-	console.log('Web interface listening on port', port);
+	console.log('HTTP interface listening on port', port);
 });
+
+var fs = require('fs');
+var https = require('https');
+var portS = process.env.PORTS || 8081;
+var serverS = https.createServer({
+		cert: fs.readFileSync(`${__dirname}/cert/cert.pem`, 'utf-8'),
+		key: fs.readFileSync(`${__dirname}/cert/private.pem`, 'utf-8'),
+	}, app)
+	.listen(portS, function() {
+		console.log('HTTPS interface listening on port', portS);
+	});

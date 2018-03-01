@@ -4,3 +4,11 @@
 		display: none !important;
 	}
 }
+
+.ui-select-placeholder {
+	display: inline-block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: calc(100% - 15px);
+}

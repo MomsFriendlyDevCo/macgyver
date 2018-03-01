@@ -1,7 +1,7 @@
 /**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
-* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automatically
+* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
 * @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
 * @param {string} [config.textPrompt] The prompt to display in the select box
 * @param {string} [config.textInnerPrompt] The prompt to display when searching

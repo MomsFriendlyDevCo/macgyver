@@ -132,6 +132,22 @@ $macgyver.getDataTree(root, [useDefaults=false])
 Generate an empty data entity from a given widget container. This function can be used to return the 'blank' form contents. If `useDefaults == true` the defaults for each widget will be set as the value.
 
 
+$macgyver.neatenSpec(spec)
+--------------------------
+Attempt to neaten up a 'rough' MacGyver spec into a pristine one.
+This function performs various sanity checks on nested elements e.g. checking each item has a valid ID and if not adding one.
+
+
+$macgyver.specDataPrototype(spec)
+---------------------------------
+Create an empty data structure based on the specification. This is really just used to make sure that the deeply nested objects-within-objects (or arrays) are present when Angular tries to bind to them.
+
+
+$macgyver.widgets
+-----------------
+An object containing data on each valid MacGyver widget registered. If running on the front-end this is updated as new widgets register themselves. On the backend this uses the computed version located in `./dist/widgets.json`.
+
+
 API Events
 ==========
 MacGyver components are also expected to optionally respond to the following events:

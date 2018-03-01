@@ -1,6 +1,6 @@
 {
   "name": "@momsfriendlydevco/macgyver",
-  "version": "0.0.5",
+  "version": "0.0.16",
   "description": "Dynamic form widgets for Angular",
   "main": "src/shared.js",
   "repository": {
@@ -21,35 +21,37 @@
   },
   "homepage": "https://github.com/MomsFriendlyDevCo/macgyver#readme",
   "dependencies": {
+    "@momsfriendlydevco/angular-ui-scribble": "0.0.2",
     "angular": "^1.6.6",
     "angular-sanitize": "^1.6.6",
     "bootstrap": "^3.3.7",
     "dragular": "^4.4.6",
-    "filesize": "^3.5.10",
+    "filesize": "^3.5.11",
     "font-awesome": "^4.7.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
-    "tree-tools": "^1.1.2",
+    "tree-tools": "^1.2.0",
     "ui-select": "^0.19.8"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
-    "babel-plugin-angularjs-annotate": "^0.8.0",
+    "babel-plugin-angularjs-annotate": "^0.8.2",
     "babel-preset-es2015": "^6.24.1",
-    "express": "^4.15.4",
+    "express": "^4.16.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.0",
-    "gulp-clean-css": "^3.7.0",
+    "gulp-clean-css": "^3.9.0",
     "gulp-concat": "^2.6.1",
     "gulp-gh-pages": "^0.5.4",
     "gulp-nodemon": "^2.2.1",
     "gulp-plumber": "^1.1.0",
     "gulp-preprocess": "^2.0.0",
     "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.6.1",
     "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.8",
     "gulp-watch": "^4.3.11",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.2"
   },
   "optionalDependencies": {
     "@momsfriendlydevco/angular-bs-tooltip": "^1.2.4"

@@ -67,8 +67,12 @@ angular
 
 			$scope.$watch('$ctrl.config', ()=> {
 				if (!$ctrl.config || _.isEmpty($ctrl.config)) return; // Form not loaded yet
-				// Force showTitle to be false on the root element if its not already set
-				if (_.isUndefined($ctrl.config.showTitle)) $ctrl.config.showTitle = false;
+				$ctrl.config = $macgyver.neatenSpec($ctrl.config);
+			});
+
+			$scope.$watchGroup(['$ctrl.config', '$ctrl.data'], ()=> {
+				if (!$ctrl.config || _.isEmpty($ctrl.config)) return; // Form spec not yet loaded
+				angular.merge($ctrl.data, $macgyver.specDataPrototype($ctrl.config));
 			});
 		},
 		template: `

@@ -9,14 +9,18 @@ var nodemon = require('gulp-nodemon');
 var plumber = require('gulp-plumber');
 var preprocess = require('gulp-preprocess');
 var rename = require('gulp-rename');
+var replace = require('gulp-replace');
 var rimraf = require('rimraf');
 var uglify = require('gulp-uglify');
 var watch = require('gulp-watch');
 
 gulp.task('default', ['serve']);
-gulp.task('build', ['js', 'css']);
+gulp.task('build', ['js', 'css', 'spec']);
 
 
+/**
+* Create a Nodemon monitored server and serve the demo project
+*/
 gulp.task('serve', ['build'], function() {
 	var monitor = nodemon({
 		script: './demo/server.js',
@@ -30,18 +34,21 @@ gulp.task('serve', ['build'], function() {
 			console.log('Server restarted');
 		});
 
-	watch(['./index.js', 'demo/**/*.js', 'src/**/*.js'], function() {
+	watch(['./index.js', './demo/**/*.js', './src/**/*.js'], function() {
 		console.log('Rebuild client-side JS files...');
 		gulp.start('js');
 	});
 
-	watch(['demo/**/*.css', 'src/**/*.css'], function() {
+	watch(['./demo/**/*.css', './src/**/*.css'], function() {
 		console.log('Rebuild client-side CSS files...');
 		gulp.start('css');
 	});
 });
 
 
+/**
+* Compile all JS files (including minified varients)
+*/
 gulp.task('js', ()=>
 	gulp.src([
 		'./src/macgyver.js',
@@ -71,6 +78,10 @@ gulp.task('js', ()=>
 		.pipe(gulp.dest('./dist'))
 );
 
+
+/**
+* Compile all CSS (including minified varients)
+*/
 gulp.task('css', ()=>
 	gulp.src('./src/**/*.css')
 		.pipe(concat('macgyver.css'))
@@ -80,6 +91,34 @@ gulp.task('css', ()=>
 		.pipe(gulp.dest('./dist'))
 );
 
+
+/**
+* Extract the specification parts of all mg* components and create dist/widgets.json as a lookup object of data about each by key
+* NOTE: Yes I know this is bloody awful in how it works, but it works
+*/
+gulp.task('spec', ()=> {
+	var widgets = {};
+
+	return gulp.src('./src/components/**/*.js')
+		.pipe(plumber({
+			errorHandler: function(err) {
+				gutil.log(gutil.colors.red('ERROR DURING SPEC BUILD'));
+				process.stdout.write(err.stack);
+				this.emit('end');
+			},
+		}))
+		.pipe(replace(/\$macgyverProvider\.register\((.+?),\s*((.|[\n\r])+?)\)/gm, (all, id, spec) => {
+			widgets[_.trim(id, "'")] = (new Function('return ' + spec))();
+		}))
+		.pipe(concat('widgets.json'))
+		.pipe(replace(/^(.|[\n\r])+$/m, ()=> JSON.stringify(widgets)))
+		.pipe(gulp.dest('./dist'))
+});
+
+
+/**
+* Compile the gh-pages branch in GitHub
+*/
 gulp.task('gh-pages', ['build'], function() {
 	rimraf.sync('./gh-pages');
 
@@ -87,6 +126,7 @@ gulp.task('gh-pages', ['build'], function() {
 		'./LICENSE',
 		'./demo/_config.yml',
 		'./demo/app.js',
+		'./demo/app.css',
 		'./demo/editor.html',
 		'./demo/index.html',
 		'./demo/style.css',
@@ -98,6 +138,8 @@ gulp.task('gh-pages', ['build'], function() {
 		'./node_modules/angular-relative-date/dist/angular-relative-date.min.js',
 		'./node_modules/angular-sanitize/angular-sanitize.js',
 		'./node_modules/angular-sanitize/angular-sanitize.js',
+		'./node_modules/@momsfriendlydevco/angular-ui-scribble/dist/angular-ui-scribble.css',
+		'./node_modules/@momsfriendlydevco/angular-ui-scribble/dist/angular-ui-scribble.js',
 		'./node_modules/bootstrap/dist/css/bootstrap.min.css',
 		'./node_modules/bootstrap/dist/js/bootstrap.min.js',
 		'./node_modules/dragular/dist/dragular.min.js',
@@ -108,6 +150,8 @@ gulp.task('gh-pages', ['build'], function() {
 		'./node_modules/font-awesome/fonts/fontawesome-webfont.woff2',
 		'./node_modules/jquery/dist/jquery.min.js',
 		'./node_modules/lodash/lodash.min.js',
+		'./node_modules/signature_pad/dist/signature_pad.min.js',
+		'./node_modules/tree-tools/dist/ngTreeTools.js',
 		'./node_modules/ui-select/dist/select.css',
 		'./node_modules/ui-select/dist/select.js',
 	], {base: __dirname})

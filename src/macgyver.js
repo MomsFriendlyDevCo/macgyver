@@ -1,6 +1,7 @@
 angular
 	.module('macgyver', [
 		'angular-bs-tooltip',
+		'angular-ui-scribble',
 		'dragularModule',
 		'ngSanitize',
 		'ngTreeTools',
