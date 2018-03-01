@@ -27,6 +27,8 @@ angular
 			textEmpty: {type: 'mgText', title: 'No data message', default: 'No data'},
 			items: {
 				type: 'mgTableEditor',
+				editable: true, // We have to explicitally specify this for `items` to be editable
+				title: 'Column setup',
 				default: [
 					{id: 'col1', type: 'mgText'},
 					{id: 'col2', title: 'mgText'},

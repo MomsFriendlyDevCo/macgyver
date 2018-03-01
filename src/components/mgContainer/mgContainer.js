@@ -5,6 +5,7 @@
 * @param {array} config.items A collection of sub-item objects to display
 * @param {boolean} [config.ignoreScope=false] If true any child item storage paths will not be prefixed by this items ID (e.g. a child item with the ID 'foo' will normally be set to '(whatever this ID is).foo' unless this option is true)
 * @param {string} [config.layout="form"] The layout profile to use. ENUM: form = A standard horizontal form layout, panel = A bootsrap panel with header and footer
+* @param {boolean} [config.items[].editable=true] Whether the item should be exposed as editable in mgFormEditor, NOTE: This defaults to false for the key `items` unless explicitally specified
 * @param {boolean} [config.items[].help] Optional help text to show under the element
 * @param {boolean} [config.items[].ignoreScope=false] Whether this container effects the lexical path of the item being set - i.e. if enabled (the default) the saved item will use this containers ID in the path of the item to set, if disabled this container is effectively invisible
 * @param {boolean} [config.items[].showTitle=true] Whether to show the left-hand-side form title for the item
