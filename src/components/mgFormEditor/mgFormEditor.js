@@ -388,17 +388,19 @@ angular
 			* Execute a verb action
 			* The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
 			* or a string
-			* @param {Object} verb The verb to execute
+			* @param {Object|function|string} verb The verb to execute, if this is a function it is exected as (widget, verb)
 			*/
 			$ctrl.verbAction = verb => {
-				if (angular.isFunction(verb.action)) {
-					verb.action($ctrl.selectedWidget, verb);
-				} else if (verb.action == 'edit') {
-					$ctrl.widgetEdit();
-				} else if (verb.action == 'toggleTitle') {
-					$ctrl.widgetToggle('showTitle', true);
-				} else if (verb.action == 'delete') {
-					$ctrl.widgetDelete();
+				if (angular.isFunction(verb.action)) return verb.action($ctrl.selectedWidget, verb);
+
+				var action = _.isObject(verb) && verb.action ? verb.action : verb;
+
+				switch (action) {
+					case 'edit': $ctrl.widgetEdit(); break;
+					case 'toggleTitle': $ctrl.widgetToggle('showTitle', true); break;
+					case 'delete': $ctrl.widgetDelete(); break;
+					default:
+						throw new Error(`Unknown or unsupported verb action: "${action}"`);
 				}
 			};
 
