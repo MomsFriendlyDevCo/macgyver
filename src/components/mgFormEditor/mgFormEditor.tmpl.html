@@ -55,38 +55,25 @@
 <!-- }}} -->
 
 <!-- Form editing hover mask {{{ -->
-<div class="mgFormEditor-mask-background">
-	<a ng-click="$ctrl.widgetAdd('above')" class="mgFormEditor-mask-add-above"><i class="fa fa-2x fa-arrow-up"></i></a>
-	<a ng-click="$ctrl.widgetAdd('below')" class="mgFormEditor-mask-add-below"><i class="fa fa-2x fa-arrow-down"></i></a>
-</div>
-<div class="mgFormEditor-mask-verbs">
-	<div class="pull-right">
-		<a ng-show="$ctrl.$macgyver.widgets[$ctrl.selectedWidget.type].isContainer" ng-click="$ctrl.widgetAdd('inside'); $event.stopPropagation()" class="btn btn-success btn-sm" tooltip="Insert new widget inside this container" tooltip-container="body"><i class="fa fa-fw fa-indent"></i></a>
-		<a
-			ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.maskVerbs"
-			ng-click="$ctrl.verbAction(verb); $event.stopPropagation()"
-			ng-class="$ctrl.verbProperty(verb, 'class')"
-			tooltip="{{verb.tooltip}}"
-			tooltip-container="body">
-				<i ng-class="$ctrl.verbProperty(verb, 'icon')"></i>
+<div class="mgFormEditor-mask">
+	<div class="mgFormEditor-mask-background"></div>
+	<div class="mgFormEditor-mask-buttons btn-group">
+		<a class="mgFormEditor-mask-handle btn btn-default">
+			<i class="fa fa-fw fa-bars"></i>
 		</a>
+		<a class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-fw fa-ellipsis-h"></i>
+		</a>
+		<ul class="dropdown-menu">
+			<li ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.verbs" ng-class="verb.title == '-' ? 'divider' : ''">
+				<a ng-if="verb.title != '-'" ng-click="$ctrl.verbAction(verb)">
+					<i ng-class="$ctrl.verbProperty(verb, 'icon')"></i>
+					{{verb.title}}
+				</a>
+			</li>
+		</ul>
 	</div>
 </div>
-<!-- }}} -->
-
-<!-- Widget context menu {{{ -->
-<ul id="mgFormEditor-dropdown-widget" class="dropdown-menu">
-	<li><a ng-click="$ctrl.widgetEdit()"><i class="fa fa-fw fa-pencil"></i> Edit</a></li>
-	<li class="dropdown-submenu">
-		<a tabindex="-1"><i class="fa fa-fw fa-plus"></i> Add widget...</a>
-		<ul class="dropdown-menu">
-			<li><a ng-click="$ctrl.widgetAdd('above')"><i class="fa fa-fw fa-arrow-up"></i> Above</a></li>
-			<li><a ng-click="$ctrl.widgetAdd('below')"><i class="fa fa-fw fa-arrow-down"></i> Below</a></li>
-		</ul>
-	</li>
-	<li class="divider"></li>
-	<li><a ng-click="$ctrl.widgetDelete()"><i class="fa fa-fw fa-trash"></i> Delete</a></li>
-</ul>
 <!-- }}} -->
 
 <mg-form config="$ctrl.config" data="$ctrl.data"></mg-form>

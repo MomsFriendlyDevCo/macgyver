@@ -18,15 +18,12 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 			},
 
 			// Example of custom maskVerb properties
-			maskVerbs: [
-				{action: 'toggleTitle', class: 'btn btn-default btn-sm', icon: 'fa fa-fw fa-arrows-h', tooltip: 'Toggle the title visibility of this element'},
-				{action: 'delete', class: 'btn btn-danger btn-sm', icon: 'fa fa-fw fa-trash', tooltip: 'Delete this widget'},
-				{
-					action: widget => widget.star = !widget.star,
-					class: widget => 'btn btn-sm ' + (widget.star ? 'btn-warning' : 'btn-default'),
-					icon: widget => 'fa fa-fw ' + (widget.star ? 'fa-star' : 'fa-star-o'),
-					tooltip: 'Toggle the star of the widget',
-				},
+			verbs: [
+				{action: 'edit', icon: 'fa fa-fw fa-pencil', title: 'Edit'},
+				{title: '-'},
+				{action: 'toggleTitle', icon: 'fa fa-fw fa-arrows-h', title: 'Toggle title display'},
+				{action: 'delete', icon: 'fa fa-fw fa-trash', title: 'Delete widget'},
+				{action: widget => widget.star = !widget.star, icon: 'fa fa-fw fa-star', title: 'Toggle always displayed'},
 			],
 		},
 	});

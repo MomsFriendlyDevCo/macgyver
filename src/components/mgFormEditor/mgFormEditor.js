@@ -15,20 +15,9 @@ angular
 			config: '<',
 			data: '=',
 		},
-		controller: function($element, $macgyver, $scope, $timeout, dragularService, TreeTools) {
+		controller: function($element, $macgyver, $q, $scope, $timeout, dragularService, TreeTools) {
 			var $ctrl = this;
 			$ctrl.$macgyver = $macgyver;
-
-			// .editing mode {{{
-			// This variable (as well as the partner CSS: `mg-form-editor.editing` dictates whether mg-form-editor should react to events like clicking form elements
-			$ctrl.editing = false;
-			$ctrl.setEditing = editing => {
-				$ctrl.editing = editing;
-				$element.toggleClass('editing', $ctrl.editing);
-			};
-
-			$scope.$evalAsync(()=> $ctrl.setEditing(true)); // Kickoff initial editing mode when everything settles
-			// }}}
 
 			// Widget Creation {{{
 			$ctrl.categories = _($macgyver.widgets)
@@ -132,22 +121,21 @@ angular
 			/**
 			* Begin editing a widget
 			* @param {Object} [widget] An optional widget to edit, if omitted the widget is calculated from the currently selected DOM element
+			* @returns {Promise} A promise that will resolve when the user closes the modal dialog, it will reject if no object can be edited
 			*/
-			$ctrl.widgetEdit = function(widget) {
+			$ctrl.widgetEdit = widget => $q(function(resolve, reject) {
 				var node;
 				if (_.isObject(widget)) {
 					node = widget;
 				} else if ($ctrl.selectedWidget) { // Try to determine from currently selected widget if we have one
 					node = TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
 				} else { // Can't do anything - cancel action
-					return;
+					return reject('No widget selected to edit');
 				}
-
-				if (!node) return; // Didn't find anything - do nothing
 
 				// Get Human Readable Name for the edit widget. If error jsut use vanilla display
 				if (node.type && typeof node.type == 'string') {
-					$ctrl.widgetName = ' - '+node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim()
+					$ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim()
 				}
 
 				// Select the Angular data element
@@ -214,52 +202,16 @@ angular
 					],
 				};
 
-				$ctrl.setEditing(false);
-				$('#modal-mgFormEditor-edit').modal('show')
+				$ctrl.maskReact.move = false;
+				$ctrl.maskReact.context = false;
+				$('#modal-mgFormEditor-edit')
 					.one('hidden.bs.modal', ()=> {
-						$ctrl.setEditing(true); // Restore editing ability to editor (i.e. click will open the edit page)
-					});
-			};
-
-			// Clicking on any widget when the mask is enabled should open an editor {{{
-			$element.on('mousedown', 'mg-container > div', function(event) {
-				var elem = angular.element(this);
-				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
-
-				if (event.button == 0) {
-					event.stopPropagation();
-					$scope.$apply(() => {
-						$ctrl.widgetEdit();
-					});
-				}
+						resolve();
+						$ctrl.maskReact.move = true;
+						$ctrl.maskReact.context = true;
+					})
+					.modal('show')
 			});
-
-			// Open a context menu on RMB
-			$element.on('contextmenu', 'mg-container > div', function(event) {
-				var elem = angular.element(this);
-				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
-				event.stopPropagation();
-				event.preventDefault();
-
-				// Close the dropdown if the user clicks off it {{{
-				angular.element(document)
-					.one('mousedown', function(e) {
-						if (!angular.element(e.target).closest('.dropdown-menu').length) e.stopPropagation(); // Only prevent the click if the user wasn't clicking the dropdown menu
-						// Hide the menu in 100ms (Angular gets upset if we trigger an ng-click on an invisible <a> tag)
-						setTimeout(()=> angular.element('#mgFormEditor-dropdown-widget').css('display', 'none'), 100);
-					});
-				// }}}
-
-				// Position a dropdown under the mouse {{{
-				var pos = this.getBoundingClientRect();
-				angular.element('#mgFormEditor-dropdown-widget')
-					.css({
-						left: pos.left + _.get($macgyver.settings, 'mgFormEditor.menuPosition.left', 0),
-						top: pos.top + _.get($macgyver.settings, 'mgFormEditor.menuPosition.top', 0),
-					});
-				// }}}
-			});
-			// }}}
 
 			/**
 			* Toggle a single property associated with the active widget
@@ -298,29 +250,88 @@ angular
 			// }}}
 
 			// Setup a mask over any widget when the user moves their mouse over them {{{
-			$element.on('mouseover', '.mgComponent', function(event) {
-				event.stopPropagation();
+			$ctrl.maskReact = {
+				move: true, // Whether the mask can move, if falsy all mouse move events will be ignored
+				edit: true, // Respond to left-mouse-clicks
+				context: true, // Respond to right-mouse-clicks
+			};
+
+			// React to mouse movement
+			$element.on('mousemove', function(event) {
+				if (!$ctrl.maskReact.move) return;
+				var mouse = {left: event.clientX, top: event.clientY};
+
+				var matching =
+					angular.element('.mgComponent')
+						.toArray()
+						.map(i => {
+							var rect = i.getBoundingClientRect();
+							return {
+								rect,
+								area: rect.width * rect.height,
+								el: i,
+							};
+						})
+						.filter(i => i.rect.left <= mouse.left && i.rect.top <= mouse.top && i.rect.right >= mouse.left && i.rect.bottom >= mouse.top)
+						.sort((a, b) => { // Find the item under the mouse with the tinest area
+							if (a.area == b.area) return 0;
+							return a.area < b.area ? -1 : 1;
+						})
+						[0];
+
+				if (matching) {
+					$element.children('.mgFormEditor-mask').css({
+						left: matching.rect.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
+						top: matching.rect.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
+						width: matching.rect.width + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
+						height: matching.rect.height + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
+						display: 'block',
+					})
+
+					$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: angular.element(matching.el).attr('data-path')}, {childNode: 'items'});
+				} else {
+					$ctrl.selectedWidget = null;
+				}
+			});
+
+			// Hide the mask when scrolling
+			angular.element(document).on('scroll', ()=> $scope.$apply(()=> {
+				$element.children('.mgFormEditor-mask').css('display', 'none');
+				$ctrl.selectedWidget = null;
+			}));
+
+			// When opening / closing dropdowns disable the mask from moving
+			$element.on('show.bs.dropdown', ()=> { $scope.$apply(()=> {
+				$ctrl.maskReact.move = false
+				$ctrl.maskReact.edit = false
+			}) });
+			$element.on('hide.bs.dropdown', ()=> { $scope.$apply(()=> {
+				$ctrl.maskReact.move = true;
+				$ctrl.maskReact.edit = true;
+			}) });
+
+			// React to mouse clicking
+			$element.on('mousedown', function(event) {
+				if (angular.element(event.target).closest('a').length) return; // User was probably clicking on a button - don't handle this internally
+
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				var pos = this.getBoundingClientRect();
-				var setCSS = {
-					left: pos.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
-					top: pos.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
-					width: elem.width() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
-					height: elem.height() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
-				};
-				$element.children('.mgFormEditor-mask-background').css(setCSS);
+				if ($ctrl.maskReact.edit && event.button == 0) { // Left mouse click - edit widget under cursor
+					event.stopPropagation();
+					$scope.$apply(()=> $ctrl.widgetEdit());
+				}
+			});
 
-				var verbWidth = 250;
-				$element.children('.mgFormEditor-mask-verbs').css({
-					left: setCSS.left + setCSS.width - verbWidth - 5,
-					top: setCSS.top,
-					width: verbWidth,
-				});
-				$scope.$apply(() => {
-					$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: elem.attr('data-path')}, {childNode: 'items'});
-				});
+			// React to right mouse menu clicking
+			$element.on('contextmenu', function(event) {
+				if (!$ctrl.maskReact.context) return;
+
+				event.stopPropagation();
+				event.preventDefault();
+
+				if (!$ctrl.selectedWidget) return;
+				$element.find('.mgFormEditor-mask > .mgFormEditor-mask-buttons .dropdown-toggle').dropdown('toggle');
 			});
 			// }}}
 
@@ -376,15 +387,12 @@ angular
 			$ctrl.verbAction = verb => {
 				if (angular.isFunction(verb.action)) {
 					verb.action($ctrl.selectedWidget, verb);
-				} else if (angular.isString(verb.action)) {
-					switch (verb.action) {
-						case 'toggleTitle':
-							$ctrl.widgetToggle('showTitle', true);
-							break;
-						case 'delete':
-							$ctrl.widgetDelete();
-							break;
-					}
+				} else if (verb.action == 'edit') {
+					$ctrl.widgetEdit();
+				} else if (verb.action == 'toggleTitle') {
+					$ctrl.widgetToggle('showTitle', true);
+				} else if (verb.action == 'delete') {
+					$ctrl.widgetDelete();
 				}
 			};
 
