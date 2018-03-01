@@ -181,7 +181,10 @@ angular
 									if (!v.title) v.title = _.startCase(k);
 									return v;
 								})
-								.filter(i => i.id != 'items') // Sub-items are managed by the UI
+								.filter(i => // editable defaults to true for all cases unless the ID is `items` in which case it has to be explicit
+									!_.isUndefined(i.editable) ? i.editable
+									: i.id != 'items'
+								)
 								.value()
 						},
 						// }}}
