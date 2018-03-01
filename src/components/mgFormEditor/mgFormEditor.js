@@ -202,8 +202,11 @@ angular
 					],
 				};
 
-				$ctrl.maskReact.move = false;
-				$ctrl.maskReact.context = false;
+				$timeout(()=> { // Disable movement + context in the next tick so any upstream blockers can resolve first (e.g. the dropdown menu blocker will set these both back to true)
+					$ctrl.maskReact.move = false;
+					$ctrl.maskReact.context = false;
+				});
+
 				$('#modal-mgFormEditor-edit')
 					.one('hidden.bs.modal', ()=> {
 						resolve();
