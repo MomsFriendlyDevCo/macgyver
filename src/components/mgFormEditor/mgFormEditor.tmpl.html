@@ -67,7 +67,7 @@
 					<i class="fa fa-fw fa-ellipsis-h"></i>
 				</a>
 				<ul class="dropdown-menu">
-					<li ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.verbs" ng-class="verb.title == '-' ? 'divider' : ''">
+					<li ng-repeat="verb in $ctrl.dropdownVerbs" ng-class="verb.title == '-' ? 'divider' : ''">
 						<a ng-if="verb.title != '-'" ng-click="$ctrl.verbAction(verb)">
 							<i ng-class="verb.icon"></i>
 							{{verb.title}}

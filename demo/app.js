@@ -20,10 +20,18 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 			// Example of custom maskVerb properties
 			verbs: [
 				{action: 'edit', icon: 'fa fa-fw fa-pencil', title: 'Edit'},
-				{title: '-'},
-				{action: 'toggleTitle', icon: 'fa fa-fw fa-arrows-h', title: 'Toggle title display'},
 				{action: 'delete', icon: 'fa fa-fw fa-trash', title: 'Delete widget'},
-				{action: widget => widget.star = !widget.star, icon: 'fa fa-fw fa-star', title: 'Toggle always displayed'},
+				{title: '-'},
+				{
+					title: 'Always show widget title',
+					icon: widget => widget.showTitle || _.isUndefined(widget.showTitle) ? 'fa fa-fw fa-check-square-o' : 'fa fa-fw fa-square-o',
+					action: widget => widget.showTitle = ! _.get(widget, 'showTitle', true), // showTitle defaults to true if unspecifed
+				},
+				{
+					title: 'Always displayed',
+					icon: widget => widget.star ? 'fa fa-fw fa-check-square-o' : 'fa fa-fw fa-square-o',
+					action: widget => widget.star = !widget.star,
+				},
 			],
 		},
 	});

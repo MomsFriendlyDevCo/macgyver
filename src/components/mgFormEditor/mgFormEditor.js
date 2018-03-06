@@ -351,6 +351,28 @@ angular
 			});
 			// }}}
 
+			// Recalculate dropdown menu {{{
+			$ctrl.dropdownVerbs;
+
+			$ctrl.recalculateDropdown = ()=> {
+				if (!$ctrl.selectedWidget) {
+					$ctrl.dropdownVerbs = [];
+				} else {
+					// Flatten all properties down, if they are a function use the return value of that function
+					$ctrl.dropdownVerbs = $ctrl.$macgyver.settings.mgFormEditor.verbs.map(verb => _.mapValues(verb, (v, k) => {
+						if (_.isFunction(v) && k != 'action') { // Translate all functions EXCEPT action
+							return v($ctrl.selectedWidget);
+						} else {
+							return v;
+						}
+					}));
+				}
+			};
+
+			// Recalc if focus changes or the verb list changes
+			$scope.$watchGroup(['$ctrl.$macgyver.settings.mgFormEditor.verbs', '$ctrl.selectedWidget.id'], ()=> $ctrl.recalculateDropdown());
+			// }}}
+
 			// Drag + Drop via Dragular {{{
 			// Dragular has to be re-init each time the items array changes as it attaches to jQuery hooks and not Angular
 			$scope.$watchCollection('$ctrl.config.items', ()=> $timeout(()=> {
@@ -401,18 +423,22 @@ angular
 			* @param {Object|function|string} verb The verb to execute, if this is a function it is exected as (widget, verb)
 			*/
 			$ctrl.verbAction = verb => {
-				if (angular.isFunction(verb.action)) return verb.action($ctrl.selectedWidget, verb);
+				if (angular.isFunction(verb.action)) {
+					verb.action($ctrl.selectedWidget, verb);
+				} else {
+					var action = _.isObject(verb) && verb.action ? verb.action : verb;
 
-				var action = _.isObject(verb) && verb.action ? verb.action : verb;
-
-				switch (action) {
-					case 'add': $ctrl.widgetAdd(); break;
-					case 'edit': $ctrl.widgetEdit(); break;
-					case 'toggleTitle': $ctrl.widgetToggle('showTitle', true); break;
-					case 'delete': $ctrl.widgetDelete(); break;
-					default:
-						throw new Error(`Unknown or unsupported verb action: "${action}"`);
+					switch (action) {
+						case 'add': $ctrl.widgetAdd(); break;
+						case 'edit': $ctrl.widgetEdit(); break;
+						case 'delete': $ctrl.widgetDelete(); break;
+						default:
+							throw new Error(`Unknown or unsupported verb action: "${action}"`);
+					}
 				}
+
+				// Recalculate dropdown after all actions
+				$ctrl.recalculateDropdown();
 			};
 			// }}}
 
@@ -426,5 +452,6 @@ angular
 				});
 			};
 			// }}}
+
 		},
 	})
