@@ -58,20 +58,29 @@
 <div class="mgFormEditor-mask">
 	<div class="mgFormEditor-mask-background"></div>
 	<div class="mgFormEditor-mask-buttons btn-group">
-		<a class="mgFormEditor-mask-handle btn btn-default">
-			<i class="fa fa-fw fa-bars"></i>
-		</a>
-		<a class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-			<i class="fa fa-fw fa-ellipsis-h"></i>
-		</a>
-		<ul class="dropdown-menu">
-			<li ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.verbs" ng-class="verb.title == '-' ? 'divider' : ''">
-				<a ng-if="verb.title != '-'" ng-click="$ctrl.verbAction(verb)">
-					<i ng-class="$ctrl.verbProperty(verb, 'icon')"></i>
-					{{verb.title}}
+		<div class="mgFormEditor-mask-buttons-left">
+			<div class="btn-group">
+				<a class="mgFormEditor-mask-handle btn btn-default">
+					<i class="fa fa-fw fa-bars"></i>
 				</a>
-			</li>
-		</ul>
+				<a class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<i class="fa fa-fw fa-ellipsis-h"></i>
+				</a>
+				<ul class="dropdown-menu">
+					<li ng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.verbs" ng-class="verb.title == '-' ? 'divider' : ''">
+						<a ng-if="verb.title != '-'" ng-click="$ctrl.verbAction(verb)">
+							<i ng-class="verb.icon"></i>
+							{{verb.title}}
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="mgFormEditor-mask-buttons-right">
+			<a ng-click="$ctrl.verbAction('add')" class="btn btn-default">
+				<i class="fa fa-plus"></i>
+			</a>
+		</div>
 	</div>
 </div>
 <!-- }}} -->

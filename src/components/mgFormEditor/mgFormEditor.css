@@ -33,21 +33,35 @@ mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-background {
 	background-size: 140px 140px;
 }
 
-mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-buttons {
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons > .mgFormEditor-mask-buttons-left {
 	position: absolute;
 	top: calc(50% - 16px);
 	left: 10px;
 }
 
-mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-buttons > a {
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons > .mgFormEditor-mask-buttons-right {
+	position: absolute;
+	top: calc(50% - 16px);
+	right: 10px;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons a {
 	padding: 8px 12px !important;
 }
 
-mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-buttons .mgFormEditor-mask-handle {
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .mgFormEditor-mask-handle {
 	cursor: move;
 }
 
-mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-buttons .dropdown-menu a {
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .dropdown-menu a {
 	padding: 3px 10px;
 }
 /* }}} */

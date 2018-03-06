@@ -40,10 +40,10 @@ angular
 
 			/**
 			* Add a new widget
-			* @param {string} direction The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
+			* @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
 			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
 			*/
-			$ctrl.widgetAdd = function(direction, widget) {
+			$ctrl.widgetAdd = function(direction = 'below', widget) {
 				var node;
 				if (_.isString(widget)) {
 					debugger;
@@ -60,7 +60,17 @@ angular
 					direction: direction,
 				};
 
-				$('#modal-mgFormEditor-add').modal('show');
+				$timeout(()=> { // Disable movement + context in the next tick so any upstream blockers can resolve first (e.g. the dropdown menu blocker will set these both back to true)
+					$ctrl.maskReact.move = false;
+					$ctrl.maskReact.context = false;
+				});
+
+				$('#modal-mgFormEditor-add')
+					.one('hidden.bs.modal', ()=> {
+						$ctrl.maskReact.move = true;
+						$ctrl.maskReact.context = true;
+					})
+					.modal('show');
 			};
 
 			// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
@@ -396,29 +406,12 @@ angular
 				var action = _.isObject(verb) && verb.action ? verb.action : verb;
 
 				switch (action) {
+					case 'add': $ctrl.widgetAdd(); break;
 					case 'edit': $ctrl.widgetEdit(); break;
 					case 'toggleTitle': $ctrl.widgetToggle('showTitle', true); break;
 					case 'delete': $ctrl.widgetDelete(); break;
 					default:
 						throw new Error(`Unknown or unsupported verb action: "${action}"`);
-				}
-			};
-
-			/**
-			* Return the evaulated property of a mask verb
-			* If the verbs property is a function it is invoked with ({$ctrl.selectedWidget, verb})
-			* If its a string it is used as is
-			* @param {Object} verb The verb to examine
-			* @param {string} prop The property to evaluate and return
-			* @returns {*} The evaluated return value
-			*/
-			$ctrl.verbProperty = (verb, prop) => {
-				if (!$ctrl.selectedWidget) return;
-
-				if (angular.isFunction(verb[prop])) {
-					return verb[prop]($ctrl.selectedWidget);
-				} else {
-					return verb[prop];
 				}
 			};
 			// }}}
