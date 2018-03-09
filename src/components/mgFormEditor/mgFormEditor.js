@@ -350,26 +350,63 @@ angular
 			});
 			// }}}
 
-			// Recalculate dropdown menu {{{
-			$ctrl.dropdownVerbs;
+			// Recalculate verbs menu {{{
+			$ctrl.verbs = {dropdown: [], buttonsLeft: [], buttonsRight: []}; // All get popuulated via $ctrl.recalculateVerbs()
 
-			$ctrl.recalculateDropdown = ()=> {
-				if (!$ctrl.selectedWidget) {
-					$ctrl.dropdownVerbs = [];
-				} else {
+			$ctrl.recalculateVerbs = ()=> {
+				Object.assign($ctrl.verbs, _.mapValues($ctrl.verbs, (junk, verbArea) =>
 					// Flatten all properties down, if they are a function use the return value of that function
-					$ctrl.dropdownVerbs = $ctrl.$macgyver.settings.mgFormEditor.verbs.map(verb => _.mapValues(verb, (v, k) => {
-						if (_.isFunction(v) && k != 'action') { // Translate all functions EXCEPT action
-							return v($ctrl.selectedWidget);
-						} else {
-							return v;
-						}
-					}));
-				}
+					$macgyver.settings.mgFormEditor.verbs[verbArea]
+						.filter(verb =>
+							(!verb.selectedWidgetOnly || (verb.selectedWidgetOnly && $ctrl.selectedWidget)) // Selected widget filtering
+							&& (!verb.show || verb.show($ctrl.selectedWidget)) // Show function? Use it to determine filtering
+						)
+						.map(verb => _.mapValues(verb, (v, k) => {
+							if (_.isFunction(v) && k != 'action') { // Translate all functions EXCEPT action
+								return v($ctrl.selectedWidget);
+							} else {
+								return v;
+							}
+						}))
+				));
 			};
 
 			// Recalc if focus changes or the verb list changes
-			$scope.$watchGroup(['$ctrl.$macgyver.settings.mgFormEditor.verbs', '$ctrl.selectedWidget.id'], ()=> $ctrl.recalculateDropdown());
+			$scope.$watchGroup(['$ctrl.$macgyver.settings.mgFormEditor.verbs', '$ctrl.selectedWidget.id'], ()=> $ctrl.recalculateVerbs());
+
+
+			/**
+			* Execute a verb action
+			* The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
+			* or a string
+			* @param {Object|function|string} verb The verb to execute, if this is a function it is exected as (widget, verb)
+			*/
+			$ctrl.verbAction = verb => {
+				if (angular.isFunction(verb.action)) {
+					verb.action($ctrl.selectedWidget, verb);
+				} else {
+					var action = _.isObject(verb) && verb.action ? verb.action : verb;
+
+					switch (action) {
+						case 'add': $ctrl.widgetAdd(); break;
+						case 'edit': $ctrl.widgetEdit(); break;
+						case 'delete': $ctrl.widgetDelete(); break;
+						case 'dropdown':
+							// FIXME: Not yet working
+							$element.find('.mgFormEditor-mask-buttons .dropdown-toggle')
+								.attr('data-toggle', 'dropdown') // Have to set this for Bootstrap'py reasons
+								.dropdown();
+
+							console.log('DD DONE');
+							break;
+						default:
+							throw new Error(`Unknown or unsupported verb action: "${action}"`);
+					}
+				}
+
+				// Recalculate dropdown after all actions
+				$ctrl.recalculateVerbs();
+			};
 			// }}}
 
 			// Drag + Drop via Dragular {{{
@@ -412,33 +449,6 @@ angular
 					.flatten()
 					.value();
 			});
-			// }}}
-
-			// Mask verbs (i.e. buttons that appear on hover) {{{
-			/**
-			* Execute a verb action
-			* The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
-			* or a string
-			* @param {Object|function|string} verb The verb to execute, if this is a function it is exected as (widget, verb)
-			*/
-			$ctrl.verbAction = verb => {
-				if (angular.isFunction(verb.action)) {
-					verb.action($ctrl.selectedWidget, verb);
-				} else {
-					var action = _.isObject(verb) && verb.action ? verb.action : verb;
-
-					switch (action) {
-						case 'add': $ctrl.widgetAdd(); break;
-						case 'edit': $ctrl.widgetEdit(); break;
-						case 'delete': $ctrl.widgetDelete(); break;
-						default:
-							throw new Error(`Unknown or unsupported verb action: "${action}"`);
-					}
-				}
-
-				// Recalculate dropdown after all actions
-				$ctrl.recalculateDropdown();
-			};
 			// }}}
 
 			// Init + Set Defaults {{{
