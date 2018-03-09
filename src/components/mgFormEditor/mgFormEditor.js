@@ -64,12 +64,11 @@ angular
 					$ctrl.maskReact.context = false;
 				});
 
-				$('#modal-mgFormEditor-add')
-					.one('hidden.bs.modal', ()=> {
+				$ctrl.modal.show('modal-mgFormEditor-add')
+					.then(()=> {
 						$ctrl.maskReact.move = true;
 						$ctrl.maskReact.context = true;
-					})
-					.modal('show');
+					});
 			};
 
 			// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
@@ -82,7 +81,6 @@ angular
 			*/
 			$ctrl.widgetAddSubmit = function(props) {
 				angular.merge($ctrl.widgetAddDetails, props);
-				$('#modal-mgFormEditor-add').modal('hide');
 
 				// Locate node we are adding above / below
 				var node = TreeTools.find($ctrl.config, {id: $ctrl.widgetAddDetails.id}, {childNode: 'items'});
@@ -102,18 +100,18 @@ angular
 						var insertedIndex = (nodeIndex - 1) < 0 ? 0 : nodeIndex - 1;
 						//actually insert the prototypeWidget
 						nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
-						$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+						$ctrl.modal.hide().then(()=> $ctrl.widgetEdit(nodeParent.items[insertedIndex]));
 						break;
 					case 'below':
 						//Insert below the current widget (increment by 1)
 						var insertedIndex = nodeIndex + 1;
 						//actually insert the prototypeWidget
 						nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
-						$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+						$ctrl.modal.hide().then(()=> $ctrl.widgetEdit(nodeParent.items[insertedIndex]));
 						break;
 					case 'inside':
 						node.items.push(prototypeWidget);
-						$ctrl.widgetEdit(node.items[node.items.length-1]);
+						$ctrl.modal.hide().then(()=> $ctrl.widgetEdit(node.items[node.items.length-1]));
 						break;
 				}
 
@@ -221,13 +219,12 @@ angular
 					$ctrl.maskReact.context = false;
 				});
 
-				$('#modal-mgFormEditor-edit')
-					.one('hidden.bs.modal', ()=> {
+				$ctrl.modal.show('modal-mgFormEditor-edit')
+					.then(()=> {
 						resolve();
 						$ctrl.maskReact.move = true;
 						$ctrl.maskReact.context = true;
-					})
-					.modal('show')
+					});
 			});
 
 			/**
@@ -274,12 +271,12 @@ angular
 			};
 
 			// React to mouse movement
-			$element.on('mousemove', function(event) {
+			$element.on('mousemove', event => $scope.$apply(()=> {
 				if (!$ctrl.maskReact.move) return;
 				var mouse = {left: event.clientX, top: event.clientY};
 
 				var matching =
-					angular.element('.mgComponent')
+					angular.element('.mgComponent, .mgComponentEditorInserter')
 						.toArray()
 						.map(i => {
 							var rect = i.getBoundingClientRect();
@@ -476,5 +473,40 @@ angular
 			};
 			// }}}
 
+			// Utility - dealing with Bootstrap modals {{{
+			$ctrl.modal = {
+				/**
+				* Show a Bootstrap modal, resolving a promise when the modal is ready
+				* NOTE: Because of Bootstraps *interesting* way of dealing with modal windows, this promise will call $ctrl.modal.hide() (i.e. hide all modals) before attempting to show
+				* @param {string} id The DOM ID of the modal to show
+				* @returns {Promise} Resolves when the modal is ready
+				*/
+				show: id => $q(resolve => {
+					var query = '#' + id;
+					if (angular.element(query).is(':visible').length) return resolve(); // Element is already shown
+
+					$ctrl.modal.hide()
+						.then(()=> {
+							angular.element(query)
+								.one('shown.bs.modal', ()=> resolve())
+								.modal('show');
+						});
+				}),
+
+				/**
+				* Hide a Bootstrap modal, resolving a promise when the modal is hidden
+				* @param {string} [id] The DOM ID of the modal to hide, if omitted all modals are hidden
+				* @returns {Promise} Resolves when the modal / all models are closed, never rejects
+				*/
+				hide: id => $q(resolve => {
+					var query = id ? `#${id}` : '.modal';
+					if (!angular.element(query).is(':visible').length) return resolve(); // Element(s) is/are already hidden
+
+					angular.element(query)
+						.one('hidden.bs.modal', ()=> resolve())
+						.modal('hide')
+				}),
+			};
+			// }}}
 		},
 	})
