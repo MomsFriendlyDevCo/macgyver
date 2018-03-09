@@ -46,7 +46,6 @@ angular
 			$ctrl.widgetAdd = function(direction = 'below', widget) {
 				var node;
 				if (_.isString(widget)) {
-					debugger;
 					node = TreeTools.find($ctrl.config, {id: widget}, {childNode: 'items'});
 				} else if (_.isObject(widget)) {
 					node = widget;
