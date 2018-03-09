@@ -1,11 +1,10 @@
 /* Hover mask {{{ */
-@keyframes mgFormMoveMask { from { background-position: 0; } to { background-position: 140px; } }
+@keyframes mgFormMoveMaskEditor { from { background-position: 0; } to { background-position: 140px; } }
 
 mg-form-editor .mgFormEditor-mask {
 	position: fixed;
 	z-index: 100;
 	border-radius: 5px;
-	border: 3px solid #5662a8;
 
 	/* Start offscreen */
 	left: -10000px;
@@ -14,14 +13,22 @@ mg-form-editor .mgFormEditor-mask {
 	height: 0px;
 }
 
-mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-background {
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-editor  {
+	border: 3px solid #5662a8;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-inserter  {
+	border: 3px solid #56a628;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-editor > .mgFormEditor-mask-background {
 	cursor: pointer;
 	position: absolute;
 	top: 0;
 	right: 0;
 	bottom: 0;
 	left: 0;
-	animation: mgFormMoveMask 5s linear 0s infinite;
+	animation: mgFormMoveMaskEditor 5s linear 0s infinite;
 	opacity: 0.3;
 	background: repeating-linear-gradient(
 		45deg,
@@ -31,6 +38,23 @@ mg-form-editor .mgFormEditor-mask > .mgFormEditor-mask-background {
 		#5662a8 20px
 	);
 	background-size: 140px 140px;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-inserter > .mgFormEditor-mask-background {
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	opacity: 0.3;
+	background: repeating-radial-gradient(
+		circle,
+		#60bc6d,
+		#60bc6d 40px,
+		#56a862 40px,
+		#56a862 80px
+	);
 }
 
 mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons {

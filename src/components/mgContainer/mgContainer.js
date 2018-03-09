@@ -85,8 +85,8 @@ angular
 								</div>
 								<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'">{{w.help}}</div>
 							</div>
-							<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
-								<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
+							<div ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
+								<mg-form-editor-inserter config="$ctrl.config" data="$ctrl.data"></mg-form-editor-inserter>
 							</div>
 						</div>
 					</div>
@@ -111,7 +111,7 @@ angular
 				</div>
 				<div ng-switch-default>
 					<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">
-						<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>
+						<mg-form-editor-inserter config="$ctrl.config" data="$ctrl.data"></mg-form-editor-inserter>
 					</div>
 					<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 						<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'">{{w.title}}</label>

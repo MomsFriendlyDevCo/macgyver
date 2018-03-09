@@ -58,12 +58,12 @@
 <div class="mgFormEditor-mask">
 	<div class="mgFormEditor-mask-background"></div>
 	<div class="mgFormEditor-mask-buttons btn-group">
-		<div class="mgFormEditor-mask-buttons-left">
+		<div ng-if="!$ctrl.isInserter" class="mgFormEditor-mask-buttons-left">
 			<div class="btn-group">
 				<a ng-repeat="button in $ctrl.verbs.buttonsLeft" ng-click="$ctrl.verbAction(button)" ng-class="button.class">
 					<i ng-class="button.icon"></i>
 				</a>
-				<a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></a>
+				<a ng-if="$ctrl.selectedWidget" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></a>
 				<ul class="dropdown-menu">
 					<li ng-repeat="verb in $ctrl.verbs.dropdown" ng-class="verb.title == '-' ? 'divider' : ''">
 						<a ng-if="verb.title != '-'" ng-click="$ctrl.verbAction(verb)">
@@ -74,7 +74,7 @@
 				</ul>
 			</div>
 		</div>
-		<div class="mgFormEditor-mask-buttons-right">
+		<div ng-if="!$ctrl.isInserter" class="mgFormEditor-mask-buttons-right">
 			<a ng-repeat="button in $ctrl.verbs.buttonsRight" ng-click="$ctrl.verbAction(button)" ng-class="button.class">
 				<i ng-class="button.icon"></i>
 			</a>

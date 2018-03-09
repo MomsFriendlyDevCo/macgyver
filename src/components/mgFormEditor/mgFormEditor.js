@@ -122,6 +122,8 @@ angular
 			// }}}
 
 			// Widget Editing {{{
+			$ctrl.isInserter; // The user is hovering over a meta-inserter widget
+			$ctrl.insertPosition; // If !!$ctrl.isInserter this is where to actually make the new element
 			$ctrl.selectedWidget; // The currently selected widget (determined by mouseover)
 			$ctrl.selectedWidgetData;
 			$ctrl.selectedWidgetForm;
@@ -295,19 +297,29 @@ angular
 						[0];
 
 				if (matching) {
-					$element.children('.mgFormEditor-mask').css({
-						left: matching.rect.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
-						top: matching.rect.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
-						width: matching.rect.width + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
-						height: matching.rect.height + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
-						display: 'block',
-					})
+					$ctrl.isInserter = angular.element(matching.el).hasClass('mgComponentEditorInserter');
+					$element.children('.mgFormEditor-mask')
+						.removeClass('mgFormEditor-mask-editor mgFormEditor-mask-inserter')
+						.addClass($ctrl.isInserter ? 'mgFormEditor-mask-inserter' : 'mgFormEditor-mask-editor')
+						.css({
+							left: matching.rect.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
+							top: matching.rect.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
+							width: matching.rect.width + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
+							height: matching.rect.height + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
+							display: 'block',
+						})
 
-					$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: angular.element(matching.el).attr('data-path')}, {childNode: 'items'});
+					if ($ctrl.isInserter) {
+						$ctrl.selectedWidget = undefined;
+						$ctrl.insertPosition = angular.element(matching.el);
+					} else {
+						$ctrl.selectedWidget = TreeTools.find($ctrl.config, {id: angular.element(matching.el).attr('data-path')}, {childNode: 'items'});
+						$ctrl.insertPosition = undefined;
+					}
 				} else {
 					$ctrl.selectedWidget = null;
 				}
-			});
+			}));
 
 			// Hide the mask when scrolling
 			angular.element(document).on('scroll', ()=> $scope.$apply(()=> {
@@ -332,9 +344,11 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				if ($ctrl.maskReact.edit && event.button == 0) { // Left mouse click - edit widget under cursor
+				if ($ctrl.maskReact.edit && $ctrl.selectedWidget && event.button == 0) { // Left mouse click on widget - edit widget under cursor
 					event.stopPropagation();
 					$scope.$apply(()=> $ctrl.widgetEdit());
+				} else if ($ctrl.isInserter && event.button == 0) { // Left mouse click on inserter meta-widget
+					$ctrl.insertPosition.trigger('click');
 				}
 			});
 
@@ -350,7 +364,7 @@ angular
 			});
 			// }}}
 
-			// Recalculate verbs menu {{{
+			// Verbs {{{
 			$ctrl.verbs = {dropdown: [], buttonsLeft: [], buttonsRight: []}; // All get popuulated via $ctrl.recalculateVerbs()
 
 			$ctrl.recalculateVerbs = ()=> {

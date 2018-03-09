@@ -24,7 +24,7 @@ $macgyver.forEach = function(spec, cb) {
 		}
 	};
 	forEachScanner(spec);
-},
+};
 
 /**
 * Flatten a spec tree and return a key/val object of all fields
