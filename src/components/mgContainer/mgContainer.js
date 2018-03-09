@@ -20,7 +20,7 @@ angular
 		icon: 'fa fa-dropbox',
 		category: 'Layout',
 		isContainer: true,
-		template: '<mg-container config="w" data="w.ignoreScope ? $ctrl.data : $ctrl.data[w.id]"></mg-container>', // Overriding template for containers to bypass scoping if ignoreScope is true
+		template: '<mg-container config="w" data="$ctrl.data"></mg-container>', // Template to use per widget injection
 		config: {
 			// items: undefined, // Intentionally hidden - mgFormEditor provides functionality to edit this
 			ignoreScope: {type: 'mgToggle', default: false, title: 'Ignore Scope', help: 'Flatten the data scope with the parent level - i.e. dont nest any child element inside an object when saving data'},
@@ -77,7 +77,10 @@ angular
 							<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 								<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'">{{w.title}}</label>
 								<div ng-if="!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'">
-									` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
+									` + _.map($macgyver.widgets, w =>
+										`<div ng-switch-when="${w.id}">`
+										+ w.template
+										+ '</div>').join('\n') + `
 									<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
 								</div>
 								<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'">{{w.help}}</div>
