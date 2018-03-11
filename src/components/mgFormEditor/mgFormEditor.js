@@ -62,9 +62,9 @@ angular
 
 
 				return $q.resolve()
-					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu'], 'widgetAdd'))
+					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetAdd'))
 					.then(()=> $ctrl.modal.show('modal-mgFormEditor-add'))
-					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu'], 'widgetAdd'))
+					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetAdd'))
 			};
 
 			// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
@@ -211,9 +211,9 @@ angular
 				};
 
 				return $q.resolve()
-					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu'], 'widgetEdit'))
+					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
 					.then(()=> $ctrl.modal.show('modal-mgFormEditor-edit'))
-					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu'], 'widgetEdit'))
+					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
 			});
 
 			/**
@@ -252,7 +252,7 @@ angular
 			};
 			// }}}
 
-			// Setup a mask over any widget when the user moves their mouse over them {{{
+			// Edit mask {{{
 			// React to mouse movement
 			$element.on('mousemove', event => $scope.$apply(()=> {
 				if ($ctrl.locks.check('maskMove')) return;
