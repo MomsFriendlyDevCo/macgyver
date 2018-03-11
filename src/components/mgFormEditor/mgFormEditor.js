@@ -318,7 +318,7 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				if ($ctrl.locks.check('edit') && $ctrl.selectedWidget && event.button == 0) { // Left mouse click on widget - edit widget under cursor
+				if (!$ctrl.locks.check('edit') && $ctrl.selectedWidget && event.button == 0) { // Left mouse click on widget - edit widget under cursor
 					event.stopPropagation();
 					$scope.$apply(()=> $ctrl.widgetEdit());
 				} else if ($ctrl.isInserter && event.button == 0) { // Left mouse click on inserter meta-widget
