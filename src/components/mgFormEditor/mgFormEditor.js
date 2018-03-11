@@ -42,6 +42,7 @@ angular
 			* Add a new widget
 			* @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
 			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
+			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
 			*/
 			$ctrl.widgetAdd = function(direction = 'below', widget) {
 				var node;
@@ -59,16 +60,11 @@ angular
 					direction: direction,
 				};
 
-				$timeout(()=> { // Disable movement + context in the next tick so any upstream blockers can resolve first (e.g. the dropdown menu blocker will set these both back to true)
-					$ctrl.maskReact.move = false;
-					$ctrl.maskReact.context = false;
-				});
 
-				$ctrl.modal.show('modal-mgFormEditor-add')
-					.then(()=> {
-						$ctrl.maskReact.move = true;
-						$ctrl.maskReact.context = true;
-					});
+				return $q.resolve()
+					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu'], 'widgetAdd'))
+					.then(()=> $ctrl.modal.show('modal-mgFormEditor-add'))
+					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu'], 'widgetAdd'))
 			};
 
 			// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
@@ -214,17 +210,10 @@ angular
 					],
 				};
 
-				$timeout(()=> { // Disable movement + context in the next tick so any upstream blockers can resolve first (e.g. the dropdown menu blocker will set these both back to true)
-					$ctrl.maskReact.move = false;
-					$ctrl.maskReact.context = false;
-				});
-
-				$ctrl.modal.show('modal-mgFormEditor-edit')
-					.then(()=> {
-						resolve();
-						$ctrl.maskReact.move = true;
-						$ctrl.maskReact.context = true;
-					});
+				return $q.resolve()
+					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu'], 'widgetEdit'))
+					.then(()=> $ctrl.modal.show('modal-mgFormEditor-edit'))
+					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu'], 'widgetEdit'))
 			});
 
 			/**
@@ -264,15 +253,9 @@ angular
 			// }}}
 
 			// Setup a mask over any widget when the user moves their mouse over them {{{
-			$ctrl.maskReact = {
-				move: true, // Whether the mask can move, if falsy all mouse move events will be ignored
-				edit: true, // Respond to left-mouse-clicks
-				context: true, // Respond to right-mouse-clicks
-			};
-
 			// React to mouse movement
 			$element.on('mousemove', event => $scope.$apply(()=> {
-				if (!$ctrl.maskReact.move) return;
+				if ($ctrl.locks.check('maskMove')) return;
 				var mouse = {left: event.clientX, top: event.clientY};
 
 				var matching =
@@ -325,14 +308,8 @@ angular
 			}));
 
 			// When opening / closing dropdowns disable the mask from moving
-			$element.on('show.bs.dropdown', ()=> { $scope.$apply(()=> {
-				$ctrl.maskReact.move = false
-				$ctrl.maskReact.edit = false
-			}) });
-			$element.on('hide.bs.dropdown', ()=> { $scope.$apply(()=> {
-				$ctrl.maskReact.move = true;
-				$ctrl.maskReact.edit = true;
-			}) });
+			$element.on('show.bs.dropdown', ()=> { $scope.$apply(()=> $ctrl.locks.add(['maskMove', 'edit'], 'dropdown')) });
+			$element.on('hide.bs.dropdown', ()=> { $scope.$apply(()=> $ctrl.locks.remove(['maskMove', 'edit'], 'dropdown')) });
 
 			// React to mouse clicking
 			$element.on('mousedown', function(event) {
@@ -341,7 +318,7 @@ angular
 				var elem = angular.element(this);
 				if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-				if ($ctrl.maskReact.edit && $ctrl.selectedWidget && event.button == 0) { // Left mouse click on widget - edit widget under cursor
+				if ($ctrl.locks.check('edit') && $ctrl.selectedWidget && event.button == 0) { // Left mouse click on widget - edit widget under cursor
 					event.stopPropagation();
 					$scope.$apply(()=> $ctrl.widgetEdit());
 				} else if ($ctrl.isInserter && event.button == 0) { // Left mouse click on inserter meta-widget
@@ -351,7 +328,7 @@ angular
 
 			// React to right mouse menu clicking
 			$element.on('contextmenu', function(event) {
-				if (!$ctrl.maskReact.context) return;
+				if (!$ctrl.locks.check('contextMenu')) return;
 
 				event.stopPropagation();
 				event.preventDefault();
@@ -473,10 +450,10 @@ angular
 			};
 			// }}}
 
-			// Utility - dealing with Bootstrap modals {{{
+			// Utility > Modals {{{
 			$ctrl.modal = {
 				/**
-				* Show a Bootstrap modal, resolving a promise when the modal is ready
+				* Show a Bootstrap modal, resolving a promise when the modal has been closed
 				* NOTE: Because of Bootstraps *interesting* way of dealing with modal windows, this promise will call $ctrl.modal.hide() (i.e. hide all modals) before attempting to show
 				* @param {string} id The DOM ID of the modal to show
 				* @returns {Promise} Resolves when the modal is ready
@@ -488,7 +465,7 @@ angular
 					$ctrl.modal.hide()
 						.then(()=> {
 							angular.element(query)
-								.one('shown.bs.modal', ()=> resolve())
+								.one('hidden.bs.modal', ()=> resolve())
 								.modal('show');
 						});
 				}),
@@ -508,5 +485,53 @@ angular
 				}),
 			};
 			// }}}
+
+			// Utility > Locks {{{
+			$ctrl.locks = {
+				/**
+				* Internal lock storage
+				* @var {Object <Set>}
+				*/
+				_locks: {},
+
+				/**
+				* Add an item to a named lock set(s)
+				* @param {string|array} lock The locking set(s) to add to
+				* @param {string|array} id The ID of the lock to add
+				*/
+				add: (lock, id) => {
+					console.log('LOCK ADD', lock, id);
+					_.castArray(lock).forEach(l => {
+						if (!$ctrl.locks._locks[l]) $ctrl.locks._locks[l] = new Set();
+						_.castArray(id).forEach(i => $ctrl.locks._locks[l].add(i));
+					});
+				},
+
+				/**
+				* Remove an item from a lock set(s)
+				* @param {string|array} lock The locking set(s) to remove from
+				* @param {string|array} id The ID of the lock to remove
+				*/
+				remove: (lock, id) => {
+					console.log('LOCK REMOVE', lock, id);
+					_.castArray(lock).forEach(l => {
+						if (!$ctrl.locks._locks[l]) return;  // Lock is empty anyway
+						_.castArray(id).forEach(i => $ctrl.locks._locks[l].delete(i));
+					});
+					return $ctrl;
+				},
+
+				/**
+				* Query if a given lock has any entities
+				* @param {string} lock The lock to query
+				* @returns {boolean} True if the lock has any entities
+				*/
+				check: lock => {
+					console.log('QUERY', lock, 'SET', $ctrl.locks._locks[lock], 'KEYCOUNT', $ctrl.locks._locks[lock] ? $ctrl.locks._locks[lock].size : 'nolock');
+					return $ctrl.locks._locks[lock] && $ctrl.locks._locks[lock].size > 0;
+				},
+			};
+			// }}}
+
 		},
 	})
