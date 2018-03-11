@@ -4,6 +4,7 @@
 * @param {Object} [$macgyver.settings.mgFormEditor.maskPosition] Optional object containing left, top, width, height relative positions (e.g. left=1 will use the position + 1px)
 * @param {Object} [$macgyver.settings.mgFormEditor.menuPosition] Optional object containing left, top (e.g. left=1 will use the position + 1px)
 * @param {Object} [$macgyver.settings.mgFormEditor.maskVerbs] Optional collection of buttons to display when hovering over a component (see the 'Defaults' section in the code for the default contents)
+* @param {Object|boolean} [$macgyver.settings.mgFormEditor.scroller] Optional element to bind to for scroll events. If this is boolean false nothing will be bound, if its a string that jQuery selector will be used, everything else (including falsy) defaults to `document`
 */
 angular
 	.module('macgyver')
@@ -302,10 +303,20 @@ angular
 			}));
 
 			// Hide the mask when scrolling
-			angular.element(document).on('scroll', ()=> $scope.$apply(()=> {
-				$element.children('.mgFormEditor-mask').css('display', 'none');
-				$ctrl.selectedWidget = null;
-			}));
+			if (_.get($macgyver.settings, 'mgFormEditor.scroller') !== false) { // Bind to scrollable element?
+				angular.element(_.get($macgyver.settings, 'mgFormEditor.scroller') || document).on('scroll', ()=> {
+					$element.children('.mgFormEditor-mask').css('display', 'none');
+					$scope.$apply(()=> $ctrl.selectedWidget = null);
+				})
+
+				if (_.has($macgyver.settings, 'mgFormEditor.scroller')) { // Are we using a non-body scroller?
+					// Bind to the editing mask to detect wheel events - when we find them destroy the mask so future wheels get forwarded to the scroll element
+					$element.children('.mgFormEditor-mask')[0].addEventListener('wheel', ()=> {
+						$element.children('.mgFormEditor-mask').css('display', 'none');
+						$scope.$apply(()=> $ctrl.selectedWidget = null);
+					});
+				}
+			}
 
 			// When opening / closing dropdowns disable the mask from moving
 			$element.on('show.bs.dropdown', ()=> { $scope.$apply(()=> $ctrl.locks.add(['maskMove', 'edit'], 'dropdown')) });
