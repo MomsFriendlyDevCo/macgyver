@@ -32,109 +32,96 @@ mg-form .form-group {
 }
 
 /* Hover mask {{{ */
-@keyframes mgFormMoveMask { from { background-position: 0; } to { background-position: 140px; } }
+@keyframes mgFormMoveMaskEditor { from { background-position: 0; } to { background-position: 140px; } }
 
-mg-form-editor .mgFormEditor-mask-background {
-	pointer-events: none;
+mg-form-editor .mgFormEditor-mask {
 	position: fixed;
 	z-index: 100;
 	border-radius: 5px;
-	opacity: 0.4;
-	animation: mgFormMoveMask 2s linear 0s infinite;
+
+	/* Start offscreen */
+	left: -10000px;
+	top: -10000px;
+	width: 0px;
+	height: 0px;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-editor  {
+	border: 3px solid #5662a8;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-inserter  {
+	border: 3px solid #56a628;
+}
+
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-editor > .mgFormEditor-mask-background {
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	animation: mgFormMoveMaskEditor 5s linear 0s infinite;
+	opacity: 0.3;
 	background: repeating-linear-gradient(
 		45deg,
 		#606dbc,
 		#606dbc 10px,
-		#465298 10px,
-		#465298 20px
+		#5662a8 10px,
+		#5662a8 20px
 	);
 	background-size: 140px 140px;
-	overflow: hidden;
-
-	/* Start offscreen */
-	left: -10000px;
-	top: -10000px;
-	width: 0px;
-	height: 0px;
 }
 
-/* Add above / below buttons {{{ */
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-above {
-	pointer-events: auto;
+mg-form-editor .mgFormEditor-mask.mgFormEditor-mask-inserter > .mgFormEditor-mask-background {
+	cursor: pointer;
 	position: absolute;
-	left: 0;
 	top: 0;
-	width: 35px;
-	height: 35px;
-	color: #5f5f5f;
-	border-left: 50px solid #d4d4d4;
-	border-bottom: 50px solid transparent;
-}
-
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-above:hover {
-	border-left: 50px solid #000;
-	color: #fff;
-}
-
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-above > .fa {
-	margin-left: -45px;
-	margin-top: 5px;
-}
-
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-below {
-	pointer-events: auto;
-	position: absolute;
 	right: 0;
 	bottom: 0;
-	width: 35px;
-	height: 35px;
-	color: #5f5f5f;
-	border-right: 50px solid #d4d4d4;
-	border-top: 50px solid transparent;
+	left: 0;
+	opacity: 0.3;
+	background: repeating-radial-gradient(
+		circle,
+		#60bc6d,
+		#60bc6d 40px,
+		#56a862 40px,
+		#56a862 80px
+	);
 }
 
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-below:hover {
-	border-right: 50px solid #000;
-	color: #fff;
-}
-
-mg-form-editor .mgFormEditor-mask-background .mgFormEditor-mask-add-below > .fa {
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons {
 	position: absolute;
-	top: -30px;
-	left: 24px;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons > .mgFormEditor-mask-buttons-left {
+	position: absolute;
+	top: calc(50% - 16px);
+	left: 10px;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons > .mgFormEditor-mask-buttons-right {
+	position: absolute;
+	top: calc(50% - 16px);
+	right: 10px;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons a {
+	padding: 8px 12px !important;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .mgFormEditor-mask-handle {
+	cursor: move;
+}
+
+mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .dropdown-menu a {
+	padding: 3px 10px;
 }
 /* }}} */
-
-mg-form-editor .mgFormEditor-mask-verbs {
-	position: fixed;
-	z-index: 150;
-	padding-right: 40px;
-	/* Start offscreen */
-	left: -10000px;
-	top: -10000px;
-	width: 0px;
-	height: 0px;
-}
-/* }}} */
-
-/* Context menu {{{ */
-#mgFormEditor-dropdown-widget {
-	position: fixed;
-	display: block;
-
-	/* Start offscreen */
-	left: -10000px;
-	top: -10000px;
-}
-/* }}} */
-
-/* Hide when not in editing mode */
-mg-form-editor:not(.editing) .mgFormEditor-mask {
-	display: none;
-}
-
-mg-form-editor > mg-form mg-container > div:hover {
-}
 
 mg-list td {
 	padding: 0 !important;
