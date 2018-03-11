@@ -500,7 +500,7 @@ angular
 				*/
 				hide: id => $q(resolve => {
 					var query = id ? `#${id}` : '.modal';
-					if (!angular.element(query).is(':visible').length) return resolve(); // Element(s) is/are already hidden
+					if (!angular.element(query).is(':visible')) return resolve(); // Element(s) is/are already hidden
 
 					angular.element(query)
 						.one('hidden.bs.modal', ()=> resolve())
