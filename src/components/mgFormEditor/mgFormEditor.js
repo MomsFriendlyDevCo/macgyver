@@ -500,7 +500,6 @@ angular
 				* @param {string|array} id The ID of the lock to add
 				*/
 				add: (lock, id) => {
-					console.log('LOCK ADD', lock, id);
 					_.castArray(lock).forEach(l => {
 						if (!$ctrl.locks._locks[l]) $ctrl.locks._locks[l] = new Set();
 						_.castArray(id).forEach(i => $ctrl.locks._locks[l].add(i));
@@ -513,7 +512,6 @@ angular
 				* @param {string|array} id The ID of the lock to remove
 				*/
 				remove: (lock, id) => {
-					console.log('LOCK REMOVE', lock, id);
 					_.castArray(lock).forEach(l => {
 						if (!$ctrl.locks._locks[l]) return;  // Lock is empty anyway
 						_.castArray(id).forEach(i => $ctrl.locks._locks[l].delete(i));
@@ -526,10 +524,7 @@ angular
 				* @param {string} lock The lock to query
 				* @returns {boolean} True if the lock has any entities
 				*/
-				check: lock => {
-					console.log('QUERY', lock, 'SET', $ctrl.locks._locks[lock], 'KEYCOUNT', $ctrl.locks._locks[lock] ? $ctrl.locks._locks[lock].size : 'nolock');
-					return $ctrl.locks._locks[lock] && $ctrl.locks._locks[lock].size > 0;
-				},
+				check: lock => $ctrl.locks._locks[lock] && $ctrl.locks._locks[lock].size > 0,
 			};
 			// }}}
 
