@@ -208,7 +208,8 @@ angular
 									.value()
 						},
 						// }}}
-					],
+					]
+						.filter(widget => widget.type != 'mgContainer' || widget.items.length > 0), // Remove empty containers
 				};
 
 				return $q.resolve()
