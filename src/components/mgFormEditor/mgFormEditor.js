@@ -92,6 +92,7 @@ angular
 				var prototypeWidget = {
 					id: $ctrl.widgetAddDetails.type + '-' + _.times(5, i => _.sample('abcdefghijklmnopqrstuvwxyz').split('')).join(''), // Generate a random ID
 					type: $ctrl.widgetAddDetails.type,
+					title: $macgyver.widgets[$ctrl.widgetAddDetails.type].title, // Set a default title
 				};
 
 				switch ($ctrl.widgetAddDetails.direction) {
