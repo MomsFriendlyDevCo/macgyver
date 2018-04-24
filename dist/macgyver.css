@@ -1,3 +1,5 @@
+.p-t-5 { padding-top: 5px }
+
 /* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
 mg-choice-buttons .fa.fa-fw {
 	height: 1em;
@@ -30,6 +32,39 @@ mg-choice-buttons .fa.fa-fw {
 mg-form .form-group {
 	margin-bottom: 10px;
 }
+
+/* Generic helper classes {{{ */
+mg-form-editor .text-nowrap {
+	white-space: nowrap;
+}
+
+mg-form-editor .text-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* }}} */
+
+/* Add widget modal {{{ */
+/* Tidy up the left hand size widget filter pills {{{ */
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills li:not(.active) a {
+	color: #333;
+}
+
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills li.active i> a {
+	color: #FFF;
+}
+
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills > a > i {
+	margin-right: 5px;
+}
+/* }}} */
+/* Tidy up the main widget selection boxes {{{ */
+mg-form-editor #modal-mgFormEditor-add .widget-item {
+	margin-bottom: 5px;
+}
+/* }}}
+/* }}} */
 
 /* Hover mask {{{ */
 @keyframes mgFormMoveMaskEditor { from { background-position: 0; } to { background-position: 140px; } }
@@ -143,29 +178,17 @@ mg-list td:first-child.text-center {
 	vertical-align: middle;
 }
 
+/* Hide the spin button in mgNumber controls */
+mg-number input[type=number]::-webkit-outer-spin-button,
+mg-number input[type=number]::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
 mg-seperator > hr {
 	margin-top: 0px;
 	margin-bottom: 10px;
-}
-
-mg-table td {
-	padding: 0 !important;
-}
-
-mg-table td > .btn {
-	height: 35px;
-}
-
-mg-table td > mg-container > .form-group {
-	margin: 0 !important;
-}
-
-mg-table td > mg-container > .form-group .col-sm-12 {
-	padding: 0 !important;
-}
-
-mg-table td > mg-container > .form-group .col-sm-12 .form-control {
-	border: none;
 }
 
 mg-signature .form-control-static {
@@ -196,6 +219,26 @@ mg-signature .btn.btn-fab {
 mg-signature .btn.btn-fab > i.fa {
 	margin-left: -2px;
 	margin-top: 6px;
+}
+
+mg-table td {
+	padding: 0 !important;
+}
+
+mg-table td > .btn {
+	height: 35px;
+}
+
+mg-table td > mg-container > .form-group {
+	margin: 0 !important;
+}
+
+mg-table td > mg-container > .form-group .col-sm-12 {
+	padding: 0 !important;
+}
+
+mg-table td > mg-container > .form-group .col-sm-12 .form-control {
+	border: none;
 }
 
 @media print {
