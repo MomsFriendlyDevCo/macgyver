@@ -2,7 +2,7 @@
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 'ui.select']).provider('$macgyver', function () {
+angular.module('macgyver', ['angular-bs-tooltip', 'angular-ui-scribble', 'dragularModule', 'ngSanitize', 'ngTreeTools', 'ui.select']).provider('$macgyver', function () {
 	var $macgyver = this;
 	$macgyver.widgets = {};
 
@@ -182,14 +182,16 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
  */
 	$macgyver.forEach = function (spec, cb) {
 		var forEachScanner = function forEachScanner(root, path) {
-			var rootPath = (path ? path + '.' : '') + (root.id || '');
-			cb(root, rootPath);
-			if (_.isArray(root.items)) root.items.forEach(function (i) {
-				return forEachScanner(i, rootPath);
-			});
+			if (_.isObject(root)) {
+				var rootPath = (path ? path + '.' : '') + (root && root.id ? root.id : '');
+				cb(root, rootPath);
+				if (_.isArray(root.items)) root.items.forEach(function (i) {
+					return forEachScanner(i, rootPath);
+				});
+			}
 		};
 		forEachScanner(spec);
-	},
+	};
 
 	/**
  * Flatten a spec tree and return a key/val object of all fields
@@ -213,34 +215,75 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 	/**
  * Attempt to neaten up a 'rough' MacGyver spec into a pristine one
  * This function performs various sanity checks on nested elements e.g. checking each item has a valid ID and if not adding one
+ * @param {boolean} [checkRootNoId=true] Root node should never have an ID
+ * @param {boolean} [checkRootShowTitle=true] Verify that the root element has showTitle disabled
+ * @param {boolean} [checkWidgetType=true] If the widget type is not registered change it to `mgText`
+ * @param {boolean} [checkWidgetIds=true] Verify that each widget has an ID, if no ID is found - generate one
+ * @param {boolean} [checkWidgetContainerIgnoreScope=true] Check that all mgContainers have ignoreScope enabled if its not specified
+ * @param {function|null} [reporter] Reporter used when logging errors, defaults to using console.log
  */
-	$macgyver.neatenSpec = function (spec) {
+	$macgyver.neatenSpec = function (spec, options) {
+		var settings = _.defaults(options, {
+			checkRootNoId: true,
+			checkRootShowTitle: true,
+			checkWidgetType: true,
+			checkWidgetIds: true,
+			checkWidgetContainerIgnoreScope: true,
+			reporter: function reporter(msg) {
+				return console.log(msg);
+			}
+		});
+
+		if (!settings.reporter) settings.reporter = function () {}; // Make sure settings.reporter always exists, even if its a NoOp
+
 		// Force showTitle to be false on the root element if its not already set {{{
-		if (_.isUndefined(spec.showTitle)) spec.showTitle = false;
-		if (!spec.id) spec.id = 'ROOT'; // Force root element to have an ID
+		if (settings.checkRootNoId && spec.id) {
+			delete spec.id;
+			settings.reporter('Root node should not have an ID - removed');
+		}
+
+		if (settings.checkRootShowTitle && _.isUndefined(spec.showTitle)) {
+			spec.showTitle = false;
+			settings.reporter('Root node should not showTitle enabled - disabled');
+		}
 		// }}}
 
 		var flatSpec = $macgyver.flattenSpec(spec);
 		$macgyver.forEach(spec, function (widget, path) {
-			// Check that the widget is valid {{{
-			if (!$macgyver.widgets[widget.type]) {
-				console.log("Invalid or unregistered MacGyver widget '" + widget.type + "' - transforming into a mgText for now");
-				widget.type = 'mgText';
+			if (path == '') return; // Don't examine root elements
+
+			if (settings.checkWidgetType) {
+				// Check that the widget is valid {{{
+				if (!$macgyver.widgets[widget.type]) {
+					settings.reporter('Invalid or unregistered MacGyver widget ' + widget.type + ' - transforming into a mgText');
+					widget.type = 'mgText';
+				}
 			}
 			// }}}
 
 			// Force all elements to have an ID {{{
-			if (!widget.id) {
-				// Make an ID based on the path {{{
-				var tryNumber = 0;
+			if (settings.checkWidgetIds && (!widget.id
+			// BUGFIX: Rename all widgets beginning with $ROOT / ROOT to a randomly selected name {{{
+			// This patch is required to retroactively fix issues with the previous path-based fix, it can be removed after 2018-07-01 - MC
+			|| /^\$*ROOT/.test(widget.id)
+			// }}}
+			)) {
+				// Make an ID based on the widget type + some junk {{{
+				var oldId = widget.id;
 				var tryId;
 				do {
-					tryId = '$' + path + '$' + tryNumber++;
+					tryId = widget.type + '-' + _.times(5, function (i) {
+						return _.sample('abcdefghijklmnopqrstuvwxyz').split('');
+					}).join('');
 				} while (flatSpec[tryId]);
 				widget.id = tryId;
+				settings.reporter((oldId ? 'Invalid widget ID ' + oldId : 'Non-existant ID for widget ' + widget.type) + ('generated new ID as ' + widget.id));
 				// }}}
 
-				if (widget.type == 'mgContainer') widget.ignoreScope = true; // Containers - enable ignoreScope also
+				if (settings.checkWidgetContainerIgnoreScope && widget.type == 'mgContainer' && _.isUndefined(widget.ignoreScope)) {
+					widget.ignoreScope = true; // Containers - enable ignoreScope also
+					settings.reporter('Forced mgContainer to ignoreScope');
+				}
 			}
 			// }}}
 		});
@@ -272,13 +315,36 @@ angular.module('macgyver', ['angular-ui-scribble', 'ngSanitize', 'ngTreeTools', 
 	$macgyver.$get = function () {
 		return $macgyver;
 	};
-}).filter('filesize', function () {
+})
+
+/**
+* Helper filter to return a human readable filesize
+* @param {string|number} filesize The filesize to format
+* @return {string} A human readable filesize (e.g. '45kb')
+* @example
+* $ctrl.someNumber | filesize
+*/
+.filter('filesize', function () {
 	return filesize;
-}).filter('mgFilterObject', function () {
-	return function (value, filter) {
-		return _.pickBy(value, function (i) {
-			return _.isMatch(i, filter);
-		});
+})
+
+/**
+* Helper filter for MacGyver which takes an object and runs a filter on it
+* @param {Object} obj The object to filter
+* @param {Object|function} filter Either a matching object expression to filter by or a function which is called as `(value, key)`
+* @return {Object} The input object filtered by the supplied filter
+* @example
+* $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable: true}
+*/
+.filter('mgFilterObject', function () {
+	return function (obj, filter) {
+		if (angular.isObject(filter)) {
+			return _.pickBy(obj, function (i) {
+				return _.isMatch(i, filter);
+			});
+		} else if (angular.isFunction(filter)) {
+			return _.pickBy(obj, filter);
+		}
 	};
 });
 
@@ -347,6 +413,85 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver selector of an item from a list of enums
+* @param {Object} config The config specification
+* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
+* @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
+* @param {string} [config.textPrompt] The prompt to display in the select box
+* @param {string} [config.textInnerPrompt] The prompt to display when searching
+* @param {string} [config.displayPrimaryField] The main field data to display, mapped from the collection provided in config.enum
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgChoiceDropdown', {
+		title: 'Dropdown multiple-choice',
+		icon: 'fa fa-chevron-circle-down',
+		category: 'Choice Selectors',
+		config: {
+			url: { type: 'mgUrl', help: 'Data feed URL' },
+			enum: {
+				type: 'mgList',
+				title: 'The list of items to display',
+				default: ['Foo', 'Bar', 'Baz']
+			},
+			textPrompt: { type: 'mgText', default: 'Choose an item...' },
+			textInnerPrompt: { type: 'mgText', default: 'Select an item...' },
+			displayPrimaryField: { type: 'mgText', default: 'title', help: 'The field of each enum item to display as the primary selection text' },
+			displaySecondaryField: { type: 'mgText', help: 'The field of each enum to display as a secondary item' }
+		}
+	});
+}]).component('mgChoiceDropdown', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$http', '$macgyver', '$scope', function controller($http, $macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+		$ctrl.enumIter = []; // Cleaned up version of enum
+		$scope.$watchCollection('$ctrl.config.enum', function () {
+			if (!$ctrl.config.enum) return; // No data yet
+			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
+				// Array of strings
+				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
+					return {
+						id: _.camelCase(i),
+						title: i
+					};
+				});
+			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
+				// Collection
+				$ctrl.enumIter = $ctrl.config.enum;
+			}
+		});
+		// }}}
+		// Go fetch the URL contents if $ctrl.config.url is set {{{
+		$scope.$watch('$ctrl.url', function () {
+			if (!$ctrl.config.url) return; // No URL to pull
+			$http.get($ctrl.config.url).then(function (res) {
+				return $ctrl.enumIter = res.data.map(function (i) {
+					if (i._id) {
+						// Remap _id => id
+						i.id = i._id;
+						delete i._id;
+					}
+					return i;
+				});
+			});
+		});
+		// }}}
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<ui-select ng-model="$ctrl.data" title="{{$ctrl.config.textPrompt || \'Choose an item...\'}}">\n\t\t\t\t<ui-select-match placeholder="{{$ctrl.config.textInnerPrompt || \'Select an item...\'}}">{{$select.selected[$ctrl.config.displayPrimaryField || \'title\']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat="item.id as item in $ctrl.enumIter | filter:$select.search track by item.id" group-by="$ctrl.config.groupBy">\n\t\t\t\t\t<div ng-bind-html="item[$ctrl.config.displayPrimaryField || \'title\'] | highlight:$select.search"></div>\n\t\t\t\t\t<small ng-if="$ctrl.config.displaySecondaryField" ng-bind-html="item[$ctrl.config.displaySecondaryField] | highlight:$select.search"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t'
+});
+
+/**
 * MacGyver selector of an item from a small list of enums
 * @param {Object} config The config specification
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
@@ -393,7 +538,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 
 		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
 		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watch('$ctrl.config.enum', function () {
+		$scope.$watchCollection('$ctrl.config.enum', function () {
 			if (!$ctrl.config.enum) return; // No data yet
 			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
 				// Array of strings
@@ -416,85 +561,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<div ng-class="$ctrl.config.classWrapper || \'btn-group\'">\n\t\t\t\t<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || \'btn\',\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassSelected || \'btn-primary\'\n\t\t\t\t\t: item.class || $ctrl.config.itemClassDefault || \'btn-default\'\n\t\t\t\t]" ng-click="$ctrl.data = item.id">\n\t\t\t\t\t<i ng-class="$ctrl.data == item.id ? (item.iconSelected || $ctrl.config.iconSelected) : (item.icon || $ctrl.config.iconDefault)"></i>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
-});
-
-/**
-* MacGyver selector of an item from a list of enums
-* @param {Object} config The config specification
-* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
-* @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
-* @param {string} [config.textPrompt] The prompt to display in the select box
-* @param {string} [config.textInnerPrompt] The prompt to display when searching
-* @param {string} [config.displayPrimaryField] The main field data to display, mapped from the collection provided in config.enum
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgChoiceDropdown', {
-		title: 'Dropdown multiple-choice',
-		icon: 'fa fa-chevron-circle-down',
-		category: 'Choice Selectors',
-		config: {
-			url: { type: 'mgUrl', help: 'Data feed URL' },
-			enum: {
-				type: 'mgList',
-				title: 'The list of items to display',
-				default: ['Foo', 'Bar', 'Baz']
-			},
-			textPrompt: { type: 'mgText', default: 'Choose an item...' },
-			textInnerPrompt: { type: 'mgText', default: 'Select an item...' },
-			displayPrimaryField: { type: 'mgText', default: 'title', help: 'The field of each enum item to display as the primary selection text' },
-			displaySecondaryField: { type: 'mgText', help: 'The field of each enum to display as a secondary item' }
-		}
-	});
-}]).component('mgChoiceDropdown', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$http', '$macgyver', '$scope', function controller($http, $macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watch('$ctrl.config.enum', function () {
-			if (!$ctrl.config.enum) return; // No data yet
-			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
-				// Array of strings
-				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
-					return {
-						id: _.camelCase(i),
-						title: i
-					};
-				});
-			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
-				// Collection
-				$ctrl.enumIter = $ctrl.config.enum;
-			}
-		});
-		// }}}
-		// Go fetch the URL contents if $ctrl.config.url is set {{{
-		$scope.$watch('$ctrl.url', function () {
-			if (!$ctrl.config.url) return; // No URL to pull
-			$http.get($ctrl.config.url).then(function (res) {
-				return $ctrl.enumIter = res.data.map(function (i) {
-					if (i._id) {
-						// Remap _id => id
-						i.id = i._id;
-						delete i._id;
-					}
-					return i;
-				});
-			});
-		});
-		// }}}
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<ui-select ng-model="$ctrl.data" title="{{$ctrl.config.textPrompt || \'Choose an item...\'}}">\n\t\t\t\t<ui-select-match placeholder="{{$ctrl.config.textInnerPrompt || \'Select an item...\'}}">{{$select.selected[$ctrl.config.displayPrimaryField || \'title\']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat="item.id as item in $ctrl.enumIter | filter:$select.search track by item.id" group-by="$ctrl.config.groupBy">\n\t\t\t\t\t<div ng-bind-html="item[$ctrl.config.displayPrimaryField || \'title\'] | highlight:$select.search"></div>\n\t\t\t\t\t<small ng-if="$ctrl.config.displaySecondaryField" ng-bind-html="item[$ctrl.config.displaySecondaryField] | highlight:$select.search"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t'
 });
 
 /**
@@ -531,7 +597,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 
 		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
 		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watch('$ctrl.config.enum', function () {
+		$scope.$watchCollection('$ctrl.config.enum', function () {
 			if (!$ctrl.config.enum) return; // No data yet
 			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
 				// Array of strings
@@ -563,6 +629,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 * @param {array} config.items A collection of sub-item objects to display
 * @param {boolean} [config.ignoreScope=false] If true any child item storage paths will not be prefixed by this items ID (e.g. a child item with the ID 'foo' will normally be set to '(whatever this ID is).foo' unless this option is true)
 * @param {string} [config.layout="form"] The layout profile to use. ENUM: form = A standard horizontal form layout, panel = A bootsrap panel with header and footer
+* @param {boolean} [config.items[].editable=true] Whether the item should be exposed as editable in mgFormEditor, NOTE: This defaults to false for the key `items` unless explicitally specified
 * @param {boolean} [config.items[].help] Optional help text to show under the element
 * @param {boolean} [config.items[].ignoreScope=false] Whether this container effects the lexical path of the item being set - i.e. if enabled (the default) the saved item will use this containers ID in the path of the item to set, if disabled this container is effectively invisible
 * @param {boolean} [config.items[].showTitle=true] Whether to show the left-hand-side form title for the item
@@ -576,7 +643,7 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		icon: 'fa fa-dropbox',
 		category: 'Layout',
 		isContainer: true,
-		template: '<mg-container config="w" data="w.ignoreScope ? $ctrl.data : $ctrl.data[w.id]"></mg-container>', // Overriding template for containers to bypass scoping if ignoreScope is true
+		template: '<mg-container config="w" data="$ctrl.data"></mg-container>', // Template to use per widget injection
 		config: {
 			// items: undefined, // Intentionally hidden - mgFormEditor provides functionality to edit this
 			ignoreScope: { type: 'mgToggle', default: false, title: 'Ignore Scope', help: 'Flatten the data scope with the parent level - i.e. dont nest any child element inside an object when saving data' },
@@ -616,9 +683,9 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 	template: ['$macgyver', function template($macgyver) {
 		return '\n\t\t\t<div ng-switch="$ctrl.config.layout">\n\t\t\t\t<div ng-switch-when="panel">\n\t\t\t\t\t<div class="panel" ng-class="[$ctrl.config.layoutStyle || \'panel-default\', $ctrl.config.layoutColorful ? \'panel-colorful\' : undefined]">\n\t\t\t\t\t\t<div class="panel-heading">{{$ctrl.config.title}}</div>\n\t\t\t\t\t\t<div class="panel-body">\n\t\t\t\t\t\t\t<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t\t\t\t\t<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text) ? \'col-sm-3\' : \'col-sm-12\'">{{w.title}}</label>\n\t\t\t\t\t\t\t\t<div ng-if="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">\n\t\t\t\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
 			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
-		}).join('\n') + '\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9 col-sm-offset-3\' : \'col-sm-12\'">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t\t\t\t\t<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when="columns">\n\t\t\t\t\t<table class="table table-bordered" style="width: 100%">\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th ng-repeat="w in $ctrl.config.items track by w.id">{{w.title}}</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
+		}).join('\n') + '\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9 col-sm-offset-3\' : \'col-sm-12\'">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t\t\t\t\t<mg-form-editor-inserter config="$ctrl.config" data="$ctrl.data"></mg-form-editor-inserter>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when="columns">\n\t\t\t\t\t<table class="table table-bordered" style="width: 100%">\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th ng-repeat="w in $ctrl.config.items track by w.id">{{w.title}}</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
 			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
-		}).join('\n') + '\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t\t\t\t<div class="help-block" ng-if="w.help">{{w.help}}</div>\n\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-default>\n\t\t\t\t\t<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t\t\t<a class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Add widget</a>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t\t\t<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text) ? \'col-sm-3\' : \'col-sm-12\'">{{w.title}}</label>\n\t\t\t\t\t\t<div ng-if="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">\n\t\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
+		}).join('\n') + '\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t\t\t\t<div class="help-block" ng-if="w.help">{{w.help}}</div>\n\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-default>\n\t\t\t\t\t<div ng-click="$ctrl.widgetAddChild()" ng-if="$ctrl.isEditing && !$ctrl.config.items.length" class="text-center">\n\t\t\t\t\t\t<mg-form-editor-inserter config="$ctrl.config" data="$ctrl.data"></mg-form-editor-inserter>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == \'error\' ? \'has-error\' : \'\', w.rowClass]">\n\t\t\t\t\t\t<label ng-if="w.showTitle || w.showTitle===undefined" class="control-label text-left" ng-class="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text) ? \'col-sm-3\' : \'col-sm-12\'">{{w.title}}</label>\n\t\t\t\t\t\t<div ng-if="!(w.type==\'mgLabel\' || w.type==\'mgHtml\') || ($ctrl.data[w.id] || w.text)" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9\' : \'col-sm-12\'">\n\t\t\t\t\t\t\t' + _.map($macgyver.widgets, function (w) {
 			return '<div ng-switch-when="' + w.id + '">' + w.template + '</div>';
 		}).join('\n') + '\n\t\t\t\t\t\t\t<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="help-block" ng-if="w.help" ng-class="w.showTitle || w.showTitle===undefined ? \'col-sm-9 col-sm-offset-3\' : \'col-sm-12\'">{{w.help}}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
 	}]
@@ -1009,36 +1076,27 @@ angular.module('macgyver').component('mgForm', {
 * @param {Object} [$macgyver.settings.mgFormEditor.maskPosition] Optional object containing left, top, width, height relative positions (e.g. left=1 will use the position + 1px)
 * @param {Object} [$macgyver.settings.mgFormEditor.menuPosition] Optional object containing left, top (e.g. left=1 will use the position + 1px)
 * @param {Object} [$macgyver.settings.mgFormEditor.maskVerbs] Optional collection of buttons to display when hovering over a component (see the 'Defaults' section in the code for the default contents)
+* @param {Object|boolean} [$macgyver.settings.mgFormEditor.scroller] Optional element to bind to for scroll events. If this is boolean false nothing will be bound, if its a string that jQuery selector will be used, everything else (including falsy) defaults to `document`
 */
 angular.module('macgyver').component('mgFormEditor', {
-	template: '\n\t\t\t<!-- Widget Add modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-add" class="modal fade">\n\t\t\t\t<div class="modal-dialog" style="width: 50%">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Add Widget</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t\t<div class="col-md-3">\n\t\t\t\t\t\t\t\t\t<ul class="nav nav-pills nav-stacked">\n\t\t\t\t\t\t\t\t\t\t<li ng-repeat="cat in $ctrl.categories" ng-class="cat == $ctrl.category && \'active\'" ng-click="$ctrl.category = cat">\n\t\t\t\t\t\t\t\t\t\t\t<a>{{cat}}</a>\n\t\t\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="col-md-9">\n\t\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetAddSubmit({type: widget.id})" ng-repeat="widget in $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable:true, category: $ctrl.category} track by widget.id" class="col-md-4 pad-top-sm">\n\t\t\t\t\t\t\t\t\t\t<div class="btn btn-default btn-xlg btn-block text-center">\n\t\t\t\t\t\t\t\t\t\t\t<div><i ng-class="widget.icon" class="fa-4x"></i></div>\n\t\t\t\t\t\t\t\t\t\t\t<div class="pad-top-sm">{{widget.title}}</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget Edit modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-edit" class="modal fade">\n\t\t\t\t<div class="modal-dialog">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Edit Widget {{$ctrl.widgetName}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body form-horizontal">\n\t\t\t\t\t\t\t<mg-form config="$ctrl.selectedWidgetForm" data="$ctrl.selectedWidgetData"></mg-form>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<div class="pull-left">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetDelete()" type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-trash"></i> Delete</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class="pull-right">\n\t\t\t\t\t\t\t\t<a type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i> Save &amp; Close</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Form editing hover mask {{{ -->\n\t\t\t<div class="mgFormEditor-mask-background">\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'above\')" class="mgFormEditor-mask-add-above"><i class="fa fa-2x fa-arrow-up"></i></a>\n\t\t\t\t<a ng-click="$ctrl.widgetAdd(\'below\')" class="mgFormEditor-mask-add-below"><i class="fa fa-2x fa-arrow-down"></i></a>\n\t\t\t</div>\n\t\t\t<div class="mgFormEditor-mask-verbs">\n\t\t\t\t<div class="pull-right">\n\t\t\t\t\t<a ng-show="$ctrl.$macgyver.widgets[$ctrl.selectedWidget.type].isContainer" ng-click="$ctrl.widgetAdd(\'inside\'); $event.stopPropagation()" class="btn btn-success btn-sm" tooltip="Insert new widget inside this container" tooltip-container="body"><i class="fa fa-fw fa-indent"></i></a>\n\t\t\t\t\t<a\n\t\t\t\t\t\tng-repeat="verb in $ctrl.$macgyver.settings.mgFormEditor.maskVerbs"\n\t\t\t\t\t\tng-click="$ctrl.verbAction(verb); $event.stopPropagation()"\n\t\t\t\t\t\tng-class="$ctrl.verbProperty(verb, \'class\')"\n\t\t\t\t\t\ttooltip="{{verb.tooltip}}"\n\t\t\t\t\t\ttooltip-container="body">\n\t\t\t\t\t\t\t<i ng-class="$ctrl.verbProperty(verb, \'icon\')"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget context menu {{{ -->\n\t\t\t<ul id="mgFormEditor-dropdown-widget" class="dropdown-menu">\n\t\t\t\t<li><a ng-click="$ctrl.widgetEdit()"><i class="fa fa-fw fa-pencil"></i> Edit</a></li>\n\t\t\t\t<li class="dropdown-submenu">\n\t\t\t\t\t<a tabindex="-1"><i class="fa fa-fw fa-plus"></i> Add widget...</a>\n\t\t\t\t\t<ul class="dropdown-menu">\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'above\')"><i class="fa fa-fw fa-arrow-up"></i> Above</a></li>\n\t\t\t\t\t\t<li><a ng-click="$ctrl.widgetAdd(\'below\')"><i class="fa fa-fw fa-arrow-down"></i> Below</a></li>\n\t\t\t\t\t</ul>\n\t\t\t\t</li>\n\t\t\t\t<li class="divider"></li>\n\t\t\t\t<li><a ng-click="$ctrl.widgetDelete()"><i class="fa fa-fw fa-trash"></i> Delete</a></li>\n\t\t\t</ul>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<mg-form config="$ctrl.config" data="$ctrl.data"></mg-form>\n\t\t\t\n\t\t',
+	template: '\n\t\t\t<!-- Widget Add modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-add" class="modal fade">\n\t\t\t\t<div ng-if="$ctrl.isCreating" class="modal-dialog" style="width: 50%">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Add Widget</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t\t<div class="col-md-3">\n\t\t\t\t\t\t\t\t\t<ul class="nav nav-pills nav-stacked">\n\t\t\t\t\t\t\t\t\t\t<li ng-class="!$ctrl.category && \'active\'" ng-click="$ctrl.category = false" class="text-ellipsis text-nowrap">\n\t\t\t\t\t\t\t\t\t\t\t<a>\n\t\t\t\t\t\t\t\t\t\t\t\t<i class="fa fa-fw fa-asterisk"></i>\n\t\t\t\t\t\t\t\t\t\t\t\tAll widgets\n\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t\t\t\t<li ng-repeat="cat in $ctrl.categories" ng-class="cat == $ctrl.category && \'active\'" ng-click="$ctrl.category = cat"  class="text-ellipsis text-nowrap">\n\t\t\t\t\t\t\t\t\t\t\t<a>\n\t\t\t\t\t\t\t\t\t\t\t\t<i class="fa fa-fw fa-circle"></i>\n\t\t\t\t\t\t\t\t\t\t\t\t{{cat}}\n\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="col-md-9">\n\t\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetAddSubmit({type: widget.id})" ng-repeat="widget in $ctrl.$macgyver.widgets | mgFilterObject:$ctrl.widgetFilter track by widget.id" class="col-md-4 widget-item">\n\t\t\t\t\t\t\t\t\t\t<div class="btn btn-default btn-xlg btn-block text-center">\n\t\t\t\t\t\t\t\t\t\t\t<div><i ng-class="widget.icon" class="fa-4x"></i></div>\n\t\t\t\t\t\t\t\t\t\t\t<div class="p-t-5 text-ellipsis">{{widget.title}}</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Widget Edit modal {{{ -->\n\t\t\t<div id="modal-mgFormEditor-edit" class="modal fade">\n\t\t\t\t<div class="modal-dialog pull-right">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">Edit Widget {{$ctrl.widgetName}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body form-horizontal">\n\t\t\t\t\t\t\t<mg-form config="$ctrl.selectedWidgetForm" data="$ctrl.selectedWidgetData"></mg-form>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<div class="pull-left">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.widgetDelete()" type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-trash"></i> Delete</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class="pull-right">\n\t\t\t\t\t\t\t\t<a type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i> Save &amp; Close</a>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<!-- Form editing hover mask {{{ -->\n\t\t\t<div class="mgFormEditor-mask">\n\t\t\t\t<div class="mgFormEditor-mask-background"></div>\n\t\t\t\t<div class="mgFormEditor-mask-buttons btn-group">\n\t\t\t\t\t<div ng-if="!$ctrl.isInserter" class="mgFormEditor-mask-buttons-left">\n\t\t\t\t\t\t<a ng-repeat="button in $ctrl.verbs.buttonsLeft" ng-click="$ctrl.verbAction(button)" ng-class="button.class">\n\t\t\t\t\t\t\t<i ng-class="button.icon"></i>\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div ng-if="!$ctrl.isInserter" class="mgFormEditor-mask-buttons-right">\n\t\t\t\t\t\t<div class="btn-group">\n\t\t\t\t\t\t\t<a ng-repeat="button in $ctrl.verbs.buttonsRight" ng-click="$ctrl.verbAction(button)" ng-class="button.class">\n\t\t\t\t\t\t\t\t<i ng-class="button.icon"></i>\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t<a ng-if="$ctrl.selectedWidget" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-fw fa-ellipsis-h"></i></a>\n\t\t\t\t\t\t\t<ul class="dropdown-menu pull-right">\n\t\t\t\t\t\t\t\t<li ng-repeat="verb in $ctrl.verbs.dropdown" ng-class="verb.title == \'-\' ? \'divider\' : \'\'">\n\t\t\t\t\t\t\t\t\t<a ng-if="verb.title != \'-\'" ng-click="$ctrl.verbAction(verb)">\n\t\t\t\t\t\t\t\t\t\t<i ng-class="verb.icon"></i>\n\t\t\t\t\t\t\t\t\t\t{{verb.title}}\n\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<!-- }}} -->\n\t\t\t\n\t\t\t<mg-form config="$ctrl.config" data="$ctrl.data"></mg-form>\n\t\t\t\n\t\t',
 	bindings: {
 		config: '<',
 		data: '='
 	},
-	controller: ['$element', '$macgyver', '$scope', 'TreeTools', function controller($element, $macgyver, $scope, TreeTools) {
+	controller: ['$element', '$macgyver', '$q', '$scope', '$timeout', 'dragularService', 'TreeTools', function controller($element, $macgyver, $q, $scope, $timeout, dragularService, TreeTools) {
 		var $ctrl = this;
 		$ctrl.$macgyver = $macgyver;
 
-		// .editing mode {{{
-		// This variable (as well as the partner CSS: `mg-form-editor.editing` dictates whether mg-form-editor should react to events like clicking form elements
-		$ctrl.editing = false;
-		$ctrl.setEditing = function (editing) {
-			$ctrl.editing = editing;
-			$element.toggleClass('editing', $ctrl.editing);
-		};
-
-		$scope.$evalAsync(function () {
-			return $ctrl.setEditing(true);
-		}); // Kickoff initial editing mode when everything settles
-		// }}}
-
 		// Widget Creation {{{
+		$ctrl.isCreating = false; // Whether we are currently adding widgets (disables rendering of the add modal if falsy)
 		$ctrl.categories = _($macgyver.widgets).filter(function (w) {
 			return w.userPlaceable;
 		}).map('category').sort().uniq().value();
 
-		$ctrl.category = $ctrl.categories[0];
+		$ctrl.category = $ctrl.categories.find(function (c) {
+			return c == 'Simple Inputs';
+		}); // Try to find 'Simple Inputs' or dont use a filter
 
 		/**
   * Container for the element we're going to create
@@ -1051,13 +1109,16 @@ angular.module('macgyver').component('mgFormEditor', {
 
 		/**
   * Add a new widget
-  * @param {string} direction The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
+  * @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
   * @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
+  * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
   */
-		$ctrl.widgetAdd = function (direction, widget) {
+		$ctrl.widgetAdd = function () {
+			var direction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'below';
+			var widget = arguments[1];
+
 			var node;
 			if (_.isString(widget)) {
-				debugger;
 				node = TreeTools.find($ctrl.config, { id: widget }, { childNode: 'items' });
 			} else if (_.isObject(widget)) {
 				node = widget;
@@ -1072,7 +1133,17 @@ angular.module('macgyver').component('mgFormEditor', {
 				direction: direction
 			};
 
-			$('#modal-mgFormEditor-add').modal('show');
+			return $q.resolve().then(function () {
+				return $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetAdd');
+			}).then(function () {
+				return $ctrl.isCreating = true;
+			}).then(function () {
+				return $ctrl.modal.show('modal-mgFormEditor-add');
+			}).then(function () {
+				return $ctrl.isCreating = false;
+			}).then(function () {
+				return $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetAdd');
+			});
 		};
 
 		// Also listen for broadcasts from child controls such as the 'Add widget' button on empty containers
@@ -1086,7 +1157,6 @@ angular.module('macgyver').component('mgFormEditor', {
   */
 		$ctrl.widgetAddSubmit = function (props) {
 			angular.merge($ctrl.widgetAddDetails, props);
-			$('#modal-mgFormEditor-add').modal('hide');
 
 			// Locate node we are adding above / below
 			var node = TreeTools.find($ctrl.config, { id: $ctrl.widgetAddDetails.id }, { childNode: 'items' });
@@ -1101,7 +1171,8 @@ angular.module('macgyver').component('mgFormEditor', {
 				id: $ctrl.widgetAddDetails.type + '-' + _.times(5, function (i) {
 					return _.sample('abcdefghijklmnopqrstuvwxyz').split('');
 				}).join(''), // Generate a random ID
-				type: $ctrl.widgetAddDetails.type
+				type: $ctrl.widgetAddDetails.type,
+				title: $macgyver.widgets[$ctrl.widgetAddDetails.type].title // Set a default title
 			};
 
 			switch ($ctrl.widgetAddDetails.direction) {
@@ -1110,26 +1181,38 @@ angular.module('macgyver').component('mgFormEditor', {
 					var insertedIndex = nodeIndex - 1 < 0 ? 0 : nodeIndex - 1;
 					//actually insert the prototypeWidget
 					nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
-					$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+					$ctrl.modal.hide().then(function () {
+						return $ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+					});
 					break;
 				case 'below':
 					//Insert below the current widget (increment by 1)
 					var insertedIndex = nodeIndex + 1;
 					//actually insert the prototypeWidget
 					nodeParent.items.splice(insertedIndex, 0, prototypeWidget);
-					$ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+					$ctrl.modal.hide().then(function () {
+						return $ctrl.widgetEdit(nodeParent.items[insertedIndex]);
+					});
 					break;
 				case 'inside':
 					node.items.push(prototypeWidget);
-					$ctrl.widgetEdit(node.items[node.items.length - 1]);
+					$ctrl.modal.hide().then(function () {
+						return $ctrl.widgetEdit(node.items[node.items.length - 1]);
+					});
 					break;
 			}
 
 			$scope.$broadcast('mg.mgFormEditor.change');
 		};
+
+		$ctrl.widgetFilter = function (widget) {
+			return widget.userPlaceable && (!$ctrl.category || widget.category == $ctrl.category);
+		};
 		// }}}
 
 		// Widget Editing {{{
+		$ctrl.isInserter; // The user is hovering over a meta-inserter widget
+		$ctrl.insertPosition; // If !!$ctrl.isInserter this is where to actually make the new element
 		$ctrl.selectedWidget; // The currently selected widget (determined by mouseover)
 		$ctrl.selectedWidgetData;
 		$ctrl.selectedWidgetForm;
@@ -1138,131 +1221,98 @@ angular.module('macgyver').component('mgFormEditor', {
 		/**
   * Begin editing a widget
   * @param {Object} [widget] An optional widget to edit, if omitted the widget is calculated from the currently selected DOM element
+  * @returns {Promise} A promise that will resolve when the user closes the modal dialog, it will reject if no object can be edited
   */
 		$ctrl.widgetEdit = function (widget) {
-			var node;
-			if (_.isObject(widget)) {
-				node = widget;
-			} else if ($ctrl.selectedWidget) {
-				// Try to determine from currently selected widget if we have one
-				node = TreeTools.find($ctrl.config, { id: $ctrl.selectedWidget.id }, { childNode: 'items' });
-			} else {
-				// Can't do anything - cancel action
-				return;
-			}
+			return $q(function (resolve, reject) {
+				var node;
+				if (_.isObject(widget)) {
+					node = widget;
+				} else if ($ctrl.selectedWidget) {
+					// Try to determine from currently selected widget if we have one
+					node = TreeTools.find($ctrl.config, { id: $ctrl.selectedWidget.id }, { childNode: 'items' });
+				} else {
+					// Can't do anything - cancel action
+					return reject('No widget selected to edit');
+				}
 
-			if (!node) return; // Didn't find anything - do nothing
+				// Get Human Readable Name for the edit widget. If error jsut use vanilla display
+				if (node.type && typeof node.type == 'string') {
+					$ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim();
+				}
 
-			// Get Human Readable Name for the edit widget. If error jsut use vanilla display
-			if (node.type && typeof node.type == 'string') {
-				$ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim();
-			}
+				// Select the Angular data element
+				$ctrl.selectedWidgetData = node;
 
-			// Select the Angular data element
-			$ctrl.selectedWidgetData = node;
-
-			// Setup a form definition from the defined properties of the config element
-			$ctrl.selectedWidgetForm = {
-				type: 'mgContainer',
-				items: [
-				// Options applicable to all types {{{
-				{
-					id: 'globalConfig',
+				// Setup a form definition from the defined properties of the config element
+				$ctrl.selectedWidgetForm = {
 					type: 'mgContainer',
-					ignoreScope: true,
-					showTitle: false,
-					items: [{ id: 'id', type: 'mgText', title: 'ID' }]
-				},
-				// }}}
-				{ id: 'sepGlobal', type: 'mgSeperator', showTitle: false },
-				// Options for this specific type {{{
-				{
-					id: 'typeConfig',
-					type: 'mgContainer',
-					ignoreScope: true,
-					showTitle: false,
-					items: _($macgyver.widgets[$ctrl.selectedWidgetData.type].config).map(function (v, k) {
-						v.id = k;
-						if (!v.title) v.title = _.startCase(k);
-						return v;
-					}).filter(function (i) {
-						return i.id != 'items';
-					}) // Sub-items are managed by the UI
-					.value()
-				},
-				// }}}
-				// Options inherited from parents (via configChildren) {{{
-				{
-					id: 'parentConfig',
-					type: 'mgContainer',
-					ignoreScope: true,
-					showTitle: false,
-					items:
-					// Partially horrifying method of scoping upwards though a tree to determine parent config
-					_(
-					// Step 1 - extract all the parent items configChildren and merge it into an object (oldest config first so children overwrite)
-					_(TreeTools.parents($ctrl.config, node, { childNode: 'items' })).slice(0, -1) // Remove this node from the list
-					.reverse() // We're interested in the oldest first (so younger parents overwrite the config)
-					.map(function (p) {
-						return _.get($macgyver, ['widgets', p.type, 'configChildren']);
-					}).filter() // Remove all blank items
-					.reduce(function (obj, p) {
-						return _.assign(obj, p);
-					}, {}))
-					// Step 2 - transform output into a form
-					.map(function (p, k) {
-						p.id = k;
-						if (!p.title) p.title = _.startCase(k);
-						return p;
-					}).value()
-				}]
-			};
+					items: [
+					// Options applicable to all types {{{
+					{
+						id: 'globalConfig',
+						type: 'mgContainer',
+						ignoreScope: true,
+						showTitle: false,
+						items: [{ id: 'id', type: 'mgText', title: 'ID' }]
+					},
+					// }}}
+					{ id: 'sepGlobal', type: 'mgSeperator', showTitle: false },
+					// Options for this specific type {{{
+					{
+						id: 'typeConfig',
+						type: 'mgContainer',
+						ignoreScope: true,
+						showTitle: false,
+						items: _($macgyver.widgets[$ctrl.selectedWidgetData.type].config).map(function (v, k) {
+							v.id = k;
+							if (!v.title) v.title = _.startCase(k);
+							return v;
+						}).filter(function (i) {
+							return (// editable defaults to true for all cases unless the ID is `items` in which case it has to be explicit
+								!_.isUndefined(i.editable) ? i.editable : i.id != 'items'
+							);
+						}).value()
+					},
+					// }}}
+					// Options inherited from parents (via configChildren) {{{
+					{
+						id: 'parentConfig',
+						type: 'mgContainer',
+						ignoreScope: true,
+						showTitle: false,
+						items:
+						// Partially horrifying method of scoping upwards though a tree to determine parent config
+						_(
+						// Step 1 - extract all the parent items configChildren and merge it into an object (oldest config first so children overwrite)
+						_(TreeTools.parents($ctrl.config, node, { childNode: 'items' })).slice(0, -1) // Remove this node from the list
+						.reverse() // We're interested in the oldest first (so younger parents overwrite the config)
+						.map(function (p) {
+							return _.get($macgyver, ['widgets', p.type, 'configChildren']);
+						}).filter() // Remove all blank items
+						.reduce(function (obj, p) {
+							return _.assign(obj, p);
+						}, {}))
+						// Step 2 - transform output into a form
+						.map(function (p, k) {
+							p.id = k;
+							if (!p.title) p.title = _.startCase(k);
+							return p;
+						}).value()
+					}].filter(function (widget) {
+						return widget.type != 'mgContainer' || widget.items.length > 0;
+					}) // Remove empty containers
+				};
 
-			$ctrl.setEditing(false);
-			$('#modal-mgFormEditor-edit').modal('show').one('hidden.bs.modal', function () {
-				$ctrl.setEditing(true); // Restore editing ability to editor (i.e. click will open the edit page)
+				return $q.resolve().then(function () {
+					return $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetEdit');
+				}).then(function () {
+					return $ctrl.modal.show('modal-mgFormEditor-edit');
+				}).then(function () {
+					return $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetEdit');
+				});
 			});
 		};
-
-		// Clicking on any widget when the mask is enabled should open an editor {{{
-		$element.on('mousedown', 'mg-container > div', function (event) {
-			var elem = angular.element(this);
-			if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
-
-			if (event.button == 0) {
-				event.stopPropagation();
-				$scope.$apply(function () {
-					$ctrl.widgetEdit();
-				});
-			}
-		});
-
-		// Open a context menu on RMB
-		$element.on('contextmenu', 'mg-container > div', function (event) {
-			var elem = angular.element(this);
-			if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
-			event.stopPropagation();
-			event.preventDefault();
-
-			// Close the dropdown if the user clicks off it {{{
-			angular.element(document).one('mousedown', function (e) {
-				if (!angular.element(e.target).closest('.dropdown-menu').length) e.stopPropagation(); // Only prevent the click if the user wasn't clicking the dropdown menu
-				// Hide the menu in 100ms (Angular gets upset if we trigger an ng-click on an invisible <a> tag)
-				setTimeout(function () {
-					return angular.element('#mgFormEditor-dropdown-widget').css('display', 'none');
-				}, 100);
-			});
-			// }}}
-
-			// Position a dropdown under the mouse {{{
-			var pos = this.getBoundingClientRect();
-			angular.element('#mgFormEditor-dropdown-widget').css({
-				left: pos.left + _.get($macgyver.settings, 'mgFormEditor.menuPosition.left', 0),
-				top: pos.top + _.get($macgyver.settings, 'mgFormEditor.menuPosition.top', 0)
-			});
-			// }}}
-		});
-		// }}}
 
 		/**
   * Toggle a single property associated with the active widget
@@ -1304,72 +1354,223 @@ angular.module('macgyver').component('mgFormEditor', {
 		};
 		// }}}
 
-		// Setup a mask over any widget when the user moves their mouse over them {{{
-		$element.on('mouseover', '.mgComponent', function (event) {
-			event.stopPropagation();
+		// Edit mask {{{
+		// React to mouse movement
+		$element.on('mousemove', function (event) {
+			return $scope.$apply(function () {
+				if ($ctrl.locks.check('maskMove')) return;
+				var mouse = { left: event.clientX, top: event.clientY };
+
+				var matching = angular.element('.mgComponent, .mgComponentEditorInserter').toArray().map(function (i) {
+					var rect = i.getBoundingClientRect();
+					return {
+						rect: rect,
+						area: rect.width * rect.height,
+						el: i
+					};
+				}).filter(function (i) {
+					return i.rect.left <= mouse.left && i.rect.top <= mouse.top && i.rect.right >= mouse.left && i.rect.bottom >= mouse.top;
+				}).sort(function (a, b) {
+					// Find the item under the mouse with the tinest area
+					if (a.area == b.area) return 0;
+					return a.area < b.area ? -1 : 1;
+				})[0];
+
+				if (matching) {
+					$ctrl.isInserter = angular.element(matching.el).hasClass('mgComponentEditorInserter');
+					$element.children('.mgFormEditor-mask').removeClass('mgFormEditor-mask-editor mgFormEditor-mask-inserter').addClass($ctrl.isInserter ? 'mgFormEditor-mask-inserter' : 'mgFormEditor-mask-editor').css({
+						left: matching.rect.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
+						top: matching.rect.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
+						width: matching.rect.width + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
+						height: matching.rect.height + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0),
+						display: 'block'
+					});
+
+					if ($ctrl.isInserter) {
+						$ctrl.selectedWidget = undefined;
+						$ctrl.insertPosition = angular.element(matching.el);
+					} else {
+						$ctrl.selectedWidget = TreeTools.find($ctrl.config, { id: angular.element(matching.el).attr('data-path') }, { childNode: 'items' });
+						$ctrl.insertPosition = undefined;
+					}
+				} else {
+					$ctrl.selectedWidget = null;
+				}
+			});
+		});
+
+		// Hide the mask when scrolling
+		if (_.get($macgyver.settings, 'mgFormEditor.scroller') !== false) {
+			// Bind to scrollable element?
+			angular.element(_.get($macgyver.settings, 'mgFormEditor.scroller') || document).on('scroll', function () {
+				$element.children('.mgFormEditor-mask').css('display', 'none');
+				$scope.$apply(function () {
+					return $ctrl.selectedWidget = null;
+				});
+			});
+
+			if (_.has($macgyver.settings, 'mgFormEditor.scroller')) {
+				// Are we using a non-body scroller?
+				// Bind to the editing mask to detect wheel events - when we find them destroy the mask so future wheels get forwarded to the scroll element
+				$element.children('.mgFormEditor-mask')[0].addEventListener('wheel', function () {
+					$element.children('.mgFormEditor-mask').css('display', 'none');
+					$scope.$apply(function () {
+						return $ctrl.selectedWidget = null;
+					});
+				});
+			}
+		}
+
+		// When opening / closing dropdowns disable the mask from moving
+		$element.on('show.bs.dropdown', function () {
+			$scope.$apply(function () {
+				return $ctrl.locks.add(['maskMove', 'edit'], 'dropdown');
+			});
+		});
+		$element.on('hide.bs.dropdown', function () {
+			$scope.$apply(function () {
+				return $ctrl.locks.remove(['maskMove', 'edit'], 'dropdown');
+			});
+		});
+
+		// React to mouse clicking
+		$element.on('mousedown', function (event) {
+			if (angular.element(event.target).closest('a').length) return; // User was probably clicking on a button - don't handle this internally
+
 			var elem = angular.element(this);
 			if (elem.closest('.modal').length) return; // Don't react when the element is inside a modal
 
-			var pos = this.getBoundingClientRect();
-			var setCSS = {
-				left: pos.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
-				top: pos.top + _.get($macgyver.settings, 'mgFormEditor.maskPosition.top', 0),
-				width: elem.width() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.width', 0),
-				height: elem.height() + _.get($macgyver.settings, 'mgFormEditor.maskPosition.height', 0)
-			};
-			$element.children('.mgFormEditor-mask-background').css(setCSS);
+			if (!$ctrl.locks.check('edit') && $ctrl.selectedWidget && event.button == 0) {
+				// Left mouse click on widget - edit widget under cursor
+				event.stopPropagation();
+				$scope.$apply(function () {
+					return $ctrl.widgetEdit();
+				});
+			} else if ($ctrl.isInserter && event.button == 0) {
+				// Left mouse click on inserter meta-widget
+				$ctrl.insertPosition.trigger('click');
+			}
+		});
 
-			var verbWidth = 250;
-			$element.children('.mgFormEditor-mask-verbs').css({
-				left: setCSS.left + setCSS.width - verbWidth - 5,
-				top: setCSS.top,
-				width: verbWidth
-			});
-			$scope.$apply(function () {
-				$ctrl.selectedWidget = TreeTools.find($ctrl.config, { id: elem.attr('data-path') }, { childNode: 'items' });
-			});
+		// React to right mouse menu clicking
+		$element.on('contextmenu', function (event) {
+			if (!$ctrl.locks.check('contextMenu')) return;
+
+			event.stopPropagation();
+			event.preventDefault();
+
+			if (!$ctrl.selectedWidget) return;
+			$element.find('.mgFormEditor-mask > .mgFormEditor-mask-buttons .dropdown-toggle').dropdown('toggle');
 		});
 		// }}}
 
-		// Mask verbs (i.e. buttons that appear on hover) {{{
+		// Verbs {{{
+		$ctrl.verbs = { dropdown: [], buttonsLeft: [], buttonsRight: [] }; // All get popuulated via $ctrl.recalculateVerbs()
+
+		$ctrl.recalculateVerbs = function () {
+			Object.assign($ctrl.verbs, _.mapValues($ctrl.verbs, function (junk, verbArea) {
+				return (
+					// Flatten all properties down, if they are a function use the return value of that function
+					$macgyver.settings.mgFormEditor.verbs[verbArea].filter(function (verb) {
+						return (!verb.selectedWidgetOnly || verb.selectedWidgetOnly && $ctrl.selectedWidget) && ( // Selected widget filtering
+						!verb.show || verb.show($ctrl.selectedWidget));
+					} // Show function? Use it to determine filtering
+					).map(function (verb) {
+						return _.mapValues(verb, function (v, k) {
+							if (_.isFunction(v) && k != 'action') {
+								// Translate all functions EXCEPT action
+								return v($ctrl.selectedWidget);
+							} else {
+								return v;
+							}
+						});
+					})
+				);
+			}));
+		};
+
+		// Recalc if focus changes or the verb list changes
+		$scope.$watchGroup(['$ctrl.$macgyver.settings.mgFormEditor.verbs', '$ctrl.selectedWidget.id'], function () {
+			return $ctrl.recalculateVerbs();
+		});
+
 		/**
   * Execute a verb action
   * The action can be a function - in which case it is executed as ({$ctrl.selectedWidget, verb})
   * or a string
-  * @param {Object} verb The verb to execute
+  * @param {Object|function|string} verb The verb to execute, if this is a function it is exected as (widget, verb)
   */
 		$ctrl.verbAction = function (verb) {
 			if (angular.isFunction(verb.action)) {
 				verb.action($ctrl.selectedWidget, verb);
-			} else if (angular.isString(verb.action)) {
-				switch (verb.action) {
-					case 'toggleTitle':
-						$ctrl.widgetToggle('showTitle', true);
-						break;
+			} else {
+				var action = _.isObject(verb) && verb.action ? verb.action : verb;
+
+				switch (action) {
+					case 'add':
+						$ctrl.widgetAdd();break;
+					case 'edit':
+						$ctrl.widgetEdit();break;
 					case 'delete':
-						$ctrl.widgetDelete();
+						$ctrl.widgetDelete();break;
+					case 'dropdown':
+						// FIXME: Not yet working
+						$element.find('.mgFormEditor-mask-buttons .dropdown-toggle').attr('data-toggle', 'dropdown') // Have to set this for Bootstrap'py reasons
+						.dropdown();
+
+						console.log('DD DONE');
 						break;
+					default:
+						throw new Error('Unknown or unsupported verb action: "' + action + '"');
 				}
 			}
-		};
 
-		/**
-  * Return the evaulated property of a mask verb
-  * If the verbs property is a function it is invoked with ({$ctrl.selectedWidget, verb})
-  * If its a string it is used as is
-  * @param {Object} verb The verb to examine
-  * @param {string} prop The property to evaluate and return
-  * @returns {*} The evaluated return value
-  */
-		$ctrl.verbProperty = function (verb, prop) {
-			if (!$ctrl.selectedWidget) return;
-
-			if (angular.isFunction(verb[prop])) {
-				return verb[prop]($ctrl.selectedWidget);
-			} else {
-				return verb[prop];
-			}
+			// Recalculate dropdown after all actions
+			$ctrl.recalculateVerbs();
 		};
+		// }}}
+
+		// Drag + Drop via Dragular {{{
+		// Dragular has to be re-init each time the items array changes as it attaches to jQuery hooks and not Angular
+		$scope.$watchCollection('$ctrl.config.items', function () {
+			return $timeout(function () {
+				if ($ctrl.drake) $ctrl.drake.remove();
+
+				try {
+					$ctrl.drake = dragularService('mg-container', {
+						classes: {
+							mirror: 'gu-mirror form-horizontal' // BS insists that the dragging mirror have the correct form helper
+						},
+						scope: $scope,
+						direction: 'vertical',
+						lockY: true
+					});
+				} catch (e) {
+					// NOTE: Dragular complains about multiple event handlers being attached but we don't really care about that
+					// Disabled the following line (or remove the entire try-catch block) if you need to see the error
+					// console.error(e);
+				}
+			});
+		});
+
+		// Handle the drop condition - splice the moved item back into the parent items array, removing the original
+		$scope.$on('dragulardrop', function (e, el, targetContainer, sourceContainer, conModel, elIndex, targetModel, dropIndex) {
+			var parents = TreeTools.parents($ctrl.config, { id: $ctrl.selectedWidget.id }, { childNode: 'items' });
+			var parent = parents[parents.length - 2];
+
+			parent.items = _(parent.items).map(function (i, idx, items) {
+				if (idx == dropIndex) {
+					// Is this the drop position?
+					return [items[elIndex], i];
+				} else if (idx == elIndex) {
+					// Is this the source position?
+					return undefined;
+				} else {
+					// Everything else gets passed though
+					return i;
+				}
+			}).filter().flatten().value();
+		});
 		// }}}
 
 		// Init + Set Defaults {{{
@@ -1379,7 +1580,124 @@ angular.module('macgyver').component('mgFormEditor', {
 			});
 		};
 		// }}}
+
+		// Utility > Modals {{{
+		$ctrl.modal = {
+			/**
+   * Show a Bootstrap modal, resolving a promise when the modal has been closed
+   * NOTE: Because of Bootstraps *interesting* way of dealing with modal windows, this promise will call $ctrl.modal.hide() (i.e. hide all modals) before attempting to show
+   * @param {string} id The DOM ID of the modal to show
+   * @returns {Promise} Resolves when the modal is ready
+   */
+			show: function show(id) {
+				return $q(function (resolve) {
+					var query = '#' + id;
+					if (angular.element(query).is(':visible').length) return resolve(); // Element is already shown
+
+					$ctrl.modal.hide().then(function () {
+						angular.element(query).one('hidden.bs.modal', function () {
+							return resolve();
+						}).modal('show');
+					});
+				});
+			},
+
+			/**
+   * Hide a Bootstrap modal, resolving a promise when the modal is hidden
+   * @param {string} [id] The DOM ID of the modal to hide, if omitted all modals are hidden
+   * @returns {Promise} Resolves when the modal / all models are closed, never rejects
+   */
+			hide: function hide(id) {
+				return $q(function (resolve) {
+					var query = id ? '#' + id : '.modal';
+					if (!angular.element(query).is(':visible')) return resolve(); // Element(s) is/are already hidden
+
+					angular.element(query).one('hidden.bs.modal', function () {
+						return resolve();
+					}).modal('hide');
+				});
+			}
+		};
+		// }}}
+
+		// Utility > Locks {{{
+		$ctrl.locks = {
+			/**
+   * Internal lock storage
+   * @var {Object <Set>}
+   */
+			_locks: {},
+
+			/**
+   * Add an item to a named lock set(s)
+   * @param {string|array} lock The locking set(s) to add to
+   * @param {string|array} id The ID of the lock to add
+   */
+			add: function add(lock, id) {
+				_.castArray(lock).forEach(function (l) {
+					if (!$ctrl.locks._locks[l]) $ctrl.locks._locks[l] = new Set();
+					_.castArray(id).forEach(function (i) {
+						return $ctrl.locks._locks[l].add(i);
+					});
+				});
+			},
+
+			/**
+   * Remove an item from a lock set(s)
+   * @param {string|array} lock The locking set(s) to remove from
+   * @param {string|array} id The ID of the lock to remove
+   */
+			remove: function remove(lock, id) {
+				_.castArray(lock).forEach(function (l) {
+					if (!$ctrl.locks._locks[l]) return; // Lock is empty anyway
+					_.castArray(id).forEach(function (i) {
+						return $ctrl.locks._locks[l].delete(i);
+					});
+				});
+				return $ctrl;
+			},
+
+			/**
+   * Query if a given lock has any entities
+   * @param {string} lock The lock to query
+   * @returns {boolean} True if the lock has any entities
+   */
+			check: function check(lock) {
+				return $ctrl.locks._locks[lock] && $ctrl.locks._locks[lock].size > 0;
+			}
+		};
+		// }}}
 	}]
+});
+
+/**
+* MacGyver form editor helper widget for widget inserting
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgFormEditorInserter', {
+		title: 'Form Editor - Inserter',
+		userPlaceable: false,
+		icon: 'fa fa-pencil-square-o',
+		category: 'Form Editor Inserter',
+		config: {}
+	});
+}]).component('mgFormEditorInserter', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$element', '$macgyver', '$scope', function controller($element, $macgyver, $scope) {
+		var $ctrl = this;
+		$ctrl.$macgyver = $macgyver;
+		$macgyver.inject($scope, $ctrl);
+
+		$element.on('click', function () {
+			return $scope.$apply(function () {
+				// Pass - higher level functions handle the insertation here - we just have to catch the event
+			});
+		});
+	}],
+	template: '\n\t\t\t<div class="alert alert-success mgComponentEditorInserter">\n\t\t\t\t<div ng-click="$ctrl.widgetAddChild()">\n\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\tAdd widget\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t'
 });
 
 /**
@@ -1461,6 +1779,33 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 	}],
 	template: ['$macgyver', function template($macgyver) {
 		return '\n\t\t\t<table class="table table-striped table-bordered">\n\t\t\t\t<tr ng-repeat="row in $ctrl.config.items">\n\t\t\t\t\t<td ng-repeat="w in row.items" ng-switch="w.type">\n\t\t\t\t\t\t<mg-container ng-if="w.type==\'mgContainer\'" data="$ctrl.data[w.id]" config="w"></mg-container>\n\t\t\t\t\t\t<div ng-if="w.type!=\'mgContainer\'" class="alert alert-danger">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t';
+	}]
+});
+
+/**
+* MacGyver component layout for grid rows
+* This is really just a virtual wrapper around content and doesnt serve any purpose except to identify what is a grid row in the hierarchy
+* This container displays an array (rows) or arrays (columns) of widgets (items)
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgGridRow', {
+		title: 'Grid row layout',
+		icon: 'fa fa-dropbox',
+		category: 'Layout',
+		isContainer: true,
+		userPlaceable: false,
+		config: {}
+	});
+}]).component('mgGridRow', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
 	}]
 });
 
@@ -1708,8 +2053,16 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 			});
 		};
 		// }}}
+
+		// Change {{{
+		// Watching for change events and manually editing the array offset is required for some reason
+		// No idea why Angular doesn't bind to the pointer of the array offset itself
+		$ctrl.changeItem = function (index, value) {
+			return $ctrl.data[index] = value;
+		};
+		// }}}
 	}],
-	template: '\n\t\t\t<form ng-submit="$ctrl.addItem()">\n\t\t\t\t<table class="table table-bordered table-hover">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr ng-repeat="row in $ctrl.data track by $index">\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center font-md">{{$index + 1 | number}}</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model="row" type="text" class="form-control"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.allowDelete == undefined || $ctrl.config.allowDelete">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.removeItem($index)" class="btn btn-danger btn-sm visible-parent-hover"><i class="fa fa-trash-o"></i></a>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t\t<tfoot class="hidden-print">\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center" width="30px">\n\t\t\t\t\t\t\t\t<button type="submit" class="btn btn-ellipsis" ng-class="$ctrl.listNewItem.text ? \'btn-success\' : \'btn-disabled\'">\n\t\t\t\t\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\t\t\t\t</button>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model="$ctrl.listNewItem.text" type="text" class="form-control"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td width="35px">&nbsp;</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tfoot>\n\t\t\t\t</table>\n\t\t\t</form>\n\t\t'
+	template: '\n\t\t\t<form ng-submit="$ctrl.addItem()">\n\t\t\t\t<table class="table table-bordered table-hover">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr ng-repeat="row in $ctrl.data track by $index">\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center font-md">{{$index + 1 | number}}</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model="row" ng-change="$ctrl.changeItem($index, row)" type="text" class="form-control"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.allowDelete == undefined || $ctrl.config.allowDelete">\n\t\t\t\t\t\t\t\t<a ng-click="$ctrl.removeItem($index)" class="btn btn-danger btn-sm visible-parent-hover"><i class="fa fa-trash-o"></i></a>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t\t<tfoot class="hidden-print">\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center" width="30px">\n\t\t\t\t\t\t\t\t<button type="submit" class="btn btn-ellipsis" ng-class="$ctrl.listNewItem.text ? \'btn-success\' : \'btn-disabled\'">\n\t\t\t\t\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\t\t\t\t</button>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model="$ctrl.listNewItem.text" type="text" class="form-control"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td width="35px">&nbsp;</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tfoot>\n\t\t\t\t</table>\n\t\t\t</form>\n\t\t'
 });
 
 /**
@@ -1751,6 +2104,8 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		};
 
 		$ctrl.add = function (steps) {
+			if (!angular.isNumber($ctrl.data)) return $ctrl.data = $ctrl.config.min || 0; // Not already a number default to the min or zero
+
 			$ctrl.data += steps * ($ctrl.step || 1);
 			if ($ctrl.config.max && $ctrl.data > $ctrl.config.max) $ctrl.data = $ctrl.config.max;
 			if ($ctrl.config.min && $ctrl.data < $ctrl.config.min) $ctrl.data = $ctrl.config.min;
@@ -1910,6 +2265,8 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 			textEmpty: { type: 'mgText', title: 'No data message', default: 'No data' },
 			items: {
 				type: 'mgTableEditor',
+				editable: true, // We have to explicitally specify this for `items` to be editable
+				title: 'Column setup',
 				default: [{ id: 'col1', type: 'mgText' }, { id: 'col2', title: 'mgText' }, { id: 'col3', title: 'mgText' }]
 			}
 		},
@@ -2034,6 +2391,8 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 	},
 	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
 		var $ctrl = this;
+		$ctrl.$macgyver = $macgyver;
+
 		$macgyver.inject($scope, $ctrl);
 
 		// Adopt default  if no data value is given {{{
@@ -2041,8 +2400,28 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
 		});
 		// }}}
+
+		$ctrl.add = function () {
+			if (!$ctrl.data) $ctrl.data = [];
+			$ctrl.data.push({
+				title: 'Column ' + ($ctrl.data.length + 1),
+				type: 'mgText',
+				showTitle: false
+			});
+		};
+
+		$ctrl.remove = function (index) {
+			return $ctrl.data = $ctrl.data.filter(function (c, i) {
+				return i != index;
+			});
+		};
+
+		$ctrl.widgetSelection;
+		$scope.$watch('$ctrl.$macgyver.widgets', function () {
+			$ctrl.widgetSelection = _($macgyver.widgets).map().sortBy('title').value();
+		});
 	}],
-	template: '\n\t\t\t<table class="table table-bordered table-striped">\n\t\t\t</table>\n\t\t'
+	template: '\n\t\t\t<table class="table table-bordered table-striped">\n\t\t\t\t<thead>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<th width="50%">Title</th>\n\t\t\t\t\t\t<th width="25%">Type</th>\n\t\t\t\t\t\t<th width="25%">\n\t\t\t\t\t\t\tWidth\n\t\t\t\t\t\t\t<i\n\t\t\t\t\t\t\t\tclass="pull-right fa fa-info-circle"\n\t\t\t\t\t\t\t\ttooltip="Width can be any valid CSS specifier. e.g. \'100\' (assumes pixels), \'50px\', \'20%\'"\n\t\t\t\t\t\t\t></i>\n\t\t\t\t\t\t</th>\n\t\t\t\t\t\t<th width="32px">&nbsp;</th>\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr ng-repeat="item in $ctrl.data">\n\t\t\t\t\t\t<td><input ng-model="item.title" type="text" class="form-control"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<select ng-model="item.type" class="form-control">\n\t\t\t\t\t\t\t\t<option ng-repeat="widget in $ctrl.widgetSelection track by widget.id" value="{{widget.id}}">{{widget.title}}</option>\n\t\t\t\t\t\t\t</select>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t\t<td><input ng-model="item.width" type="text" class="form-control" placeholder="Default"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<a ng-click="$ctrl.remove($index)" class="btn btn-danger btn-sm">\n\t\t\t\t\t\t\t\t<i class="fa fa-trash"></i>\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t\t<tfoot>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td colspan="4" class="text-center">\n\t\t\t\t\t\t\t<a ng-click="$ctrl.add()" class="btn btn-sm btn-success">\n\t\t\t\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\t\t\t\tAdd column\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tfoot>\n\t\t\t</table>\n\t\t'
 });
 
 /**
