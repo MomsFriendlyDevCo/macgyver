@@ -1,0 +1,7 @@
+/* Hide the spin button in mgNumber controls */
+mg-number input[type=number]::-webkit-outer-spin-button,
+mg-number input[type=number]::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
