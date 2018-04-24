@@ -40,6 +40,8 @@ angular
 			];
 
 			$ctrl.add = steps => {
+				if (!angular.isNumber($ctrl.data)) return $ctrl.data = $ctrl.config.min || 0; // Not already a number default to the min or zero
+
 				$ctrl.data += steps * ($ctrl.step || 1);
 				if ($ctrl.config.max && $ctrl.data > $ctrl.config.max) $ctrl.data = $ctrl.config.max;
 				if ($ctrl.config.min && $ctrl.data < $ctrl.config.min) $ctrl.data = $ctrl.config.min;
