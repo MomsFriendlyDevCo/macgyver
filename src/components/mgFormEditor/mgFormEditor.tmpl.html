@@ -19,7 +19,7 @@
 						<a ng-click="$ctrl.widgetAddSubmit({type: widget.id})" ng-repeat="widget in $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable:true, category: $ctrl.category} track by widget.id" class="col-md-4 pad-top-sm">
 							<div class="btn btn-default btn-xlg btn-block text-center">
 								<div><i ng-class="widget.icon" class="fa-4x"></i></div>
-								<div class="pad-top-sm">{{widget.title}}</div>
+								<div class="p-t-5 text-ellipsis">{{widget.title}}</div>
 							</div>
 						</a>
 					</div>
