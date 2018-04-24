@@ -33,7 +33,7 @@ angular
 
 			// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
 			$ctrl.enumIter = []; // Cleaned up version of enum
-			$scope.$watch('$ctrl.config.enum', ()=> {
+			$scope.$watchCollection('$ctrl.config.enum', ()=> {
 				if (!$ctrl.config.enum) return; // No data yet
 				if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) { // Array of strings
 					$ctrl.enumIter = $ctrl.config.enum.map(i => ({
