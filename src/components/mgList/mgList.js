@@ -36,7 +36,9 @@ angular
 			];
 
 			// Adopt default  if no data value is given {{{
-			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
+			$scope.$watch('$ctrl.data', ()=> {
+				if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+			});
 			// }}}
 
 			// Appending {{{
@@ -56,6 +58,12 @@ angular
 				$ctrl.data = $ctrl.data.filter((x, i) => i != index);
 			};
 			// }}}
+
+			// Change {{{
+			// Watching for change events and manually editing the array offset is required for some reason
+			// No idea why Angular doesn't bind to the pointer of the array offset itself
+			$ctrl.changeItem = (index, value) => $ctrl.data[index] = value;
+			// }}}
 		},
 		template: `
 			<form ng-submit="$ctrl.addItem()">
@@ -64,7 +72,7 @@ angular
 						<tr ng-repeat="row in $ctrl.data track by $index">
 							<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center font-md">{{$index + 1 | number}}</td>
 							<td>
-								<input ng-model="row" type="text" class="form-control"/>
+								<input ng-model="row" ng-change="$ctrl.changeItem($index, row)" type="text" class="form-control"/>
 							</td>
 							<td ng-if="$ctrl.config.allowDelete == undefined || $ctrl.config.allowDelete">
 								<a ng-click="$ctrl.removeItem($index)" class="btn btn-danger btn-sm visible-parent-hover"><i class="fa fa-trash-o"></i></a>
