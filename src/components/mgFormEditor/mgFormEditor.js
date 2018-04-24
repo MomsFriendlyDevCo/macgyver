@@ -29,7 +29,7 @@ angular
 				.uniq()
 				.value();
 
-			$ctrl.category = $ctrl.categories[0];
+			$ctrl.category = $ctrl.categories.find(c => c == 'Simple Inputs'); // Try to find 'Simple Inputs' or dont use a filter
 
 			/**
 			* Container for the element we're going to create
