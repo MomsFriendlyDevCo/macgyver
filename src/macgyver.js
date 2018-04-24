@@ -183,5 +183,28 @@ angular
 			return $macgyver;
 		};
 	})
+
+	/**
+	* Helper filter to return a human readable filesize
+	* @param {string|number} filesize The filesize to format
+	* @return {string} A human readable filesize (e.g. '45kb')
+	* @example
+	* $ctrl.someNumber | filesize
+	*/
 	.filter('filesize', ()=> filesize)
-	.filter('mgFilterObject', ()=> (value, filter) => _.pickBy(value, i => _.isMatch(i, filter)))
+
+	/**
+	* Helper filter for MacGyver which takes an object and runs a filter on it
+	* @param {Object} obj The object to filter
+	* @param {Object|function} filter Either a matching object expression to filter by or a function which is called as `(value, key)`
+	* @return {Object} The input object filtered by the supplied filter
+	* @example
+	* $ctrl.$macgyver.widgets | mgFilterObject:{userPlaceable: true}
+	*/
+	.filter('mgFilterObject', ()=> (obj, filter) => {
+		if (angular.isObject(filter)) {
+			return _.pickBy(obj, i => _.isMatch(i, filter))
+		} else if (angular.isFunction(filter)) {
+			return _.pickBy(obj, filter);
+		}
+	})

@@ -21,6 +21,7 @@ angular
 			$ctrl.$macgyver = $macgyver;
 
 			// Widget Creation {{{
+			$ctrl.isCreating = false; // Whether we are currently adding widgets (disables rendering of the add modal if falsy)
 			$ctrl.categories = _($macgyver.widgets)
 				.filter(w => w.userPlaceable)
 				.map('category')
@@ -64,7 +65,9 @@ angular
 
 				return $q.resolve()
 					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetAdd'))
+					.then(()=> $ctrl.isCreating = true)
 					.then(()=> $ctrl.modal.show('modal-mgFormEditor-add'))
+					.then(()=> $ctrl.isCreating = false)
 					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetAdd'))
 			};
 
@@ -114,6 +117,8 @@ angular
 
 				$scope.$broadcast('mg.mgFormEditor.change');
 			};
+
+			$ctrl.widgetFilter = widget => widget.userPlaceable && (!$ctrl.category || widget.category == $ctrl.category);
 			// }}}
 
 			// Widget Editing {{{

@@ -1,3 +1,36 @@
+/* Generic helper classes {{{ */
+mg-form-editor .text-nowrap {
+	white-space: nowrap;
+}
+
+mg-form-editor .text-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* }}} */
+
+/* Add widget modal {{{ */
+/* Tidy up the left hand size widget filter pills {{{ */
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills li:not(.active) a {
+	color: #333;
+}
+
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills li.active i> a {
+	color: #FFF;
+}
+
+mg-form-editor #modal-mgFormEditor-add .nav.nav-pills > a > i {
+	margin-right: 5px;
+}
+/* }}} */
+/* Tidy up the main widget selection boxes {{{ */
+mg-form-editor #modal-mgFormEditor-add .widget-item {
+	margin-bottom: 5px;
+}
+/* }}}
+/* }}} */
+
 /* Hover mask {{{ */
 @keyframes mgFormMoveMaskEditor { from { background-position: 0; } to { background-position: 140px; } }
 
