@@ -21,6 +21,7 @@ angular
 				default: ['Foo', 'Bar', 'Baz'],
 			},
 		},
+		toString: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
 	}))
 	.component('mgChoiceRadio', {
 		bindings: {

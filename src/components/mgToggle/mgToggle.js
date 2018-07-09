@@ -15,6 +15,7 @@ angular
 			onText: {type: 'mgText', default: 'On'},
 			offText: {type: 'mgText', default: 'Off'},
 		},
+		toString: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
 	}))
 	.component('mgToggle', {
 		bindings: {

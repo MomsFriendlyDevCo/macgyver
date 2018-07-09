@@ -17,6 +17,7 @@ angular
 			max: {type: 'mgNumber', title: 'Latest time'},
 			required: {type: 'mgToggle', default: false},
 		},
+		toString: v => (v instanceof Date ? v : Date.parse(v)).toLocaleTimeString(),
 	}))
 	.component('mgTime', {
 		bindings: {

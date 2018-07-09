@@ -15,6 +15,7 @@ angular
 			placeholder: {type: 'mgText', help: 'Ghost text to display when the text box has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
+		toString: true,
 	}))
 	.component('mgEmail', {
 		bindings: {

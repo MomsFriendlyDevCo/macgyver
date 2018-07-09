@@ -17,6 +17,10 @@ angular
 			max: {type: 'mgDate', title: 'Latest date'},
 			required: {type: 'mgToggle', default: false},
 		},
+		toString: v => {
+			var d = v instanceof Date ? v : Date.parse(v);
+			return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+		},
 	}))
 	.component('mgDate', {
 		bindings: {

@@ -15,6 +15,7 @@ angular
 			placeholder: {type: 'mgUrl', help: 'Ghost text to display when the textbox has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
+		toString: true,
 	}))
 	.component('mgUrl', {
 		bindings: {
