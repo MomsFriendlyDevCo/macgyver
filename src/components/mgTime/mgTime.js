@@ -20,9 +20,9 @@ angular
 		format: v => {
 			if (!v) return '';
 			var d = v instanceof Date ? v : new Date(v);
-			console.log('mgTime SHOULD BE DATE', d);
 			return d.toLocaleTimeString();
 		},
+		formatAlign: 'center',
 	}))
 	.component('mgTime', {
 		bindings: {

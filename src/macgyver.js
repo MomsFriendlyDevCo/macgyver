@@ -30,6 +30,7 @@ angular
 		* @param {boolean} [properties.userPlaceable=true] Whether this component should be listed as placeable by the user (if false, its hidden in the mgFormEditor UI)
 		* @param {string} [properties.category="Misc"] Which category this widget fits into when displaying the 'Add widget' dialog in mgFormEditor
 		* @param {boolean|function} [properties.format=false] Whether the value of the widget can be exposed as a string. If this is === true the exact value is used, if === false (default) it will be ignored when making a digest of the form, if a function it will be called as (value) and expected to return a string value. NOTE: In the spec file, which is a flat JSON file any function argument will be overridden to `true`
+		* @param {string} [properties.formatAlign='left'] The prefered column alignment when showing the result of `properties.format`
 		*
 		* @returns {$macgyver} This chainable object
 		*/
@@ -43,7 +44,8 @@ angular
 				title: _.startCase(id),
 				userPlaceable: true,
 				category: 'Misc',
-				totString: false,
+				format: false,
+				formatAlign: 'left',
 			});
 
 			return $macgyver;

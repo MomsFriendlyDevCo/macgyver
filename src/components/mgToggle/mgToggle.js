@@ -16,6 +16,7 @@ angular
 			offText: {type: 'mgText', default: 'Off'},
 		},
 		format: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
+		formatAlign: 'center',
 	}))
 	.component('mgToggle', {
 		bindings: {

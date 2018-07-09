@@ -27,6 +27,7 @@ angular
 			if (!v) return '';
 			return (_.isNumber(v) ? v : parseInt(v)).toLocaleString();
 		},
+		formatAlign: 'right',
 	}))
 	.component('mgNumber', {
 		bindings: {

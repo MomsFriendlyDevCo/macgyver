@@ -23,6 +23,7 @@ angular
 			console.log('mgDate SHOULD BE DATE', d);
 			return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
 		},
+		formatAlign: 'center',
 	}))
 	.component('mgDate', {
 		bindings: {

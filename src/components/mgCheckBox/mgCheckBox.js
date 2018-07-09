@@ -12,6 +12,7 @@ angular
 		config: {
 		},
 		format: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
+		formatAlign: 'center',
 	}))
 	.component('mgCheckBox', {
 		bindings: {
