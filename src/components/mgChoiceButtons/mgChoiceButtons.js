@@ -34,7 +34,7 @@ angular
 			itemClassDefault: {type: 'mgText', default: 'btn-default'},
 			itemClassSelected: {type: 'mgText', default: 'btn-primary'},
 		},
-		toString: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+		format: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
 	}))
 	.component('mgChoiceButtons', {
 		bindings: {

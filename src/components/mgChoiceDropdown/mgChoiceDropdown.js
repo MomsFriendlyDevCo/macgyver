@@ -26,7 +26,7 @@ angular
 			displayPrimaryField: {type: 'mgText', default: 'title', help: 'The field of each enum item to display as the primary selection text'},
 			displaySecondaryField: {type: 'mgText', help: 'The field of each enum to display as a secondary item'},
 		},
-		toString: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+		format: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
 	}))
 	.component('mgChoiceDropdown', {
 		bindings: {

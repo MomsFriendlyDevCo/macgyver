@@ -11,7 +11,7 @@ angular
 		category: 'Simple Inputs',
 		config: {
 		},
-		toString: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
+		format: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
 	}))
 	.component('mgCheckBox', {
 		bindings: {

@@ -23,7 +23,10 @@ angular
 			placeholder: {type: 'mgNumber', help: 'Ghost text to display when there is no value'},
 			required: {type: 'mgToggle', default: false},
 		},
-		toString: v => (_.isNumber(v) ? v : parseInt(v)).toLocaleString(),
+		format: v => {
+			if (!v) return '';
+			return (_.isNumber(v) ? v : parseInt(v)).toLocaleString();
+		},
 	}))
 	.component('mgNumber', {
 		bindings: {

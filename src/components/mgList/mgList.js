@@ -19,7 +19,7 @@ angular
 			required: {type: 'mgToggle', default: false},
 			numbered: {type: 'mgToggle', default: true},
 		},
-		toString: v => v.join(', '),
+		format: v => (v || []).join(', '),
 	}))
 	.component('mgList', {
 		bindings: {

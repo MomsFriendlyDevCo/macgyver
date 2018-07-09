@@ -17,7 +17,12 @@ angular
 			max: {type: 'mgNumber', title: 'Latest time'},
 			required: {type: 'mgToggle', default: false},
 		},
-		toString: v => (v instanceof Date ? v : Date.parse(v)).toLocaleTimeString(),
+		format: v => {
+			if (!v) return '';
+			var d = v instanceof Date ? v : new Date(v);
+			console.log('mgTime SHOULD BE DATE', d);
+			return d.toLocaleTimeString();
+		},
 	}))
 	.component('mgTime', {
 		bindings: {

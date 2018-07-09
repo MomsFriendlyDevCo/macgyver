@@ -110,7 +110,6 @@ gulp.task('spec', ()=> {
 		}))
 		// Slurp JS config for widgets, eval it into a JS object and dump it out as a translated JSON object {{{
 		.pipe(replace(/\$macgyverProvider\.register\((.+?),\s*((.|[\n\r])+?)\t\}\)\)/gm, (all, id, spec) => {
-			console.log('SANDBOX', id, '[[[' + spec + ']]]');
 			var sandbox = {widget: {}};
 			vm.runInContext('widget = ' + spec + '};', vm.createContext(sandbox));
 			// widgets[_.trim(id, "'")] = (new Function('return ' + spec))();
