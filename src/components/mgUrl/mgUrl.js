@@ -15,7 +15,10 @@ angular
 			placeholder: {type: 'mgUrl', help: 'Ghost text to display when the textbox has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
-		format: true,
+		format: v => {
+			if (!v) return '';
+			return `<a href="${v}" target="_blank">${v}</a>`;
+		},
 	}))
 	.component('mgUrl', {
 		bindings: {

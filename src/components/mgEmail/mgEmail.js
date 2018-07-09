@@ -15,7 +15,10 @@ angular
 			placeholder: {type: 'mgText', help: 'Ghost text to display when the text box has no value'},
 			required: {type: 'mgToggle', default: false},
 		},
-		format: true,
+		format: v => {
+			if (!v) return '';
+			return `<a href="mailto:${v}">${v}</a>`;
+		},
 	}))
 	.component('mgEmail', {
 		bindings: {
