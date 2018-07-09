@@ -12,6 +12,7 @@ var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var rimraf = require('rimraf');
 var uglify = require('gulp-uglify');
+var vm = require('vm');
 var watch = require('gulp-watch');
 
 gulp.task('default', ['serve']);
@@ -107,9 +108,26 @@ gulp.task('spec', ()=> {
 				this.emit('end');
 			},
 		}))
-		.pipe(replace(/\$macgyverProvider\.register\((.+?),\s*((.|[\n\r])+?)\)/gm, (all, id, spec) => {
-			widgets[_.trim(id, "'")] = (new Function('return ' + spec))();
+		// Slurp JS config for widgets, eval it into a JS object and dump it out as a translated JSON object {{{
+		.pipe(replace(/\$macgyverProvider\.register\((.+?),\s*((.|[\n\r])+?)\t\}\)\)/gm, (all, id, spec) => {
+			console.log('SANDBOX', id, '[[[' + spec + ']]]');
+			var sandbox = {widget: {}};
+			vm.runInContext('widget = ' + spec + '};', vm.createContext(sandbox));
+			// widgets[_.trim(id, "'")] = (new Function('return ' + spec))();
+
+			widgets[_.trim(id, "'")] = _(sandbox.widget)
+				.mapValues((v, k) => {
+					if (_.isString(v) || _.isNumber(v) || _.isBoolean(v) || _.isObject(v)) {
+						return v; // Simple scalar mapping - pass though
+					} else if (k == 'toString' && _.isFunction(k)) {
+						return true; // Mark that we can conver the value to a string but drop the actual function evaluation
+					} else {
+						throw new Error(`Unrecognised property type in MacGyver config for key "${k}" type "${typeof v}". All values should be scalars or a translation should be specified in gulpfile.js`);
+					}
+				})
+				.value();
 		}))
+		// }}}
 		.pipe(concat('widgets.json'))
 		.pipe(replace(/^(.|[\n\r])+$/m, ()=> JSON.stringify(widgets)))
 		.pipe(gulp.dest('./dist'))
