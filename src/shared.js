@@ -14,6 +14,7 @@ var _ = require('lodash');
 * Executes a callback on each item in a spec tree
 * @param {Object} spec The spec tree to operate on
 * @param {function} cb The callback to trigger as ({node, path})
+* @returns {$macgyver} This chainable object
 */
 $macgyver.forEach = function(spec, cb) {
 	var forEachScanner = (root, path) => {
@@ -24,6 +25,8 @@ $macgyver.forEach = function(spec, cb) {
 		}
 	};
 	forEachScanner(spec);
+
+	return $macgyver;
 };
 
 /**
@@ -53,6 +56,7 @@ $macgyver.flattenSpec = function(spec) {
 * @param {boolean} [checkWidgetIds=true] Verify that each widget has an ID, if no ID is found - generate one
 * @param {boolean} [checkWidgetContainerIgnoreScope=true] Check that all mgContainers have ignoreScope enabled if its not specified
 * @param {function|null} [reporter] Reporter used when logging errors, defaults to using console.log
+* @returns {Object} The original spec with alerations
 */
 $macgyver.neatenSpec = function(spec, options) {
 	var settings = _.defaults(options, {
@@ -131,6 +135,7 @@ $macgyver.neatenSpec = function(spec, options) {
 /**
 * Create a prototype data object
 * This will create empty objects whenever it encounters a mgContainer, arrays for iterative objects and so on
+* @return {Object} A prototype data object
 */
 $macgyver.specDataPrototype = function(spec) {
 	var tree = {};

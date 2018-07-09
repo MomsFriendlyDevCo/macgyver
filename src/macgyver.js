@@ -54,6 +54,7 @@ angular
 		* Generate an empty prototype tree from a form layout
 		* @params {array} layout The root node to generate from
 		* @params {boolean} [useDefaults] Whether to adopt control defaults when generating the tree
+		* @returns {Object} an object representing a prototype data storage tree
 		*/
 		$macgyver.getDataTree = function(root, useDefaults) {
 			if (!root) {
@@ -84,6 +85,7 @@ angular
 		* @param {Object} $scope The scope of the calling component
 		* @param {string} [direction="downwards"] What direction to search for the form element in. ENUM: 'upwards', 'downwards'
 		* @param {string} [want="$ctrl"] What aspect of the form is sought. ENUM: '$ctrl', '$scope'
+		* @returns {Object} The first found form within a scope
 		* @example
 		* // In a controller / component
 		* $macgyver.getForm($scope);
@@ -108,6 +110,7 @@ angular
 		/**
 		* Returns an object where each key is the ID of the MacGyver component with the value being the component controller
 		* @param {Object} $scope The scope of the calling component
+		* @returns {Object} An object where each key is the component path and the value is the widget
 		* // In a controller / component
 		* $macgyver.getAll($scope);
 		* // => {foo: <fooController>, bar: <barController>, ...}
@@ -146,6 +149,7 @@ angular
 		/**
 		* Inject various life-cycle hooks into a component that doesnt want to have to manage them itself
 		* This really just takes care of the unit responding to the 'mg.get' event at present
+		* @returns {$macgyver} This chainable object
 		* @example
 		* // In a controller / component
 		* $macgyver.inject($scope, $ctrl);
@@ -163,6 +167,8 @@ angular
 				});
 				return c;
 			});
+
+			return $macgyver;
 		};
 
 
