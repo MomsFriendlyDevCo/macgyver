@@ -35,6 +35,8 @@ angular
 					{id: 'col3', title: 'mgText'},
 				],
 			},
+			addButtonActiveClass: {type: 'mgText', default: 'btn btn-block btn-success fa fa-plus', advanced: true},
+			addButtonInactiveClass: {type: 'mgText', default: 'btn btn-block btn-disabled fa fa-plus', advanced: true},
 		},
 		configChildren: {
 			showTitle: {type: 'mgToggle', default: false, title: 'Show Title'},
@@ -128,6 +130,10 @@ angular
 				)
 			);
 			// }}}
+
+			// Adopt defaults {{{
+			$ctrl.$onInit = ()=> $scope.assignConfig('addButtonActiveClass', 'addButtonInactiveClass');
+			// }}}
 		},
 		template: `
 			<table class="table table-bordered table-hover">
@@ -168,9 +174,7 @@ angular
 					</tr>
 					<tr class="mgTable-append" ng-if="$ctrl.allowAdd">
 						<td class="text-center">
-							<button ng-click="$ctrl.createRow()" type="button" class="btn btn-block" ng-class="$ctrl.isAdding ? 'btn-success' : 'btn-disabled'">
-								<i class="fa fa-plus"></i>
-							</button>
+							<button ng-click="$ctrl.createRow()" type="button" ng-class="$ctrl.isAdding ? $ctrl.config.addButtonActiveClass : $ctrl.config.addButtonInactiveClass"></button>
 						</td>
 						<td ng-repeat="col in $ctrl.config.items track by col.id">
 							<mg-container config="{items: [col]}" data="$ctrl.newRow"></mg-container>
