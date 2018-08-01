@@ -170,6 +170,27 @@ angular
 				return c;
 			});
 
+
+			/**
+			* Function to force the adoption of default config values within a controller
+			* @param {string} [keys...] The keys to adopt the values of, if no specific keys are set all config keys will be used
+			* @example Set the config value 'foo' to whatever that config structure has as a default
+			* $ctrl.$onInit = $scope.assignDefaults('foo')
+			*/
+			$scope.assignConfig = (...keys) => {
+				if (!$ctrl.config.type) throw new Error('Cannot determine type of widget to assign defaults, check that assignDefaults is being called within $onInit');
+				if (!keys.length) keys = _.keys($macgyver.widgets[$ctrl.config.type].config);
+
+				keys.forEach(key => {
+					if (!angular.isUndefined($ctrl[key])) return; // Already assigned a value
+					var widget = $macgyver.widgets[$ctrl.config.type];
+					if (!widget) throw new Error(`Unable to assign default "${key}" as no default exists in "${$ctrl.config.type}" config`);
+					if (!_.has(widget.config[key], 'default')) throw new Error(`The config key "${key}" for widget "${$ctrl.config.type}" does not have a default value - remove the call to assignDefaults`);
+					console.log('ASSIGN', key, widget.config[key].default);
+					$ctrl.config[key] = widget.config[key].default;
+				});
+			};
+
 			return $macgyver;
 		};
 

@@ -13,7 +13,11 @@ angular
 		category: 'Simple Inputs',
 		config: {
 			onText: {type: 'mgText', default: 'On'},
+			onClassActive: {type: 'mgText', default: 'btn-success', advanced: true},
+			onClassInactive: {type: 'mgText', default: 'btn-default', advanced: true},
 			offText: {type: 'mgText', default: 'Off'},
+			offClassActive: {type: 'mgText', default: 'btn-danger', advanced: true},
+			offClassInactive: {type: 'mgText', default: 'btn-default', advanced: true},
 		},
 		format: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
 		formatAlign: 'center',
@@ -30,11 +34,13 @@ angular
 			// Adopt default if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
 			// }}}
+
+			$ctrl.$onInit = ()=> $scope.assignConfig();
 		},
 		template: `
 			<div class="btn-group">
-				<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="!$ctrl.data ? 'btn-danger' : 'btn-default'">{{$ctrl.config.offText || 'Off'}}</a>
-				<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="$ctrl.data ? 'btn-success' : 'btn-default'">{{$ctrl.config.onText || 'On'}}</a>
+				<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="!$ctrl.data ? $ctrl.config.offClassActive : $ctrl.config.offClassInactive">{{$ctrl.config.offText}}</a>
+				<a ng-click="$ctrl.data = !$ctrl.data" class="btn" ng-class="$ctrl.data ? $ctrl.config.onClassActive : $ctrl.config.onClassInactive">{{$ctrl.config.onText}}</a>
 			</div>
 		`,
 	})
