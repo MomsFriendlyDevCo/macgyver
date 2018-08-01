@@ -182,7 +182,7 @@ angular
 				if (!keys.length) keys = _.keys($macgyver.widgets[$ctrl.config.type].config);
 
 				keys.forEach(key => {
-					if (!angular.isUndefined($ctrl[key])) return; // Already assigned a value
+					if (!angular.isUndefined($ctrl.config[key])) return; // Already assigned a value
 					var widget = $macgyver.widgets[$ctrl.config.type];
 					if (!widget) throw new Error(`Unable to assign default "${key}" as no default exists in "${$ctrl.config.type}" config`);
 					if (!_.has(widget.config[key], 'default')) throw new Error(`The config key "${key}" for widget "${$ctrl.config.type}" does not have a default value - remove the call to assignDefaults`);
