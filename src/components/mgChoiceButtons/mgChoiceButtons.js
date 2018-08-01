@@ -4,15 +4,10 @@
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
 * @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
 * @param {string} [config.enum[].classSelected] Optional class to display per item when selected
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
 * @param {string} [config.enum[].title] Optional title to display within each element
-* @param {string} [config.itemIconDefault='fa fa-fw'] Default item to use per item (unless an override is present in the item object)
-* @param {string} [config.itemIconSelected='fa fa-check fa-lg'] Icon to use when item is selected
-* @param {string} [config.itemClassDefault='btn-default'] Default item class to use per item (unless an override is present in the item object)
-* @param {string} [config.itemClassSelected='btn-primary'] Item class to use when item is selected
+* @param {string} [config.itemClassInactive='btn btn-default'] Default item class to use per item (unless an override is present in the item object)
+* @param {string} [config.itemClassActive='btn btn-primary'] Item class to use when item is selected
 * @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
-* @param {string} [config.classItem='btn'] The class definition of each item (as well as each items id
 * @param {*} data The state data
 */
 angular
@@ -27,12 +22,9 @@ angular
 				title: 'The list of items to display',
 				default: ['Foo', 'Bar', 'Baz'],
 			},
-			classWrapper: {type: 'mgText', default: 'btn-group', title: 'Group CSS class'},
-			classItem: {type: 'mgText', default: 'btn', title: 'Item CSS class'},
-			itemIconDefault: {type: 'mgText'},
-			itemIconSelected: {type: 'mgText'},
-			itemClassDefault: {type: 'mgText', default: 'btn-default'},
-			itemClassSelected: {type: 'mgText', default: 'btn-primary'},
+			classWrapper: {type: 'mgText', default: 'btn-group', title: 'Group CSS class', advanced: true},
+			itemClassActive: {type: 'mgText', default: 'btn btn-primary', advanced: true},
+			itemClassInactive: {type: 'mgText', default: 'btn btn-default', advanced: true},
 		},
 		format: true, // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
 	}))
@@ -63,16 +55,17 @@ angular
 			$scope.$watch('$ctrl.data', ()=> {
 				if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
 			});
+
+			$ctrl.$onInit = ()=> $scope.assignConfig('itemClassInactive', 'itemClassActive');
 			// }}}
 		},
 		template: `
 			<div ng-class="$ctrl.config.classWrapper || 'btn-group'">
-				<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="[$ctrl.config.classItem || 'btn',
+				<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="
 					$ctrl.data == item.id
-					? item.classSelected || $ctrl.config.itemClassSelected || 'btn-primary'
-					: item.class || $ctrl.config.itemClassDefault || 'btn-default'
-				]" ng-click="$ctrl.data = item.id">
-					<i ng-class="$ctrl.data == item.id ? (item.iconSelected || $ctrl.config.iconSelected) : (item.icon || $ctrl.config.iconDefault)"></i>
+					? item.classSelected || $ctrl.config.itemClassActive
+					: item.class || $ctrl.config.itemClassInactive
+				" ng-click="$ctrl.data = item.id">
 					{{item.title}}
 				</a>
 			</div>

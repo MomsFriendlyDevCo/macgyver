@@ -100,11 +100,11 @@
 					"iconSelected": "fa fa-fw fa-check",
 					"iconDefault": "fa fa-fw",
 					"enum": [
-						{"id": "btn-primary", "class": "btn-primary"},
-						{"id": "btn-info", "class": "btn-info"},
-						{"id": "btn-success", "class": "btn-success"},
-						{"id": "btn-warning", "class": "btn-warning"},
-						{"id": "btn-danger", "class": "btn-danger"}
+						{"id": "btn-primary", "class": "btn btn-primary fa fa-square-o", "classSelected": "btn btn-primary fa fa-check-square-o"},
+						{"id": "btn-info", "class": "btn btn-info fa fa-square-o", "classSelected": "btn btn-info fa fa-check-square-o"},
+						{"id": "btn-success", "class": "btn btn-success fa fa-square-o", "classSelected": "btn btn-success fa fa-check-square-o"},
+						{"id": "btn-warning", "class": "btn btn-warning fa fa-square-o", "classSelected": "btn btn-warning fa fa-check-square-o"},
+						{"id": "btn-danger", "class": "btn btn-danger fa fa-square-o", "classSelected": "btn btn-danger fa fa-check-square-o"}
 					]
 				},
 				{
