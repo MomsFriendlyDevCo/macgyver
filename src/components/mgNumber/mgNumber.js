@@ -19,9 +19,15 @@ angular
 			min: {type: 'mgNumber', title: 'Minimum value'},
 			max: {type: 'mgNumber', title: 'Maximum value'},
 			step: {type: 'mgNumber', title: 'Value to increment / decrement by'},
-			slider: {type: 'mgToggle', title: 'Display slider', default: false, help: 'Whether to display a fixed slider rather than a free form text input box'},
 			placeholder: {type: 'mgNumber', help: 'Ghost text to display when there is no value'},
 			required: {type: 'mgToggle', default: false},
+			interface: {type: 'mgChoiceDropdown', title: 'Interface', help: 'How to allow number input', default: 'bumpers', enum: [
+				{id: 'bumpers', title: 'Number input with buttons'},
+				{id: 'slider', title: 'Slider bar'},
+				{id: 'input', title: 'Number input box only'},
+			]},
+			bumperDownClass: {type: 'mgText', default: 'btn btn-default fa fa-arrow-down input-group-addon', advanced: true},
+			bumperUpClass: {type: 'mgText', default: 'btn btn-default fa fa-arrow-up input-group-addon', advanced: true},
 		},
 		format: v => {
 			if (!v) return '';
@@ -54,16 +60,21 @@ angular
 
 			// Adopt default if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
+
+			$ctrl.$onInit = ()=> $scope.assignConfig('interface', 'bumperDownClass', 'bumperUpClass');
 			// }}}
 		},
 		template: `
-			<div ng-if="$ctrl.config.slider">
+			<div ng-if="$ctrl.config.interface == 'slider'">
 				<input ng-model="$ctrl.data" type="range" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
 			</div>
-			<div ng-if="!$ctrl.config.slider" class="input-group">
-				<a ng-click="$ctrl.add(-1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-down"></i></a>
+			<div ng-if="$ctrl.config.interface == 'bumpers'" class="input-group">
+				<a ng-click="$ctrl.add(-1)" class="hidden-print" ng-class="$ctrl.config.bumperDownClass"></a>
 				<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
-				<a ng-click="$ctrl.add(1)" class="btn btn-default input-group-addon hidden-print"><i class="fa fa-arrow-up"></i></a>
+				<a ng-click="$ctrl.add(1)" class="hidden-print" ng-class="$ctrl.config.bumperUpClass"></a>
+			</div>
+			<div ng-if="$ctrl.config.interface == 'input'">
+				<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
 			</div>
 		`,
 	})
