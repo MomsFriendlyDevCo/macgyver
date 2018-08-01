@@ -18,6 +18,8 @@ angular
 			max: {type: 'mgNumber', title: 'Maximum number of items'},
 			required: {type: 'mgToggle', default: false},
 			numbered: {type: 'mgToggle', default: true},
+			addButtonActiveClass: {type: 'mgText', default: 'btn btn-block btn-success fa fa-plus', advanced: true},
+			addButtonInactiveClass: {type: 'mgText', default: 'btn btn-block btn-disabled fa fa-plus', advanced: true},
 		},
 		format: v => (v || []).join(', '),
 	}))
@@ -36,10 +38,12 @@ angular
 				$ctrl.config.max && $ctrl.data.length > $ctrl.config.max && `${$ctrl.config.title} has too many items (maximum is ${$ctrl.config.max})`,
 			];
 
-			// Adopt default  if no data value is given {{{
+			// Adopt defaults if no data value is given {{{
 			$scope.$watch('$ctrl.data', ()=> {
 				if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
 			});
+
+			$ctrl.$onInit = ()=> $scope.assignConfig('addButtonActiveClass', 'addButtonInactiveClass');
 			// }}}
 
 			// Appending {{{
@@ -83,9 +87,7 @@ angular
 					<tfoot class="hidden-print">
 						<tr>
 							<td ng-if="$ctrl.config.numbered == undefined || $ctrl.config.numbered" class="text-center" width="30px">
-								<button type="submit" class="btn btn-ellipsis" ng-class="$ctrl.listNewItem.text ? 'btn-success' : 'btn-disabled'">
-									<i class="fa fa-plus"></i>
-								</button>
+								<button type="submit" ng-class="$ctrl.listNewItem.text ? $ctrl.config.addButtonActiveClass : $ctrl.config.addButtonInactiveClass"></button>
 							</td>
 							<td>
 								<input ng-model="$ctrl.listNewItem.text" type="text" class="form-control"/>
