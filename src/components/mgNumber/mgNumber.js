@@ -6,7 +6,7 @@
 * @param {Date} [config.min] The minimum allowable value
 * @param {Date} [config.max] The maximum allowable value
 * @param {number} [config.step] The number to increment / decrement by
-* @param {boolean} [config.slider=false] Display the widget as a slider rather than free-text input (requires min/max to work properly)
+* @param {boolean} [config.interface="bumpers"] Display the widget as a slider rather than free-text input (requires min/max to work properly)
 * @param {*} data The state data
 */
 angular
