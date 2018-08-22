@@ -428,6 +428,14 @@
 					"type": "mgHtml",
 					"title": "HTML",
 					"text": "Hello <strong>World</strong>"
+				},
+				{
+					"id": "demoPlaceholder",
+					"type": "mgPlaceholder",
+					"title": "Placeholder",
+					"style": "placeholder-box",
+					"text": "Placeholder!",
+					"height": 100
 				}
 			]
 		}
