@@ -11,7 +11,7 @@ angular
 		category: 'Simple Inputs',
 		config: {
 		},
-		format: v => v ? '<i class="fa fa-check"></i>' : '<i class="fa fa-times"></i>',
+		format: v => v ? 'Yes' : 'No',
 		formatAlign: 'center',
 	}))
 	.component('mgCheckBox', {
