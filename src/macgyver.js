@@ -186,7 +186,6 @@ angular
 					var widget = $macgyver.widgets[$ctrl.config.type];
 					if (!widget) throw new Error(`Unable to assign default "${key}" as no default exists in "${$ctrl.config.type}" config`);
 					if (!_.has(widget.config[key], 'default')) throw new Error(`The config key "${key}" for widget "${$ctrl.config.type}" does not have a default value - remove the call to assignDefaults`);
-					console.log('ASSIGN', key, widget.config[key].default);
 					$ctrl.config[key] = widget.config[key].default;
 				});
 			};
