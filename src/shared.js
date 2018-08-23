@@ -15,6 +15,7 @@ var _ = require('lodash');
 * @param {Object} spec The spec tree to operate on
 * @param {function} cb The callback to trigger as ({node, path})
 * @returns {$macgyver} This chainable object
+* @deprecated Use flatten() instead
 */
 $macgyver.forEach = function(spec, cb) {
 	var forEachScanner = (root, path) => {
@@ -36,6 +37,7 @@ $macgyver.forEach = function(spec, cb) {
 * @param {Object} spec The specification Object to flatten
 * @returns {Object} A key/val flattened object where the keys are the dotted notation path of the ID's and the values are the pointer to the object
 * @see $macgyver.forEach()
+* @deprecated Use flatten() instead
 *
 * @example
 * var spec = $macgyver.flattenSpec(mySpec);
@@ -45,6 +47,92 @@ $macgyver.flattenSpec = function(spec) {
 	var res = {};
 	$macgyver.forEach(spec, (widget, path) => res[path] = widget);
 	return res;
+};
+
+
+/**
+* Flatten the a spec into an object lookup where each key is the dotted notation of the key
+* NOTE: Specifying {want:'array'} will add the extra property 'path' onto the output collection
+* @param {Object} root The data or spec object to examine
+* @param {Object} [options] Optional settings to use
+* @param {number} [options.maxDepth=0] How far down the tree to recurse, set to falsy to infinitely recurse
+* @param {Object|function} [options.filter] Either a Lodash match expression or a function to run on each widget - only truthy values are appended to the output. Function is called as `(widget, path, depth)`
+* @param {stirng} [type="auto"] How to recurse into items. ENUM: 'auto' (try to determine how to recurse from root element), 'spec', 'data'
+* @param {string} [want="object"] How to return the output. ENUM: 'object' (an object where each key is the path and the value is the object), 'array' (a flattened version of an object)
+* @param {boolean} [wantPath=false] Whether to mutate the output widget with a dotted notation string indicating where to look in a data object for the value of the widget
+* @param {boolean} [wantSpec=false] Whether to mutate the output widget with the widget specification as an object for each item
+* @param {boolean} [wantSpecPath=false] Whether to mutate the output widget with a dotted notation path on where to find the widget within a spec object
+*/
+$macgyver.flatten = function(root, options) {
+	var settings = _.defaults(options, {
+		maxDepth: 0,
+		filter: undefined,
+		type: 'auto',
+		want: 'object',
+		wantPath: false,
+		wantSpec: false,
+		wantSpecPath: false,
+	});
+
+	if (settings.filter && !_.isFunction(settings.filter) && _.isObject(settings.filter)) settings.filter = _.matches(settings.filter);
+	if (settings.want != 'object' && settings.want != 'array') throw new Error('$macgyver.flatten({want}) can only be "object" or "array"');
+	if (settings.type == 'auto') {
+		if (root.items) {
+			settings.type = 'spec';
+		} else if (_.every(root, (k, v) => !v.items)) {
+			settings.type = 'data';
+		} else {
+			throw new Error('Cannot determine type of input object to $macgyver.flatten(), specify it explicitly with {type=spec|data}');
+		}
+	}
+
+	var found = {};
+	var foundAll = {}; // Unfiltered version of 'found' for use if we are gluing the path to the items later
+
+	var depthScanner = (root, path, depth = 0) => {
+		if (!_.isObject(root)) return;
+
+		var rootPath = (path ? path + '.' : '') + (root && root.id ? root.id : '');
+
+		if (settings.wantPath) foundAll[root.id] = root; // Store all objects reguardless of filtering as we need them to compute the path later
+
+		// Add to bucket of found objects?
+		if (
+			!settings.filter // No filter
+			|| settings.filter.call(root, root, path, depth) // OR we pass the filter
+		) {
+			found[root.id] = root;
+		}
+
+		// Recurse into children?
+		var recursionSubject = settings.type == 'spec' ? root.items : root;
+
+		if (
+			_.isArray(recursionSubject)
+			&& (!settings.maxDepth || depth <= settings.maxDepth)
+		) {
+			recursionSubject.forEach(i => depthScanner(i, rootPath, depth + 1));
+		}
+	};
+	depthScanner(root);
+
+	if (settings.wantPath || settings.wantSpec || settings.wantSpecPath)
+		found = _.mapValues(found, (v, k) => {
+			if (settings.wantSpec) v.spec = $macgyver.widgets[v.type];
+			if (settings.wantSpecPath) v.specPath = k;
+			if (settings.wantPath) { // Calculate the storage path by walking down the parent tree, filtering parents that don't yield a scope
+				v.path = k
+					.split('.')
+					.filter(parent => ! foundAll[parent].ignoreScope) // Remove items that tell us to ignore their scope
+					.join('.')
+			}
+
+			return v;
+		});
+
+	return (settings.want == 'object')
+		? found // Return as is - an object
+		: _.map(found); // Rewrite into an array
 };
 
 
