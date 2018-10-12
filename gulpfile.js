@@ -70,7 +70,7 @@ gulp.task('js', ()=>
 			includeBase: `${__dirname}/src`,
 		}))
 		.pipe(babel({
-			presets: ['es2015'],
+			presets: ['@babel/env'],
 			plugins: ['angularjs-annotate'],
 		}))
 		.pipe(gulp.dest('./dist'))
