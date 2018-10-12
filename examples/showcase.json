@@ -28,6 +28,16 @@
 					"interface": "input"
 				},
 				{
+					"id": "demoNumberPrefixSuffix",
+					"type": "mgNumber",
+					"title": "Number (simple input + prefix + suffix)",
+					"min": 1,
+					"max": 10,
+					"interface": "input",
+					"prefix": "$",
+					"suffix": ".00"
+				},
+				{
 					"id": "demoNumberBumpers",
 					"type": "mgNumber",
 					"title": "Number (with Bumpers)",
