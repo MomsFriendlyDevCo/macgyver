@@ -167,7 +167,7 @@ $macgyver.neatenSpec = function(spec, options) {
 
 	if (settings.checkRootShowTitle && _.isUndefined(spec.showTitle)) {
 		spec.showTitle = false;
-		settings.reporter('Root node should not showTitle enabled - disabled');
+		settings.reporter('Root node should not have showTitle enabled');
 	}
 	// }}}
 
