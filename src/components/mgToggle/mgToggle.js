@@ -19,7 +19,9 @@ angular
 			offClassActive: {type: 'mgText', default: 'btn-danger', advanced: true},
 			offClassInactive: {type: 'mgText', default: 'btn-default', advanced: true},
 		},
-		format: (v, config) => v ? config.onText || 'On' : config.offText || 'Off',
+		format: (v, config) => v
+			? config && config.onText ? config.onText : 'On'
+			: config && config.offText ? config.offText : 'Off',
 		formatAlign: 'center',
 	}))
 	.component('mgToggle', {
