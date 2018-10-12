@@ -28,6 +28,8 @@ angular
 			]},
 			bumperDownClass: {type: 'mgText', default: 'btn btn-default fa fa-arrow-down input-group-addon', advanced: true},
 			bumperUpClass: {type: 'mgText', default: 'btn btn-default fa fa-arrow-up input-group-addon', advanced: true},
+			prefix: {type: 'mgText', title: 'Prefix', help: 'Prefix to show before the input (input interface only)'},
+			suffix: {type: 'mgText', title: 'Suffix', help: 'Suffix to show after the input (input interface only)'},
 		},
 		format: v => {
 			if (!v) return '';
@@ -73,8 +75,10 @@ angular
 				<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
 				<a ng-click="$ctrl.add(1)" class="hidden-print" ng-class="$ctrl.config.bumperUpClass"></a>
 			</div>
-			<div ng-if="$ctrl.config.interface == 'input'">
+			<div ng-if="$ctrl.config.interface == 'input'" class="input-group">
+				<div ng-if="$ctrl.config.prefix" class="input-group-prepend"><div class="input-group-text">{{$ctrl.config.prefix}}</div></div>
 				<input ng-model="$ctrl.data" type="number" class="form-control" placeholder="{{$ctrl.config.placeholder}}" min="{{$ctrl.config.min}}" max="{{$ctrl.config.max}}" step="{{$ctrl.config.step}}"/>
+				<div ng-if="$ctrl.config.suffix" class="input-group-append"><div class="input-group-text">{{$ctrl.config.suffix}}</div></div>
 			</div>
 		`,
 	})
