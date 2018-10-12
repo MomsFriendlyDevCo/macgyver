@@ -122,7 +122,7 @@ angular
 						</thead>
 						<tbody>
 							<tr>
-								<td ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group row mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
+								<td ng-repeat="w in $ctrl.config.items track by w.id" ng-switch="w.type" data-path="{{w.id}}" class="form-group mgComponent" ng-class="[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]">
 									` + _.map($macgyver.widgets, w => `<div ng-switch-when="${w.id}">${w.template}</div>`).join('\n') + `
 									<div ng-switch-default class="alert alert-danger">Unknown MacGyver widget type : "{{w.type}}"</div>
 									<div class="help-block" ng-if="w.help">{{w.help}}</div>
