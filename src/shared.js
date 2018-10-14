@@ -57,6 +57,7 @@ $macgyver.flattenSpec = function(spec) {
 * @param {Object} [options] Optional settings to use
 * @param {number} [options.maxDepth=0] How far down the tree to recurse, set to falsy to infinitely recurse
 * @param {Object|function} [options.filter] Either a Lodash match expression or a function to run on each widget - only truthy values are appended to the output. Function is called as `(widget, path, depth)`
+* @param {Object|function} [options.filterChildren] Either a Lodash match expression or a function to run on each widget - only truthy values are recursed into
 * @param {stirng} [type="auto"] How to recurse into items. ENUM: 'auto' (try to determine how to recurse from root element), 'spec', 'data'
 * @param {string} [want="object"] How to return the output. ENUM: 'object' (an object where each key is the path and the value is the object), 'array' (a flattened version of an object)
 * @param {boolean} [wantPath=false] Whether to mutate the output widget with a dotted notation string indicating where to look in a data object for the value of the widget
@@ -67,6 +68,7 @@ $macgyver.flatten = function(root, options) {
 	var settings = _.defaults(options, {
 		maxDepth: 0,
 		filter: undefined,
+		filterChildren: undefined,
 		type: 'auto',
 		want: 'object',
 		wantPath: false,
@@ -109,6 +111,10 @@ $macgyver.flatten = function(root, options) {
 
 		if (
 			_.isArray(recursionSubject)
+			&& (
+				!settings.filterChildren // No filter
+				|| settings.filterChildren.call(root, root, path, depth) // ...or we pass the filter
+			)
 			&& (!settings.maxDepth || depth <= settings.maxDepth)
 		) {
 			recursionSubject.forEach(i => depthScanner(i, rootPath, depth + 1));
