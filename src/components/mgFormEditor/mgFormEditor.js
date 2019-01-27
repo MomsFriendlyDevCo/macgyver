@@ -220,7 +220,7 @@ angular
 
 				return $q.resolve()
 					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
-					.then(()=> $ctrl.modal.show('modal-mgFormEditor-edit'))
+					.then(()=> $macgyver.widgets[widget.type] && !$macgyver.widgets[widget.type].nonEditableWidget && $ctrl.modal.show('modal-mgFormEditor-edit'))
 					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
 			});
 
