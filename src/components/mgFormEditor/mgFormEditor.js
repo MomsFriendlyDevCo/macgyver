@@ -117,6 +117,7 @@ angular
 				}
 
 				$scope.$broadcast('mg.mgFormEditor.change');
+				$scope.$emit('mg.mgFormEditor.added');
 			};
 
 			$ctrl.widgetFilter = widget => widget.userPlaceable && (!$ctrl.category || widget.category == $ctrl.category);
