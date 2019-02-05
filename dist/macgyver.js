@@ -545,6 +545,75 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {string} [config.itemClassInactive='btn btn-default'] Default item class to use per item (unless an override is present in the item object)
+* @param {string} [config.itemClassActive='btn btn-primary'] Item class to use when item is selected
+* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgChoiceButtons', {
+		title: 'Button multiple-choice',
+		icon: 'fa fa-check-square',
+		category: 'Choice Selectors',
+		config: {
+			enum: {
+				type: 'mgList',
+				title: 'The list of items to display',
+				default: ['Foo', 'Bar', 'Baz']
+			},
+			classWrapper: { type: 'mgText', default: 'btn-group', title: 'Group CSS class', advanced: true },
+			itemClassActive: { type: 'mgText', default: 'btn btn-primary', advanced: true },
+			itemClassInactive: { type: 'mgText', default: 'btn btn-default', advanced: true }
+		},
+		format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+	});
+}]).component('mgChoiceButtons', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+		$ctrl.enumIter = []; // Cleaned up version of enum
+		$scope.$watchCollection('$ctrl.config.enum', function () {
+			if (!$ctrl.config.enum) return; // No data yet
+			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
+				// Array of strings
+				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
+					return {
+						id: _.camelCase(i),
+						title: i
+					};
+				});
+			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
+				// Collection
+				$ctrl.enumIter = $ctrl.config.enum;
+			}
+		});
+		// }}}
+		// Adopt default if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+
+		$ctrl.$onInit = function () {
+			return $scope.assignConfig('itemClassInactive', 'itemClassActive');
+		};
+		// }}}
+	}],
+	template: '\n\t\t\t<div ng-class="$ctrl.config.classWrapper || \'btn-group\'">\n\t\t\t\t<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t" ng-click="$ctrl.data = item.id">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
+});
+
+/**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
 * @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
@@ -622,75 +691,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<ui-select ng-model="$ctrl.data" title="{{$ctrl.config.textPrompt || \'Choose an item...\'}}">\n\t\t\t\t<ui-select-match placeholder="{{$ctrl.config.textInnerPrompt || \'Select an item...\'}}">{{$select.selected[$ctrl.config.displayPrimaryField || \'title\']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat="item.id as item in $ctrl.enumIter | filter:$select.search track by item.id" group-by="$ctrl.config.groupBy">\n\t\t\t\t\t<div ng-bind-html="item[$ctrl.config.displayPrimaryField || \'title\'] | highlight:$select.search"></div>\n\t\t\t\t\t<small ng-if="$ctrl.config.displaySecondaryField" ng-bind-html="item[$ctrl.config.displaySecondaryField] | highlight:$select.search"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t'
-});
-
-/**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {string} [config.itemClassInactive='btn btn-default'] Default item class to use per item (unless an override is present in the item object)
-* @param {string} [config.itemClassActive='btn btn-primary'] Item class to use when item is selected
-* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgChoiceButtons', {
-		title: 'Button multiple-choice',
-		icon: 'fa fa-check-square',
-		category: 'Choice Selectors',
-		config: {
-			enum: {
-				type: 'mgList',
-				title: 'The list of items to display',
-				default: ['Foo', 'Bar', 'Baz']
-			},
-			classWrapper: { type: 'mgText', default: 'btn-group', title: 'Group CSS class', advanced: true },
-			itemClassActive: { type: 'mgText', default: 'btn btn-primary', advanced: true },
-			itemClassInactive: { type: 'mgText', default: 'btn btn-default', advanced: true }
-		},
-		format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-	});
-}]).component('mgChoiceButtons', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		// Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-		$ctrl.enumIter = []; // Cleaned up version of enum
-		$scope.$watchCollection('$ctrl.config.enum', function () {
-			if (!$ctrl.config.enum) return; // No data yet
-			if (_.isArray($ctrl.config.enum) && _.isString($ctrl.config.enum[0])) {
-				// Array of strings
-				$ctrl.enumIter = $ctrl.config.enum.map(function (i) {
-					return {
-						id: _.camelCase(i),
-						title: i
-					};
-				});
-			} else if (_.isArray($ctrl.config.enum) && _.isObject($ctrl.config.enum[0])) {
-				// Collection
-				$ctrl.enumIter = $ctrl.config.enum;
-			}
-		});
-		// }}}
-		// Adopt default if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-
-		$ctrl.$onInit = function () {
-			return $scope.assignConfig('itemClassInactive', 'itemClassActive');
-		};
-		// }}}
-	}],
-	template: '\n\t\t\t<div ng-class="$ctrl.config.classWrapper || \'btn-group\'">\n\t\t\t\t<a ng-repeat="item in $ctrl.enumIter track by item.id" ng-class="\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t" ng-click="$ctrl.data = item.id">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
 });
 
 /**
@@ -1347,6 +1347,7 @@ angular.module('macgyver').component('mgFormEditor', {
 			}
 
 			$scope.$broadcast('mg.mgFormEditor.change');
+			$scope.$emit('mg.mgFormEditor.added');
 		};
 
 		$ctrl.widgetFilter = function (widget) {
@@ -1982,6 +1983,34 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver static HTML
+* This is simple display of HTML content
+* @param {Object} config The config specification
+* @param {string} [config.text] The HTML content to display if the data feed does not provide it
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgHtml', {
+		title: 'Read-only HTML',
+		icon: 'fa fa-html5',
+		category: 'General Decoration',
+		config: {
+			text: { type: 'mgHtml' }
+		}
+	});
+}]).component('mgHtml', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+	}],
+	template: '\n\t\t\t<div class="form-control-static" ng-bind-html="$ctrl.data || $ctrl.config.text"></div>\n\t\t'
+});
+
+/**
 * MacGyver Image directive
 * @require angular-ui-scribble
 * @param {Object} config The config specification
@@ -2080,34 +2109,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal fade">\n\t\t\t\t<div class="modal-dialog modal-lg">\n\t\t\t\t\t<div class="modal-content">\n\t\t\t\t\t\t<div class="modal-header">\n\t\t\t\t\t\t\t<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>\n\t\t\t\t\t\t\t<h4 class="modal-title">{{$ctrl.config.title || \'Attach image\'}}</h4>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-body">\n\t\t\t\t\t\t\t<div ng-if="$ctrl.modalShown">\n\t\t\t\t\t\t\t\t<ui-scribble editable="true" callback="$ctrl.getImage(dataURI, blob)" width="100%" height="600"></ui-scribble>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t\t\t<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div ng-if="$ctrl.config.showList === undefined || $ctrl.config.showList">\n\t\t\t\t<mg-file-list config="$ctrl.listConfig" data="$ctrl.data"></mg-file-list>\n\t\t\t</div>\n\t\t\t<div ng-if="!$ctrl.files || !$ctrl.files.length" class="hidden-print">\n\t\t\t\t<div ng-if="$ctrl.isUploading" class="alert alert-info font-lg">\n\t\t\t\t\t<i class="fa fa-spinner fa-spin"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<a ng-click="$ctrl.showModal(true)" class="btn btn-success">\n\t\t\t\t\t<i class="fa fa-plus"></i>\n\t\t\t\t\tAdd image\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t'
-});
-
-/**
-* MacGyver static HTML
-* This is simple display of HTML content
-* @param {Object} config The config specification
-* @param {string} [config.text] The HTML content to display if the data feed does not provide it
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgHtml', {
-		title: 'Read-only HTML',
-		icon: 'fa fa-html5',
-		category: 'General Decoration',
-		config: {
-			text: { type: 'mgHtml' }
-		}
-	});
-}]).component('mgHtml', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-	}],
-	template: '\n\t\t\t<div class="form-control-static" ng-bind-html="$ctrl.data || $ctrl.config.text"></div>\n\t\t'
 });
 
 /**
@@ -2676,6 +2677,52 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 });
 
 /**
+* MacGyver free text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
+* @param {Date} [config.lengthMin] The minimum allowable length
+* @param {Date} [config.lengthMax] The maximum allowable length
+* @param {number} [config.rows=3] How many row's in height to draw the widget
+* @param {*} data The state data
+*/
+angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
+	return $macgyverProvider.register('mgTextArea', {
+		title: 'Multi-line text',
+		icon: 'fa fa-align-justify',
+		category: 'Simple Inputs',
+		config: {
+			rows: { type: 'mgNumber', title: 'Line height', default: 3 },
+			lengthMin: { type: 'mgNumber', title: 'Minimum Length' },
+			lengthMax: { type: 'mgNumber', title: 'Maximum Length' },
+			placeholder: { type: 'mgTextArea', help: 'Ghost text to display when the textbox has no value' },
+			required: { type: 'mgToggle', default: false }
+		},
+		format: true
+	});
+}]).component('mgTextArea', {
+	bindings: {
+		config: '<',
+		data: '='
+	},
+	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
+		var $ctrl = this;
+		$macgyver.inject($scope, $ctrl);
+
+		$ctrl.validate = function () {
+			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.lengthMin && _.isString($ctrl.data) && $ctrl.data.length < $ctrl.config.lengthMin && $ctrl.config.title + ' is too small (minimum length is ' + $ctrl.config.lengthMin + ')', $ctrl.config.lengthMax && _.isString($ctrl.data) && $ctrl.data.length > $ctrl.config.lengthMax && $ctrl.config.title + ' is too long (maximum length is ' + $ctrl.config.lengthMax + ')'];
+		};
+
+		// Adopt default  if no data value is given {{{
+		$scope.$watch('$ctrl.data', function () {
+			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
+		});
+		// }}}
+	}],
+	template: '\n\t\t\t<textarea ng-model="$ctrl.data" class="form-control" placeholder="{{$ctrl.config.placeholder}}" minlength="{{$ctrl.config.lengthMin}}" maxlength="{{$ctrl.config.lengthMin}}" rows="{{$ctrl.config.rows || 3}}"/>\n\t\t'
+});
+
+/**
 * MacGyver time input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -2720,52 +2767,6 @@ angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvi
 		// }}}
 	}],
 	template: '\n\t\t\t<input ng-model="$ctrl.data" type="time" class="form-control"/>\n\t\t'
-});
-
-/**
-* MacGyver free text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
-* @param {Date} [config.lengthMin] The minimum allowable length
-* @param {Date} [config.lengthMax] The maximum allowable length
-* @param {number} [config.rows=3] How many row's in height to draw the widget
-* @param {*} data The state data
-*/
-angular.module('macgyver').config(['$macgyverProvider', function ($macgyverProvider) {
-	return $macgyverProvider.register('mgTextArea', {
-		title: 'Multi-line text',
-		icon: 'fa fa-align-justify',
-		category: 'Simple Inputs',
-		config: {
-			rows: { type: 'mgNumber', title: 'Line height', default: 3 },
-			lengthMin: { type: 'mgNumber', title: 'Minimum Length' },
-			lengthMax: { type: 'mgNumber', title: 'Maximum Length' },
-			placeholder: { type: 'mgTextArea', help: 'Ghost text to display when the textbox has no value' },
-			required: { type: 'mgToggle', default: false }
-		},
-		format: true
-	});
-}]).component('mgTextArea', {
-	bindings: {
-		config: '<',
-		data: '='
-	},
-	controller: ['$macgyver', '$scope', function controller($macgyver, $scope) {
-		var $ctrl = this;
-		$macgyver.inject($scope, $ctrl);
-
-		$ctrl.validate = function () {
-			return [$ctrl.config.required && !$ctrl.data && $ctrl.config.title + ' is required', $ctrl.config.lengthMin && _.isString($ctrl.data) && $ctrl.data.length < $ctrl.config.lengthMin && $ctrl.config.title + ' is too small (minimum length is ' + $ctrl.config.lengthMin + ')', $ctrl.config.lengthMax && _.isString($ctrl.data) && $ctrl.data.length > $ctrl.config.lengthMax && $ctrl.config.title + ' is too long (maximum length is ' + $ctrl.config.lengthMax + ')'];
-		};
-
-		// Adopt default  if no data value is given {{{
-		$scope.$watch('$ctrl.data', function () {
-			if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default;
-		});
-		// }}}
-	}],
-	template: '\n\t\t\t<textarea ng-model="$ctrl.data" class="form-control" placeholder="{{$ctrl.config.placeholder}}" minlength="{{$ctrl.config.lengthMin}}" maxlength="{{$ctrl.config.lengthMin}}" rows="{{$ctrl.config.rows || 3}}"/>\n\t\t'
 });
 
 /**
