@@ -285,6 +285,13 @@ angular
 						})
 						[0];
 
+				if (matching) { // Has widget disabled Edit mask
+					var widget = TreeTools.find($ctrl.config, {id: angular.element(matching.el).attr('data-path')}, {childNode: 'items'});
+					if (widget && $macgyver.widgets[widget.type].skipMask) {
+						return;
+					}
+				}
+
 				if (matching) {
 					$ctrl.isInserter = angular.element(matching.el).hasClass('mgComponentEditorInserter');
 					$element.children('.mgFormEditor-mask')
