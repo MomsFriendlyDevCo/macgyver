@@ -1522,6 +1522,14 @@ angular.module('macgyver').component('mgFormEditor', {
 				})[0];
 
 				if (matching) {
+					// Has widget disabled Edit mask
+					var widget = TreeTools.find($ctrl.config, { id: angular.element(matching.el).attr('data-path') }, { childNode: 'items' });
+					if (widget && $macgyver.widgets[widget.type].skipMask) {
+						return;
+					}
+				}
+
+				if (matching) {
 					$ctrl.isInserter = angular.element(matching.el).hasClass('mgComponentEditorInserter');
 					$element.children('.mgFormEditor-mask').removeClass('mgFormEditor-mask-editor mgFormEditor-mask-inserter').addClass($ctrl.isInserter ? 'mgFormEditor-mask-inserter' : 'mgFormEditor-mask-editor').css({
 						left: matching.rect.left + _.get($macgyver.settings, 'mgFormEditor.maskPosition.left', 0),
