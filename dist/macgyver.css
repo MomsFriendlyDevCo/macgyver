@@ -219,14 +219,15 @@ mg-placeholder > .placeholder-box > .placeholder-text {
 }
 /* }}} */
 
-/* Style: placeholder-box {{{ */
+/* Style: placeholder-construction {{{ */
 mg-placeholder > .placeholder-construction {
-	background: repeating-linear-gradient(45deg, #f1c40f, #f1c40f 10px, #000 10px, #000 20px);
+	background: repeating-linear-gradient(45deg, #dfc458, #dfc458 10px, #666 10px, #666 20px);
 }
 
 mg-placeholder > .placeholder-construction > .placeholder-text {
+	font-size: 24pt;
 	color: #FFF;
-	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+	text-shadow: -2px -2px 1px #000, 2px -2px 1px #000, -2px 2px 1px #000, 2px 2px 1px #000;
 }
 /* }}} */
 
