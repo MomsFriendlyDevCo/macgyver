@@ -6,35 +6,6 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 	$scope.data = {};
 	$scope.config = {}; // Populated via $http.get()
 
-	// Bootstrap 4 style {{{
-	_.merge($macgyver.widgets.mgChoiceButtons.config, {
-		itemClassInactive: {default: 'btn btn-light'},
-		itemClassActive: {default: 'btn btn-primary'},
-	});
-
-	_.merge($macgyver.widgets.mgList.config, {
-		addButtonActiveClass: {default: 'btn btn-block btn-success fa fa-plus'},
-		addButtonInactiveClass: {default: 'btn btn-block btn-secondary btn-disabled fa fa-plus'},
-	});
-
-	_.merge($macgyver.widgets.mgNumber.config, {
-		bumperDownClass: {default: 'btn btn-light fa fa-arrow-down input-group-prepend text-muted'},
-		bumperUpClass: {default: 'btn btn-light fa fa-arrow-up input-group-append text-muted'},
-		prefixClass: {default: 'input-group-append'},
-		suffixClass: {default: 'input-group-append'},
-	});
-
-	_.merge($macgyver.widgets.mgToggle.config, {
-		onClassInactive: {default: 'btn-light'},
-		offClassInactive: {default: 'btn-light'},
-	});
-
-	_.merge($macgyver.widgets.mgTable.config, {
-		addButtonActiveClass: {default: 'btn btn-block btn-success fa fa-plus'},
-		addButtonInactiveClass: {default: 'btn btn-block btn-secondary btn-disabled fa fa-plus'},
-	});
-	// }}}
-
 	// Configure where to place the editor mask
 	_.merge($macgyver.settings, {
 		mgFormEditor: {

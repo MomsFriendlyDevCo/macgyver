@@ -157,6 +157,7 @@ gulp.task('gh-pages', ['build'], function() {
 		'./node_modules/angular-sanitize/angular-sanitize.js',
 		'./node_modules/@momsfriendlydevco/angular-ui-scribble/dist/angular-ui-scribble.css',
 		'./node_modules/@momsfriendlydevco/angular-ui-scribble/dist/angular-ui-scribble.js',
+		'./node_modules/popper.js/dist/popper.min.js',
 		'./node_modules/bootstrap/dist/css/bootstrap.min.css',
 		'./node_modules/bootstrap/dist/js/bootstrap.min.js',
 		'./node_modules/dragular/dist/dragular.min.js',

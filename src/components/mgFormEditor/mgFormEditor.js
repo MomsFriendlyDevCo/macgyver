@@ -125,6 +125,7 @@ angular
 				}
 
 				$scope.$broadcast('mg.mgFormEditor.change');
+				$scope.$emit('mg.mgFormEditor.added');
 			};
 
 			$ctrl.widgetFilter = widget => widget.userPlaceable && (!$ctrl.category || widget.category == $ctrl.category);
@@ -228,7 +229,7 @@ angular
 
 				return $q.resolve()
 					.then(()=> $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
-					.then(()=> $ctrl.modal.show('modal-mgFormEditor-edit'))
+					.then(()=> $macgyver.widgets[node.type] && !$macgyver.widgets[node.type].nonEditableWidget && $ctrl.modal.show('modal-mgFormEditor-edit'))
 					.then(()=> $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetEdit'))
 			});
 
@@ -291,6 +292,13 @@ angular
 							return a.area < b.area ? -1 : 1;
 						})
 						[0];
+
+				if (matching) { // Has widget disabled Edit mask
+					var widget = TreeTools.find($ctrl.config, {id: angular.element(matching.el).attr('data-path')}, {childNode: 'items'});
+					if (widget && $macgyver.widgets[widget.type].skipMask) {
+						return;
+					}
+				}
 
 				if (matching) {
 					$ctrl.isInserter = angular.element(matching.el).hasClass('mgComponentEditorInserter');
