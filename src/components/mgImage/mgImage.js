@@ -91,12 +91,12 @@ angular
 			// }}}
 		},
 		template: `
-			<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal fade">
+			<div id="modal-mgImage-{{$ctrl.config.id}}" class="modal">
 				<div class="modal-dialog modal-lg">
 					<div class="modal-content">
 						<div class="modal-header">
-							<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>
 							<h4 class="modal-title">{{$ctrl.config.title || 'Attach image'}}</h4>
+							<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>
 						</div>
 						<div class="modal-body">
 							<div ng-if="$ctrl.modalShown">

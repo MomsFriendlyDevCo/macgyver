@@ -40,12 +40,12 @@
 <!-- }}} -->
 
 <!-- Widget Edit modal {{{ -->
-<div id="modal-mgFormEditor-edit" class="modal fade">
+<div id="modal-mgFormEditor-edit" class="modal">
 	<div class="modal-dialog pull-right">
 		<div class="modal-content">
 			<div class="modal-header">
-				<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>
 				<h4 class="modal-title">Edit Widget {{$ctrl.widgetName}}</h4>
+				<a class="close" data-dismiss="modal"><i class="fa fa-times"></i></a>
 			</div>
 			<div class="modal-body form-horizontal">
 				<mg-form config="$ctrl.selectedWidgetForm" data="$ctrl.selectedWidgetData"></mg-form>
