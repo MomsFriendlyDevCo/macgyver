@@ -1,6 +1,6 @@
 {
   "name": "@momsfriendlydevco/macgyver",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "Dynamic form widgets for Angular",
   "main": "src/shared.js",
   "repository": {
@@ -30,7 +30,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
-    "tree-tools": "^1.3.3",
+    "tree-tools": "^1.4.3",
     "ui-select": "^0.19.8"
   },
   "devDependencies": {
