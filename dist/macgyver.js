@@ -1679,7 +1679,7 @@ angular.module('macgyver').component('mgFormEditor', {
         return $q.resolve().then(function () {
           return $ctrl.locks.add(['maskMove', 'contextMenu', 'edit'], 'widgetEdit');
         }).then(function () {
-          return $macgyver.widgets[widget.type] && !$macgyver.widgets[widget.type].nonEditableWidget && $ctrl.modal.show('modal-mgFormEditor-edit');
+          return $macgyver.widgets[node.type] && !$macgyver.widgets[node.type].nonEditableWidget && $ctrl.modal.show('modal-mgFormEditor-edit');
         }).then(function () {
           return $ctrl.locks.remove(['maskMove', 'contextMenu', 'edit'], 'widgetEdit');
         });
@@ -2555,52 +2555,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<form ng-submit=\"$ctrl.addItem()\">\n\t\t\t\t<table class=\"table table-bordered table-hover\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr ng-repeat=\"row in $ctrl.data track by $index\">\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.numbered == undefined || $ctrl.config.numbered\" class=\"text-center font-md\">{{$index + 1 | number}}</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model=\"row\" ng-change=\"$ctrl.changeItem($index, row)\" type=\"text\" class=\"form-control\"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.allowDelete == undefined || $ctrl.config.allowDelete\">\n\t\t\t\t\t\t\t\t<a ng-click=\"$ctrl.removeItem($index)\" class=\"btn btn-danger btn-sm visible-parent-hover\"><i class=\"fa fa-trash-o\"></i></a>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t\t<tfoot class=\"hidden-print\">\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.numbered == undefined || $ctrl.config.numbered\" class=\"text-center\" width=\"30px\">\n\t\t\t\t\t\t\t\t<button type=\"submit\" ng-class=\"$ctrl.listNewItem.text ? $ctrl.config.addButtonActiveClass : $ctrl.config.addButtonInactiveClass\"></button>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model=\"$ctrl.listNewItem.text\" type=\"text\" class=\"form-control\"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td width=\"35px\">&nbsp;</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tfoot>\n\t\t\t\t</table>\n\t\t\t</form>\n\t\t"
 });
 /**
-* MacGyver placeholder
-* @param {Object} config The config specification
-* @param {string} [config.text] The text to display in the alert if data is falsy
-* @param {string} [config.style='alert-info'] The style of alert box to display. Enum of 'info', 'success', 'warning', 'danger'
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgPlaceholder', {
-    title: 'Placeholder',
-    icon: 'fa fa-arrows-alt',
-    category: 'General Decoration',
-    config: {
-      text: {
-        type: 'mgText',
-        default: ''
-      },
-      height: {
-        type: 'mgNumber'
-      },
-      style: {
-        type: 'mgChoiceButtons',
-        default: 'placeholder-lines',
-        iconSelected: 'fa fa-fw fa-check',
-        iconDefault: 'fa fa-fw',
-        enum: [{
-          id: 'placeholder-lines',
-          title: 'Lined box'
-        }, {
-          id: 'placeholder-construction',
-          title: 'Construction area'
-        }]
-      }
-    }
-  });
-}]).component('mgPlaceholder', {
-  bindings: {
-    config: '<'
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-  }],
-  template: "\n\t\t\t<div ng-class=\"$ctrl.config.style || 'placeholder-box'\" style=\"height: {{$ctrl.config.height || 'auto'}}\">\n\t\t\t\t<div ng-if=\"$ctrl.config.text\" class=\"placeholder-text\" ng-bind=\"$ctrl.config.text\"></div>\n\t\t\t</div>\n\t\t"
-});
-/**
 * MacGyver text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -2723,6 +2677,52 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'slider'\">\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"range\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'bumpers'\" class=\"input-group\">\n\t\t\t\t<a ng-click=\"$ctrl.add(-1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperDownClass\"></a>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<a ng-click=\"$ctrl.add(1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperUpClass\"></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'input'\" class=\"input-group\">\n\t\t\t\t<div ng-if=\"$ctrl.config.prefix\" ng-class=\"$ctrl.config.prefixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.prefix}}</div></div>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<div ng-if=\"$ctrl.config.suffix\" ng-class=\"$ctrl.config.suffixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.suffix}}</div></div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver placeholder
+* @param {Object} config The config specification
+* @param {string} [config.text] The text to display in the alert if data is falsy
+* @param {string} [config.style='alert-info'] The style of alert box to display. Enum of 'info', 'success', 'warning', 'danger'
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgPlaceholder', {
+    title: 'Placeholder',
+    icon: 'fa fa-arrows-alt',
+    category: 'General Decoration',
+    config: {
+      text: {
+        type: 'mgText',
+        default: ''
+      },
+      height: {
+        type: 'mgNumber'
+      },
+      style: {
+        type: 'mgChoiceButtons',
+        default: 'placeholder-lines',
+        iconSelected: 'fa fa-fw fa-check',
+        iconDefault: 'fa fa-fw',
+        enum: [{
+          id: 'placeholder-lines',
+          title: 'Lined box'
+        }, {
+          id: 'placeholder-construction',
+          title: 'Construction area'
+        }]
+      }
+    }
+  });
+}]).component('mgPlaceholder', {
+  bindings: {
+    config: '<'
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }],
+  template: "\n\t\t\t<div ng-class=\"$ctrl.config.style || 'placeholder-box'\" style=\"height: {{$ctrl.config.height || 'auto'}}\">\n\t\t\t\t<div ng-if=\"$ctrl.config.text\" class=\"placeholder-text\" ng-bind=\"$ctrl.config.text\"></div>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver horizontal seperator
