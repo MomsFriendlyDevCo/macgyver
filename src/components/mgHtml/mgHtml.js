@@ -12,7 +12,7 @@ angular
 		icon: 'fa fa-html5',
 		category: 'General Decoration',
 		config: {
-			text: {type: 'mgHtml'},
+			text: {type: 'mgTextArea', rows: 5},
 		},
 	}))
 	.component('mgHtml', {
