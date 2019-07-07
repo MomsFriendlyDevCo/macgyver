@@ -37,6 +37,37 @@ angular
 			},
 			addButtonActiveClass: {type: 'mgText', default: 'btn btn-block btn-success fa fa-plus', advanced: true},
 			addButtonInactiveClass: {type: 'mgText', default: 'btn btn-block btn-disabled fa fa-plus', advanced: true},
+			style: {
+				type: 'mgChoiceDropdown',
+				title: 'Table style',
+				help: 'How to style the table',
+				default: 'table-bordered',
+				enum: [
+					{id: '', title: 'Bordered', class: 'table-bordered'},
+					{id: 'mgTableBorderless', title: 'Borderless', class: 'table-borderless'},
+					{id: 'mgTableCondensed', title: 'Condensed', class: 'table-condensed'}
+				]
+			},
+			styleCompact: {
+				type: 'mgToggle',
+				title: 'Compact forms',
+				default: false
+			},
+			styleDarker: {
+				type: 'mgToggle',
+				title: 'Darker borders',
+				default: false
+			},
+			styleHover: {
+				type: 'mgToggle',
+				title: 'Hover rows',
+				default: true
+			},
+			styleStriped: {
+				type: 'mgToggle',
+				title: 'Striped rows',
+				default: true
+			},
 		},
 		configChildren: {
 			showTitle: {type: 'mgToggle', default: false, title: 'Show Title'},
@@ -136,7 +167,13 @@ angular
 			// }}}
 		},
 		template: `
-			<table class="table table-bordered table-hover">
+			<table class="table" ng-class="[
+				$ctrl.config.style ? $ctrl.config.style : 'table-bordered',
+				$ctrl.config.styleHover ? 'table-hover' : undefined,
+				$ctrl.config.styleStriped ? 'table-striped' : undefined,
+				$ctrl.config.styleCompact ? 'table-compact' : undefined,
+				$ctrl.config.styleDarker ? 'table-darker' : undefined
+			]">
 				<thead>
 					<tr>
 						<th ng-if="$ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers" width="30px" class="text-center font-md">#</th>
