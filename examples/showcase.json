@@ -169,7 +169,12 @@
 							"type": "mgText",
 							"showTitle": false
 						}
-					]
+					],
+					"style": "table-bordered",
+					"styleCompact": false,
+					"styleDarker": false,
+					"styleHover": true,
+					"styleStriped": true
 				},
 				{
 					"id": "demoGrid",
