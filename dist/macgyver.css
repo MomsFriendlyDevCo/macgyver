@@ -286,6 +286,95 @@ mg-table td > mg-container > .form-group .col-sm-12 .form-control {
 	border: none;
 }
 
+mg-form .table-compact .form-group {
+  margin: 0;
+}
+
+mg-form .table-compact select,
+mg-form .table-compact input,
+mg-form .table-compact .form-control {
+	background: transparent;
+  border-color: transparent;
+	box-sizing: border-box;
+  padding: 0;
+}
+
+mg-form .table-compact .col-xs-1,
+mg-form .table-compact .col-sm-1,
+mg-form .table-compact .col-md-1,
+mg-form .table-compact .col-lg-1,
+mg-form .table-compact .col-xs-2,
+mg-form .table-compact .col-sm-2,
+mg-form .table-compact .col-md-2,
+mg-form .table-compact .col-lg-2,
+mg-form .table-compact .col-xs-3,
+mg-form .table-compact .col-sm-3,
+mg-form .table-compact .col-md-3,
+mg-form .table-compact .col-lg-3,
+mg-form .table-compact .col-xs-4,
+mg-form .table-compact .col-sm-4,
+mg-form .table-compact .col-md-4,
+mg-form .table-compact .col-lg-4,
+mg-form .table-compact .col-xs-5,
+mg-form .table-compact .col-sm-5,
+mg-form .table-compact .col-md-5,
+mg-form .table-compact .col-lg-5,
+mg-form .table-compact .col-xs-6,
+mg-form .table-compact .col-sm-6,
+mg-form .table-compact .col-md-6,
+mg-form .table-compact .col-lg-6,
+mg-form .table-compact .col-xs-7,
+mg-form .table-compact .col-sm-7,
+mg-form .table-compact .col-md-7,
+mg-form .table-compact .col-lg-7,
+mg-form .table-compact .col-xs-8,
+mg-form .table-compact .col-sm-8,
+mg-form .table-compact .col-md-8,
+mg-form .table-compact .col-lg-8,
+mg-form .table-compact .col-xs-9,
+mg-form .table-compact .col-sm-9,
+mg-form .table-compact .col-md-9,
+mg-form .table-compact .col-lg-9,
+mg-form .table-compact .col-xs-10,
+mg-form .table-compact .col-sm-10,
+mg-form .table-compact .col-md-10,
+mg-form .table-compact .col-lg-10,
+mg-form .table-compact .col-xs-11,
+mg-form .table-compact .col-sm-11,
+mg-form .table-compact .col-md-11,
+mg-form .table-compact .col-lg-11,
+mg-form .table-compact .col-xs-12,
+mg-form .table-compact .col-sm-12,
+mg-form .table-compact .col-md-12,
+mg-form .table-compact .col-lg-12 {
+	padding: 0;
+}
+
+mg-form .table-compact > thead > tr > th,
+mg-form .table-compact > tbody > tr > th,
+mg-form .table-compact > tfoot > tr > th {
+	padding: 4px;
+}
+
+mg-form .table-compact > thead > tr > td,
+mg-form .table-compact > tbody > tr > td,
+mg-form .table-compact > tfoot > tr > td {
+	padding: 0;
+}
+
+mg-table .table-darker {
+	border-color: black;
+}
+
+.table-darker.table-bordered > tbody > tr > td,
+.table-darker.table-bordered > tbody > tr > th,
+.table-darker.table-bordered > tfoot > tr > td,
+.table-darker.table-bordered > tfoot > tr > th,
+.table-darker.table-bordered > thead > tr > td,
+.table-darker.table-bordered > thead > tr > th {
+	border-color: black;
+}
+
 @media print {
 	/* Toggle selection needs to be more visible in monochrome prints */
 	mg-toggle .btn.btn-default {
