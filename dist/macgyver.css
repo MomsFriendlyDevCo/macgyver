@@ -1,5 +1,15 @@
 .p-t-5 { padding-top: 5px }
 
+/* mgContainerRowLarge {{{ */
+.row.mgContainerRowLarge {
+	font-size: 200%;
+}
+
+.row.mgContainerRowLarge input.form-control {
+	height: 48px;
+}
+/* }}} */
+
 /* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
 mg-choice-buttons .fa.fa-fw {
 	height: 1em;
@@ -19,16 +29,6 @@ mg-choice-buttons .fa.fa-fw {
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
-/* mgContainerRowLarge {{{ */
-.row.mgContainerRowLarge {
-	font-size: 200%;
-}
-
-.row.mgContainerRowLarge input.form-control {
-	height: 48px;
-}
-/* }}} */
-
 mg-form .form-group {
 	margin-bottom: 10px;
 }
