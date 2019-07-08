@@ -2,10 +2,11 @@ var _ = require('lodash');
 var babel = require('gulp-babel');
 var cleanCSS = require('gulp-clean-css');
 var concat = require('gulp-concat');
-var ghPages = require('gulp-gh-pages');
+var ghpages = require('gh-pages');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var nodemon = require('gulp-nodemon');
+var path = require('path');
 var plumber = require('gulp-plumber');
 var preprocess = require('gulp-preprocess');
 var rename = require('gulp-rename');
@@ -179,8 +180,8 @@ gulp.task('gh-pages', ['build'], function() {
 			}
 			return path;
 		}))
-		.pipe(ghPages({
-			cacheDir: 'gh-pages',
-			push: true, // Change to false for dryrun (files dumped to cacheDir)
-		}))
+		.pipe(gulp.dest('gh-pages/'))
+		.on('end', function(done) {
+			ghpages.publish(path.join(process.cwd(), 'gh-pages'), done);
+		})
 });
