@@ -492,53 +492,36 @@ angular.module('macgyver', ['angular-bs-tooltip', 'angular-ui-scribble', 'dragul
   };
 });
 /**
-* MacGyver alert box
+* MacGyver toggle
 * @param {Object} config The config specification
-* @param {string} [config.text] The text to display in the alert if data is falsy
-* @param {string} [config.style='alert-info'] The style of alert box to display. Enum of 'info', 'success', 'warning', 'danger'
-* @param {*} data The state data
+* @param {boolean} data The state of the checkbox
 */
 
 angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgAlert', {
-    title: 'Alert Box',
-    icon: 'fa fa-exclamation-triangle',
-    category: 'General Decoration',
-    config: {
-      text: {
-        type: 'mgText',
-        "default": 'This is an alert!'
-      },
-      style: {
-        type: 'mgChoiceButtons',
-        "default": 'alert-info',
-        iconSelected: 'fa fa-fw fa-check',
-        iconDefault: 'fa fa-fw',
-        "enum": [{
-          id: 'alert-success',
-          "class": 'btn-success'
-        }, {
-          id: 'alert-info',
-          "class": 'btn-info'
-        }, {
-          id: 'alert-warning',
-          "class": 'btn-warning'
-        }, {
-          id: 'alert-danger',
-          "class": 'btn-danger'
-        }]
-      }
-    }
+  return $macgyverProvider.register('mgCheckBox', {
+    title: 'Check Box',
+    icon: 'fa fa-check-square-o',
+    category: 'Simple Inputs',
+    config: {},
+    format: function format(v) {
+      return v ? 'Yes' : 'No';
+    },
+    formatAlign: 'center'
   });
-}]).component('mgAlert', {
+}]).component('mgCheckBox', {
   bindings: {
-    config: '<'
+    config: '<',
+    data: '='
   },
   controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
     var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
+    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
   }],
-  template: "\n\t\t\t<div class=\"alert\" ng-class=\"$ctrl.config.style\">{{$ctrl.config.text || $scope.data}}</div>\n\t\t"
+  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
 * MacGyver selector of an item from a small list of enums
@@ -623,6 +606,55 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver alert box
+* @param {Object} config The config specification
+* @param {string} [config.text] The text to display in the alert if data is falsy
+* @param {string} [config.style='alert-info'] The style of alert box to display. Enum of 'info', 'success', 'warning', 'danger'
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgAlert', {
+    title: 'Alert Box',
+    icon: 'fa fa-exclamation-triangle',
+    category: 'General Decoration',
+    config: {
+      text: {
+        type: 'mgText',
+        "default": 'This is an alert!'
+      },
+      style: {
+        type: 'mgChoiceButtons',
+        "default": 'alert-info',
+        iconSelected: 'fa fa-fw fa-check',
+        iconDefault: 'fa fa-fw',
+        "enum": [{
+          id: 'alert-success',
+          "class": 'btn-success'
+        }, {
+          id: 'alert-info',
+          "class": 'btn-info'
+        }, {
+          id: 'alert-warning',
+          "class": 'btn-warning'
+        }, {
+          id: 'alert-danger',
+          "class": 'btn-danger'
+        }]
+      }
+    }
+  });
+}]).component('mgAlert', {
+  bindings: {
+    config: '<'
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }],
+  template: "\n\t\t\t<div class=\"alert\" ng-class=\"$ctrl.config.style\">{{$ctrl.config.text || $scope.data}}</div>\n\t\t"
 });
 /**
 * MacGyver selector of an item from a list of enums
@@ -722,38 +754,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
-});
-/**
-* MacGyver toggle
-* @param {Object} config The config specification
-* @param {boolean} data The state of the checkbox
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgCheckBox', {
-    title: 'Check Box',
-    icon: 'fa fa-check-square-o',
-    category: 'Simple Inputs',
-    config: {},
-    format: function format(v) {
-      return v ? 'Yes' : 'No';
-    },
-    formatAlign: 'center'
-  });
-}]).component('mgCheckBox', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
 * MacGyver selector of an item from a small list of enums
@@ -2748,166 +2748,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<hr/>\n\t\t"
 });
 /**
-* MacGyver Signature directive
-* @require angular-ui-scribble
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgSignature', {
-    title: 'Signature input',
-    icon: 'fa fa-picture-o',
-    category: 'Files and uploads',
-    config: {
-      allowDelete: {
-        type: 'mgToggle',
-        "default": true,
-        help: 'Allow the user to delete the signature and re-sign'
-      }
-    }
-  });
-}]).component('mgSignature', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // URL storage {{{
-
-    $ctrl.urls = {}; // These all get their defaults in $onInit
-
-    $ctrl.getUrl = function (type, context) {
-      if (_.isString($ctrl.urls[type])) {
-        return $ctrl.urls[type]; // Already a string - just return
-      } else if (_.isFunction($ctrl.urls[type])) {
-        // Resolve it using a context
-        return $ctrl.urls[type](Object.assign({}, {
-          type: type,
-          widget: 'mgSignature',
-          path: $macgyver.getPath($scope)
-        }, context));
-      } else {
-        throw new Error('Unknown URL type: ' + type);
-      }
-    }; // }}}
-    // Init {{{
-
-
-    $ctrl.$onInit = function () {
-      $ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
-
-      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
-        return "/api/widgets/".concat(o.path);
-      };
-
-      $ctrl.urls["delete"] = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
-        return "/api/widgets/".concat(o.path);
-      };
-
-      $ctrl.refresh();
-    }; // }}}
-    // Fetch data from server {{{
-
-
-    $ctrl.files;
-
-    $ctrl.refresh = function () {
-      return $http.get($ctrl.getUrl('query')).then(function (data) {
-        return $ctrl.files = data.data;
-      });
-    }; // }}}
-    // Deal with uploads {{{
-
-
-    $ctrl.isUploading = false;
-
-    $ctrl.getSignature = function (dataURI, blob) {
-      var sigBlob = new Blob([blob], {
-        type: 'image/png'
-      });
-      var formData = new FormData();
-      formData.append('file', sigBlob);
-      $http.post($ctrl.getUrl('upload', {
-        file: 'signature.png'
-      }), formData, {
-        headers: {
-          'Content-Type': undefined
-        },
-        // Need to override the headers so that angular changes them over into multipart/mime
-        transformRequest: angular.identity
-      }).then(function () {
-        $ctrl.isUploading = false;
-        $ctrl.refresh();
-      });
-      $ctrl.isUploading = true;
-    }; // }}}
-    // Deletion {{{
-
-
-    $ctrl["delete"] = function (file) {
-      return $http["delete"]($ctrl.getUrl('delete', {
-        file: 'signature.png'
-      })).then($ctrl.refresh, $ctrl.refresh);
-    }; // Whatever happens - refresh
-    // }}}
-
-  }],
-  template: "\n\t\t\t<div ng-if=\"$ctrl.files && $ctrl.files.length\" class=\"visible-parent-hover-target\">\n\t\t\t\t<img ng-src=\"{{$ctrl.files[0].url}}\" class=\"img-responsive\"/>\n\t\t\t\t<a ng-click=\"$ctrl.delete()\" class=\"btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover\" tooltip=\"Delete the signature\" tooltip-tether=\"true\"><i class=\"fa fa-fw fa-trash\"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"!$ctrl.files || !$ctrl.files.length\">\n\t\t\t\t<div ng-if=\"$ctrl.isUploading\" class=\"alert alert-info font-lg\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if=\"!$ctrl.isUploading\">\n\t\t\t\t\t<ui-scribble editable=\"false\" callback=\"$ctrl.getSignature(dataURI, blob)\"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
-});
-/**
-* MacGyver table editor meta control
-* This control provides very basic functionality to edit the properties of a mgTable by allowing each column to have width, type, title etc.
-* For more complex functionality (e.g. table columns that are nested containers) its probably best to use a JSON editor
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgTableEditor', {
-    title: 'Table Editor',
-    icon: 'fa fa-pencil-square-o',
-    config: {},
-    userPlaceable: false
-  });
-}]).component('mgTableEditor', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $ctrl.$macgyver = $macgyver;
-    $macgyver.inject($scope, $ctrl); // Adopt default  if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-
-    $ctrl.add = function () {
-      if (!$ctrl.data) $ctrl.data = [];
-      $ctrl.data.push({
-        title: "Column ".concat($ctrl.data.length + 1),
-        type: 'mgText',
-        showTitle: false
-      });
-    };
-
-    $ctrl.remove = function (index) {
-      return $ctrl.data = $ctrl.data.filter(function (c, i) {
-        return i != index;
-      });
-    };
-
-    $ctrl.widgetSelection;
-    $scope.$watch('$ctrl.$macgyver.widgets', function () {
-      $ctrl.widgetSelection = _($macgyver.widgets).map().sortBy('title').value();
-    });
-  }],
-  template: "\n\t\t\t<table class=\"table table-bordered table-striped\">\n\t\t\t\t<thead>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<th width=\"50%\">Title</th>\n\t\t\t\t\t\t<th width=\"25%\">Type</th>\n\t\t\t\t\t\t<th width=\"25%\">\n\t\t\t\t\t\t\tWidth\n\t\t\t\t\t\t\t<i\n\t\t\t\t\t\t\t\tclass=\"pull-right fa fa-info-circle\"\n\t\t\t\t\t\t\t\ttooltip=\"Width can be any valid CSS specifier. e.g. '100' (assumes pixels), '50px', '20%'\"\n\t\t\t\t\t\t\t></i>\n\t\t\t\t\t\t</th>\n\t\t\t\t\t\t<th width=\"32px\">&nbsp;</th>\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr ng-repeat=\"item in $ctrl.data\">\n\t\t\t\t\t\t<td><input ng-model=\"item.title\" type=\"text\" class=\"form-control\"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<select ng-model=\"item.type\" class=\"form-control\">\n\t\t\t\t\t\t\t\t<option ng-repeat=\"widget in $ctrl.widgetSelection track by widget.id\" value=\"{{widget.id}}\">{{widget.title}}</option>\n\t\t\t\t\t\t\t</select>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t\t<td><input ng-model=\"item.width\" type=\"text\" class=\"form-control\" placeholder=\"Default\"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<a ng-click=\"$ctrl.remove($index)\" class=\"btn btn-danger btn-sm\">\n\t\t\t\t\t\t\t\t<i class=\"fa fa-trash\"></i>\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t\t<tfoot>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td colspan=\"4\" class=\"text-center\">\n\t\t\t\t\t\t\t<a ng-click=\"$ctrl.add()\" class=\"btn btn-sm btn-success\">\n\t\t\t\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\t\t\t\tAdd column\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tfoot>\n\t\t\t</table>\n\t\t"
-});
-/**
 * MacGyver table
 * This component displays a nested tree of sub-items across rows and columns
 * @param {Object} config The config specification
@@ -3116,6 +2956,166 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<table class=\"table\" ng-class=\"[\n\t\t\t\t$ctrl.config.style ? $ctrl.config.style : 'table-bordered',\n\t\t\t\t$ctrl.config.styleHover ? 'table-hover' : undefined,\n\t\t\t\t$ctrl.config.styleStriped ? 'table-striped' : undefined,\n\t\t\t\t$ctrl.config.styleCompact ? 'table-compact' : undefined,\n\t\t\t\t$ctrl.config.styleDarker ? 'table-darker' : undefined\n\t\t\t]\">\n\t\t\t\t<thead>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<th ng-if=\"$ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers\" width=\"30px\" class=\"text-center font-md\">#</th>\n\t\t\t\t\t\t<th ng-repeat=\"col in $ctrl.config.items track by col.id\" style=\"{{(col.width ? 'width: ' + col.width + '; ' : '') + col.class}}\">\n\t\t\t\t\t\t\t{{col.title}}\n\t\t\t\t\t\t</th>\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody ng-if=\"$ctrl.isEditing\">\n\t\t\t\t\t<tr ng-repeat=\"row in $ctrl.fakeData\">\n\t\t\t\t\t\t<td ng-if=\"$ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers\" class=\"text-center font-md\">{{$index + 1 | number}}</td>\n\t\t\t\t\t\t<td ng-repeat=\"col in $ctrl.config.items track by col.id\" class=\"{{col.class}}\">\n\t\t\t\t\t\t\t<mg-container config=\"{items: [col]}\" data=\"row\"></mg-container>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t\t<tbody ng-if=\"!$ctrl.isEditing\" class=\"hidden-print\">\n\t\t\t\t\t<tr ng-if=\"!$ctrl.data\">\n\t\t\t\t\t\t<td colspan=\"{{$ctrl.config.items.length + ($ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers ? 1 : 0}}\">\n\t\t\t\t\t\t\t<div class=\"alert alert-warning m-10\">{{$ctrl.config.textEmpty || 'No data'}}</div>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr ng-repeat=\"row in $ctrl.data\">\n\t\t\t\t\t\t<td ng-if=\"$ctrl.config.rowNumbers === undefined || $ctrl.config.rowNumbers\" class=\"text-center\">\n\t\t\t\t\t\t\t<div class=\"btn-group btn-block\">\n\t\t\t\t\t\t\t\t<a class=\"btn btn-block btn-ellipsis btn-ellipsis-sm dropdown-toggle\" data-toggle=\"dropdown\">{{$index + 1 | number}}</a>\n\t\t\t\t\t\t\t\t<ul class=\"dropdown-menu\">\n\t\t\t\t\t\t\t\t\t<li ng-if=\"$ctrl.allowDelete\"><a ng-click=\"$ctrl.deleteRow($index)\"><i class=\"fa fa-trash-o\"></i> Delete</a></li>\n\t\t\t\t\t\t\t\t</ul>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t\t<td ng-repeat=\"col in $ctrl.config.items track by col.id\" class=\"{{col.class}}\">\n\t\t\t\t\t\t\t<mg-container config=\"{items: [col]}\" data=\"row\"></mg-container>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr class=\"mgTable-append\" ng-if=\"$ctrl.allowAdd\">\n\t\t\t\t\t\t<td class=\"text-center\">\n\t\t\t\t\t\t\t<button ng-click=\"$ctrl.createRow()\" type=\"button\" ng-class=\"$ctrl.isAdding ? $ctrl.config.addButtonActiveClass : $ctrl.config.addButtonInactiveClass\"></button>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t\t<td ng-repeat=\"col in $ctrl.config.items track by col.id\">\n\t\t\t\t\t\t\t<mg-container config=\"{items: [col]}\" data=\"$ctrl.newRow\"></mg-container>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t"
+});
+/**
+* MacGyver Signature directive
+* @require angular-ui-scribble
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgSignature', {
+    title: 'Signature input',
+    icon: 'fa fa-picture-o',
+    category: 'Files and uploads',
+    config: {
+      allowDelete: {
+        type: 'mgToggle',
+        "default": true,
+        help: 'Allow the user to delete the signature and re-sign'
+      }
+    }
+  });
+}]).component('mgSignature', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // URL storage {{{
+
+    $ctrl.urls = {}; // These all get their defaults in $onInit
+
+    $ctrl.getUrl = function (type, context) {
+      if (_.isString($ctrl.urls[type])) {
+        return $ctrl.urls[type]; // Already a string - just return
+      } else if (_.isFunction($ctrl.urls[type])) {
+        // Resolve it using a context
+        return $ctrl.urls[type](Object.assign({}, {
+          type: type,
+          widget: 'mgSignature',
+          path: $macgyver.getPath($scope)
+        }, context));
+      } else {
+        throw new Error('Unknown URL type: ' + type);
+      }
+    }; // }}}
+    // Init {{{
+
+
+    $ctrl.$onInit = function () {
+      $ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
+
+      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
+        return "/api/widgets/".concat(o.path);
+      };
+
+      $ctrl.urls["delete"] = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
+        return "/api/widgets/".concat(o.path);
+      };
+
+      $ctrl.refresh();
+    }; // }}}
+    // Fetch data from server {{{
+
+
+    $ctrl.files;
+
+    $ctrl.refresh = function () {
+      return $http.get($ctrl.getUrl('query')).then(function (data) {
+        return $ctrl.files = data.data;
+      });
+    }; // }}}
+    // Deal with uploads {{{
+
+
+    $ctrl.isUploading = false;
+
+    $ctrl.getSignature = function (dataURI, blob) {
+      var sigBlob = new Blob([blob], {
+        type: 'image/png'
+      });
+      var formData = new FormData();
+      formData.append('file', sigBlob);
+      $http.post($ctrl.getUrl('upload', {
+        file: 'signature.png'
+      }), formData, {
+        headers: {
+          'Content-Type': undefined
+        },
+        // Need to override the headers so that angular changes them over into multipart/mime
+        transformRequest: angular.identity
+      }).then(function () {
+        $ctrl.isUploading = false;
+        $ctrl.refresh();
+      });
+      $ctrl.isUploading = true;
+    }; // }}}
+    // Deletion {{{
+
+
+    $ctrl["delete"] = function (file) {
+      return $http["delete"]($ctrl.getUrl('delete', {
+        file: 'signature.png'
+      })).then($ctrl.refresh, $ctrl.refresh);
+    }; // Whatever happens - refresh
+    // }}}
+
+  }],
+  template: "\n\t\t\t<div ng-if=\"$ctrl.files && $ctrl.files.length\" class=\"visible-parent-hover-target\">\n\t\t\t\t<img ng-src=\"{{$ctrl.files[0].url}}\" class=\"img-responsive\"/>\n\t\t\t\t<a ng-click=\"$ctrl.delete()\" class=\"btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover\" tooltip=\"Delete the signature\" tooltip-tether=\"true\"><i class=\"fa fa-fw fa-trash\"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"!$ctrl.files || !$ctrl.files.length\">\n\t\t\t\t<div ng-if=\"$ctrl.isUploading\" class=\"alert alert-info font-lg\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if=\"!$ctrl.isUploading\">\n\t\t\t\t\t<ui-scribble editable=\"false\" callback=\"$ctrl.getSignature(dataURI, blob)\"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver table editor meta control
+* This control provides very basic functionality to edit the properties of a mgTable by allowing each column to have width, type, title etc.
+* For more complex functionality (e.g. table columns that are nested containers) its probably best to use a JSON editor
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgTableEditor', {
+    title: 'Table Editor',
+    icon: 'fa fa-pencil-square-o',
+    config: {},
+    userPlaceable: false
+  });
+}]).component('mgTableEditor', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $ctrl.$macgyver = $macgyver;
+    $macgyver.inject($scope, $ctrl); // Adopt default  if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+
+    $ctrl.add = function () {
+      if (!$ctrl.data) $ctrl.data = [];
+      $ctrl.data.push({
+        title: "Column ".concat($ctrl.data.length + 1),
+        type: 'mgText',
+        showTitle: false
+      });
+    };
+
+    $ctrl.remove = function (index) {
+      return $ctrl.data = $ctrl.data.filter(function (c, i) {
+        return i != index;
+      });
+    };
+
+    $ctrl.widgetSelection;
+    $scope.$watch('$ctrl.$macgyver.widgets', function () {
+      $ctrl.widgetSelection = _($macgyver.widgets).map().sortBy('title').value();
+    });
+  }],
+  template: "\n\t\t\t<table class=\"table table-bordered table-striped\">\n\t\t\t\t<thead>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<th width=\"50%\">Title</th>\n\t\t\t\t\t\t<th width=\"25%\">Type</th>\n\t\t\t\t\t\t<th width=\"25%\">\n\t\t\t\t\t\t\tWidth\n\t\t\t\t\t\t\t<i\n\t\t\t\t\t\t\t\tclass=\"pull-right fa fa-info-circle\"\n\t\t\t\t\t\t\t\ttooltip=\"Width can be any valid CSS specifier. e.g. '100' (assumes pixels), '50px', '20%'\"\n\t\t\t\t\t\t\t></i>\n\t\t\t\t\t\t</th>\n\t\t\t\t\t\t<th width=\"32px\">&nbsp;</th>\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr ng-repeat=\"item in $ctrl.data\">\n\t\t\t\t\t\t<td><input ng-model=\"item.title\" type=\"text\" class=\"form-control\"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<select ng-model=\"item.type\" class=\"form-control\">\n\t\t\t\t\t\t\t\t<option ng-repeat=\"widget in $ctrl.widgetSelection track by widget.id\" value=\"{{widget.id}}\">{{widget.title}}</option>\n\t\t\t\t\t\t\t</select>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t\t<td><input ng-model=\"item.width\" type=\"text\" class=\"form-control\" placeholder=\"Default\"/></td>\n\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t<a ng-click=\"$ctrl.remove($index)\" class=\"btn btn-danger btn-sm\">\n\t\t\t\t\t\t\t\t<i class=\"fa fa-trash\"></i>\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t\t<tfoot>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td colspan=\"4\" class=\"text-center\">\n\t\t\t\t\t\t\t<a ng-click=\"$ctrl.add()\" class=\"btn btn-sm btn-success\">\n\t\t\t\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\t\t\t\tAdd column\n\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tfoot>\n\t\t\t</table>\n\t\t"
 });
 /**
 * MacGyver text input
