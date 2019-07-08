@@ -5,7 +5,7 @@
 		{
 			"id": "containerInputs",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "Simple inputs",
 			"showTitle": false,
 			"items": [
@@ -22,9 +22,28 @@
 				{
 					"id": "demoNumber",
 					"type": "mgNumber",
-					"title": "Number",
+					"title": "Number (simple input)",
 					"min": 1,
-					"max": 10
+					"max": 10,
+					"interface": "input"
+				},
+				{
+					"id": "demoNumberPrefixSuffix",
+					"type": "mgNumber",
+					"title": "Number (simple input + prefix + suffix)",
+					"min": 1,
+					"max": 10,
+					"interface": "input",
+					"prefix": "$",
+					"suffix": ".00"
+				},
+				{
+					"id": "demoNumberBumpers",
+					"type": "mgNumber",
+					"title": "Number (with Bumpers)",
+					"min": 1,
+					"max": 10,
+					"interface": "bumpers"
 				},
 				{
 					"id": "demoNumberRange",
@@ -32,7 +51,7 @@
 					"title": "Number (with slider)",
 					"min": 1,
 					"max": 3,
-					"slider": true
+					"interface": "slider"
 				},
 				{
 					"id": "demoDate",
@@ -74,7 +93,7 @@
 		{
 			"id": "containerChoices",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "Choice selectors",
 			"showTitle": false,
 			"items": [
@@ -91,11 +110,11 @@
 					"iconSelected": "fa fa-fw fa-check",
 					"iconDefault": "fa fa-fw",
 					"enum": [
-						{"id": "btn-primary", "class": "btn-primary"},
-						{"id": "btn-info", "class": "btn-info"},
-						{"id": "btn-success", "class": "btn-success"},
-						{"id": "btn-warning", "class": "btn-warning"},
-						{"id": "btn-danger", "class": "btn-danger"}
+						{"id": "btn-primary", "class": "btn btn-primary fa fa-square-o", "classSelected": "btn btn-primary fa fa-check-square-o"},
+						{"id": "btn-info", "class": "btn btn-info fa fa-square-o", "classSelected": "btn btn-info fa fa-check-square-o"},
+						{"id": "btn-success", "class": "btn btn-success fa fa-square-o", "classSelected": "btn btn-success fa fa-check-square-o"},
+						{"id": "btn-warning", "class": "btn btn-warning fa fa-square-o", "classSelected": "btn btn-warning fa fa-check-square-o"},
+						{"id": "btn-danger", "class": "btn btn-danger fa fa-square-o", "classSelected": "btn btn-danger fa fa-check-square-o"}
 					]
 				},
 				{
@@ -123,7 +142,7 @@
 		{
 			"id": "containerContainers",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "Containers",
 			"showTitle": false,
 			"items": [
@@ -150,7 +169,12 @@
 							"type": "mgText",
 							"showTitle": false
 						}
-					]
+					],
+					"style": "table-bordered",
+					"styleCompact": false,
+					"styleDarker": false,
+					"styleHover": true,
+					"styleStriped": true
 				},
 				{
 					"id": "demoGrid",
@@ -249,7 +273,7 @@
 		{
 			"id": "containerLayouts",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "Container layouts",
 			"showTitle": false,
 			"items": [
@@ -300,6 +324,29 @@
 					]
 				},
 				{
+					"id": "containerLayoutCard",
+					"type": "mgContainer",
+					"layout": "card",
+					"title": "Card",
+					"items": [
+						{
+							"id": "containerLayoutCardFormFoo",
+							"type": "mgText",
+							"title": "Foo"
+						},
+						{
+							"id": "containerLayoutCardFormBar",
+							"type": "mgText",
+							"title": "Bar"
+						},
+						{
+							"id": "containerLayoutCardFormBaz",
+							"type": "mgText",
+							"title": "Baz"
+						}
+					]
+				},
+				{
 					"id": "containerLayoutColumns",
 					"type": "mgContainer",
 					"layout": "columns",
@@ -327,7 +374,7 @@
 		{
 			"id": "containerMedia",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "Media and files",
 			"showTitle": false,
 			"items": [
@@ -368,7 +415,7 @@
 		{
 			"id": "containerDecoration",
 			"type": "mgContainer",
-			"layout": "panel",
+			"layout": "card",
 			"title": "General Decoration",
 			"showTitle": false,
 			"items": [
@@ -396,6 +443,14 @@
 					"type": "mgHtml",
 					"title": "HTML",
 					"text": "Hello <strong>World</strong>"
+				},
+				{
+					"id": "demoPlaceholder",
+					"type": "mgPlaceholder",
+					"title": "Placeholder",
+					"style": "placeholder-box",
+					"text": "Placeholder!",
+					"height": 100
 				}
 			]
 		}

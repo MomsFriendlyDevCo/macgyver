@@ -186,6 +186,51 @@ mg-number input[type=number]::-webkit-inner-spin-button {
 	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
+mg-placeholder > div {
+	height: 100px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 5px;
+}
+
+/* Style: placeholder-box {{{ */
+mg-placeholder > .placeholder-box {
+	border: 1px solid #000;
+	background:
+		linear-gradient(to top left,
+			rgba(0,0,0,0) 0%,
+			rgba(0,0,0,0) calc(50% - 1px),
+			rgba(0,0,0,1) 50%,
+			rgba(0,0,0,0) calc(50% + 1px),
+			rgba(0,0,0,0) 100%),
+		linear-gradient(to top right,
+			rgba(0,0,0,0) 0%,
+			rgba(0,0,0,0) calc(50% - 1px),
+			rgba(0,0,0,1) 50%,
+			rgba(0,0,0,0) calc(50% + 1px),
+			rgba(0,0,0,0) 100%);
+}
+
+mg-placeholder > .placeholder-box > .placeholder-text {
+	background: #FFF;
+	border: 1px solid #000;
+	padding: 10px 15px;
+}
+/* }}} */
+
+/* Style: placeholder-construction {{{ */
+mg-placeholder > .placeholder-construction {
+	background: repeating-linear-gradient(45deg, #dfc458, #dfc458 10px, #666 10px, #666 20px);
+}
+
+mg-placeholder > .placeholder-construction > .placeholder-text {
+	font-size: 24pt;
+	color: #FFF;
+	text-shadow: -2px -2px 1px #000, 2px -2px 1px #000, -2px 2px 1px #000, 2px 2px 1px #000;
+}
+/* }}} */
+
 mg-seperator > hr {
 	margin-top: 0px;
 	margin-bottom: 10px;
@@ -239,6 +284,95 @@ mg-table td > mg-container > .form-group .col-sm-12 {
 
 mg-table td > mg-container > .form-group .col-sm-12 .form-control {
 	border: none;
+}
+
+mg-form .table-compact .form-group {
+  margin: 0;
+}
+
+mg-form .table-compact select,
+mg-form .table-compact input,
+mg-form .table-compact .form-control {
+	background: transparent;
+  border-color: transparent;
+	box-sizing: border-box;
+  padding: 0;
+}
+
+mg-form .table-compact .col-xs-1,
+mg-form .table-compact .col-sm-1,
+mg-form .table-compact .col-md-1,
+mg-form .table-compact .col-lg-1,
+mg-form .table-compact .col-xs-2,
+mg-form .table-compact .col-sm-2,
+mg-form .table-compact .col-md-2,
+mg-form .table-compact .col-lg-2,
+mg-form .table-compact .col-xs-3,
+mg-form .table-compact .col-sm-3,
+mg-form .table-compact .col-md-3,
+mg-form .table-compact .col-lg-3,
+mg-form .table-compact .col-xs-4,
+mg-form .table-compact .col-sm-4,
+mg-form .table-compact .col-md-4,
+mg-form .table-compact .col-lg-4,
+mg-form .table-compact .col-xs-5,
+mg-form .table-compact .col-sm-5,
+mg-form .table-compact .col-md-5,
+mg-form .table-compact .col-lg-5,
+mg-form .table-compact .col-xs-6,
+mg-form .table-compact .col-sm-6,
+mg-form .table-compact .col-md-6,
+mg-form .table-compact .col-lg-6,
+mg-form .table-compact .col-xs-7,
+mg-form .table-compact .col-sm-7,
+mg-form .table-compact .col-md-7,
+mg-form .table-compact .col-lg-7,
+mg-form .table-compact .col-xs-8,
+mg-form .table-compact .col-sm-8,
+mg-form .table-compact .col-md-8,
+mg-form .table-compact .col-lg-8,
+mg-form .table-compact .col-xs-9,
+mg-form .table-compact .col-sm-9,
+mg-form .table-compact .col-md-9,
+mg-form .table-compact .col-lg-9,
+mg-form .table-compact .col-xs-10,
+mg-form .table-compact .col-sm-10,
+mg-form .table-compact .col-md-10,
+mg-form .table-compact .col-lg-10,
+mg-form .table-compact .col-xs-11,
+mg-form .table-compact .col-sm-11,
+mg-form .table-compact .col-md-11,
+mg-form .table-compact .col-lg-11,
+mg-form .table-compact .col-xs-12,
+mg-form .table-compact .col-sm-12,
+mg-form .table-compact .col-md-12,
+mg-form .table-compact .col-lg-12 {
+	padding: 0;
+}
+
+mg-form .table-compact > thead > tr > th,
+mg-form .table-compact > tbody > tr > th,
+mg-form .table-compact > tfoot > tr > th {
+	padding: 4px;
+}
+
+mg-form .table-compact > thead > tr > td,
+mg-form .table-compact > tbody > tr > td,
+mg-form .table-compact > tfoot > tr > td {
+	padding: 0;
+}
+
+mg-table .table-darker {
+	border-color: black;
+}
+
+.table-darker.table-bordered > tbody > tr > td,
+.table-darker.table-bordered > tbody > tr > th,
+.table-darker.table-bordered > tfoot > tr > td,
+.table-darker.table-bordered > tfoot > tr > th,
+.table-darker.table-bordered > thead > tr > td,
+.table-darker.table-bordered > thead > tr > th {
+	border-color: black;
 }
 
 @media print {
