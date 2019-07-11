@@ -29,6 +29,10 @@ mg-choice-buttons .fa.fa-fw {
 }
 /* }}} */
 
+mg-form .form-group {
+	margin-bottom: 10px;
+}
+
 /* Generic helper classes {{{ */
 mg-form-editor .text-nowrap {
 	white-space: nowrap;
@@ -154,18 +158,6 @@ mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .dropdown-menu a {
 }
 /* }}} */
 
-mg-form .form-group {
-	margin-bottom: 10px;
-}
-
-/* Hide the spin button in mgNumber controls */
-mg-number input[type=number]::-webkit-outer-spin-button,
-mg-number input[type=number]::-webkit-inner-spin-button {
-	/* display: none; <- Crashes Chrome on hover */
-	-webkit-appearance: none;
-	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
-}
-
 mg-list td {
 	padding: 0 !important;
 }
@@ -184,6 +176,14 @@ mg-list td .btn > i {
 
 mg-list td:first-child.text-center {
 	vertical-align: middle;
+}
+
+/* Hide the spin button in mgNumber controls */
+mg-number input[type=number]::-webkit-outer-spin-button,
+mg-number input[type=number]::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
 mg-placeholder > div {
