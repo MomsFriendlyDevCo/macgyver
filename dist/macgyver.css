@@ -1,10 +1,5 @@
 .p-t-5 { padding-top: 5px }
 
-/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
-mg-choice-buttons .fa.fa-fw {
-	height: 1em;
-}
-
 @media print {
 	/* Disable dropdown icons when printing */
 	mg-choice-dropdown .selectize-input::after {
@@ -19,6 +14,11 @@ mg-choice-buttons .fa.fa-fw {
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
+/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
+mg-choice-buttons .fa.fa-fw {
+	height: 1em;
+}
+
 /* mgContainerRowLarge {{{ */
 .row.mgContainerRowLarge {
 	font-size: 200%;
@@ -186,41 +186,6 @@ mg-number input[type=number]::-webkit-inner-spin-button {
 	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
-mg-seperator > hr {
-	margin-top: 0px;
-	margin-bottom: 10px;
-}
-
-mg-signature .form-control-static {
-	display: block;
-	width: 250px;
-	height: 50px;
-	border: 1px solid #e9e9e9;
-	background: #FFF;
-}
-
-mg-signature .form-control-static::after {
-	content: '';
-	display: block;
-	position: relative;
-	top: 30px;
-	margin-left: auto;
-	margin-right: auto;
-	width: 80%;
-	border-bottom: 1px dashed #e9e9e9;
-}
-
-mg-signature .btn.btn-fab {
-	position: absolute;
-	left: 0;
-	bottom: 10px;
-}
-
-mg-signature .btn.btn-fab > i.fa {
-	margin-left: -2px;
-	margin-top: 6px;
-}
-
 mg-placeholder > div {
 	height: 100px;
 	display: flex;
@@ -266,6 +231,41 @@ mg-placeholder > .placeholder-construction > .placeholder-text {
 }
 /* }}} */
 
+mg-seperator > hr {
+	margin-top: 0px;
+	margin-bottom: 10px;
+}
+
+mg-signature .form-control-static {
+	display: block;
+	width: 250px;
+	height: 50px;
+	border: 1px solid #e9e9e9;
+	background: #FFF;
+}
+
+mg-signature .form-control-static::after {
+	content: '';
+	display: block;
+	position: relative;
+	top: 30px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+	border-bottom: 1px dashed #e9e9e9;
+}
+
+mg-signature .btn.btn-fab {
+	position: absolute;
+	left: 0;
+	bottom: 10px;
+}
+
+mg-signature .btn.btn-fab > i.fa {
+	margin-left: -2px;
+	margin-top: 6px;
+}
+
 mg-table td {
 	padding: 0 !important;
 }
@@ -297,6 +297,7 @@ mg-form .table-compact .form-control-static {
 	background: transparent;
   border-color: transparent;
 	box-sizing: border-box;
+	height: auto;
 	min-height: auto;
   padding: 0;
 }
@@ -364,10 +365,6 @@ mg-form .table-compact > tfoot > tr > td {
 	padding: 0;
 }
 
-mg-form .table-compact .form-control {
-	height: auto;
-}
-
 mg-table td > .btn {
 	height: auto;
 }
@@ -385,7 +382,7 @@ mg-form .table-compact .btn {
 	line-height: normal;
 }
 
-mg-table .table-darker {
+.table-darker {
 	border-color: black;
 }
 
