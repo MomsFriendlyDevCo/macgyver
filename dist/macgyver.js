@@ -541,6 +541,38 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"alert\" ng-class=\"$ctrl.config.style\">{{$ctrl.config.text || $scope.data}}</div>\n\t\t"
 });
 /**
+* MacGyver toggle
+* @param {Object} config The config specification
+* @param {boolean} data The state of the checkbox
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgCheckBox', {
+    title: 'Check Box',
+    icon: 'fa fa-check-square-o',
+    category: 'Simple Inputs',
+    config: {},
+    format: function format(v) {
+      return v ? 'Yes' : 'No';
+    },
+    formatAlign: 'center'
+  });
+}]).component('mgCheckBox', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
+});
+/**
 * MacGyver selector of an item from a small list of enums
 * @param {Object} config The config specification
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
@@ -623,38 +655,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
-});
-/**
-* MacGyver toggle
-* @param {Object} config The config specification
-* @param {boolean} data The state of the checkbox
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgCheckBox', {
-    title: 'Check Box',
-    icon: 'fa fa-check-square-o',
-    category: 'Simple Inputs',
-    config: {},
-    format: function format(v) {
-      return v ? 'Yes' : 'No';
-    },
-    formatAlign: 'center'
-  });
-}]).component('mgCheckBox', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
 * MacGyver selector of an item from a list of enums
@@ -817,6 +817,62 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
 });
 /**
+* MacGyver date input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {Date} [config.min] The minimum allowable date
+* @param {Date} [config.max] The maximum allowable date
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgDate', {
+    title: 'Date selection',
+    icon: 'fa fa-calendar',
+    category: 'Simple Inputs',
+    config: {
+      min: {
+        type: 'mgDate',
+        title: 'Earliest date'
+      },
+      max: {
+        type: 'mgDate',
+        title: 'Latest date'
+      },
+      required: {
+        type: 'mgToggle',
+        "default": false
+      }
+    },
+    format: function format(v) {
+      if (!v) return '';
+      var d = v instanceof Date ? v : new Date(v);
+      console.log('mgDate SHOULD BE DATE', d);
+      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+    },
+    formatAlign: 'center'
+  });
+}]).component('mgDate', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.validate = function () {
+      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required"), $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && "".concat($ctrl.config.title, " is too early (earliest date is ").concat($ctrl.config.min, ")"), $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && "".concat($ctrl.config.title, " is too late (latest date is ").concat($ctrl.config.max, ")")];
+    }; // Adopt default  if no data value is given {{{
+
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
+});
+/**
 * MacGyver component loader
 * This is a meta component that loads other dynamic components as an array
 * @param {Object} config The config specification
@@ -956,62 +1012,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   }]
 });
 /**
-* MacGyver date input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {Date} [config.min] The minimum allowable date
-* @param {Date} [config.max] The maximum allowable date
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgDate', {
-    title: 'Date selection',
-    icon: 'fa fa-calendar',
-    category: 'Simple Inputs',
-    config: {
-      min: {
-        type: 'mgDate',
-        title: 'Earliest date'
-      },
-      max: {
-        type: 'mgDate',
-        title: 'Latest date'
-      },
-      required: {
-        type: 'mgToggle',
-        "default": false
-      }
-    },
-    format: function format(v) {
-      if (!v) return '';
-      var d = v instanceof Date ? v : new Date(v);
-      console.log('mgDate SHOULD BE DATE', d);
-      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-    },
-    formatAlign: 'center'
-  });
-}]).component('mgDate', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.validate = function () {
-      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required"), $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && "".concat($ctrl.config.title, " is too early (earliest date is ").concat($ctrl.config.min, ")"), $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && "".concat($ctrl.config.title, " is too late (latest date is ").concat($ctrl.config.max, ")")];
-    }; // Adopt default  if no data value is given {{{
-
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
-});
-/**
 * MacGyver text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -1058,110 +1058,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
-});
-/**
-* MacGyver file list display
-* This is an optional component inside mgFileList - if you just want a simple uploader you should see that component instead
-* @param {Object} config The config specification
-* @param {boolean} [config.allowDelete=true] Whether to allow file deletion
-* @param {string,function} [config.urlQuery] The URL to query for files. If unset $macgyver.settings.urlResolver is used
-* @param {string,function} [config.urlDelete] The URL to delete files from. If unset $macgyver.settings.urlResolver is used
-* @param {string} [config.listMode='list'] The list method to use
-* @param {function} [config.onDelete] Optional callback to fire when a file has been deleted
-* @param {Array} [data] Optional array of files, if this is not set data will be populated via config.urlQuery instead
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgFileList', {
-    title: 'File list',
-    icon: 'fa fa-files-o',
-    category: 'Files and uploads',
-    config: {
-      allowDelete: {
-        type: 'mgToggle',
-        "default": true
-      },
-      listMode: {
-        type: 'mgChoiceButtons',
-        "enum": ['list', 'thumbnails'],
-        "default": 'list'
-      }
-    }
-  });
-}]).component('mgFileList', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$element", "$http", "$macgyver", "$scope", "$timeout", function controller($element, $http, $macgyver, $scope, $timeout) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-    $ctrl.thumbnailAble = ['png', 'jpg', 'jpeg', 'gif', 'webm', 'svg']; // URL storage {{{
-
-    $ctrl.urls = {}; // These all get their defaults in $onInit
-
-    $ctrl.getUrl = function (type, context) {
-      if (_.isString($ctrl.urls[type])) {
-        return $ctrl.urls[type]; // Already a string - just return
-      } else if (_.isFunction($ctrl.urls[type])) {
-        // Resolve it using a context
-        return $ctrl.urls[type](Object.assign({}, {
-          type: type,
-          widget: 'mgFileList',
-          path: $macgyver.getPath($scope)
-        }, context));
-      } else {
-        throw new Error('Unknown URL type: ' + type);
-      }
-    }; // }}}
-    // Init {{{
-
-
-    $ctrl.$onInit = function () {
-      $ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
-
-      $ctrl.urls["delete"] = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
-        return "/api/widgets/".concat(o.path);
-      };
-
-      $ctrl.refresh();
-    }; // }}}
-    // Fetch data from server {{{
-
-
-    $ctrl.refresh = function () {
-      if (!_.isEmpty($ctrl.data)) {
-        // Use data
-        $ctrl.data = $ctrl.data;
-      } else {
-        // Fetch data via URL
-        $http.get($ctrl.getUrl('query')).then(function (data) {
-          return $ctrl.data = data.data.map(function (file) {
-            if (!_.isString(file.thumbnail)) file.thumbnail = $ctrl.thumbnailAble.includes(file.ext);
-            return file;
-          });
-        });
-      }
-    }; // }}}
-    // External events {{{
-
-
-    $scope.$on('mg.refreshUploads', function () {
-      return $ctrl.refresh();
-    }); // }}}
-    // Deal with deletes {{{
-
-    $ctrl["delete"] = function (file) {
-      return $http["delete"]($ctrl.getUrl('delete', {
-        file: file.name
-      })).then($ctrl.refresh, $ctrl.refresh) // Whatever happens - refresh
-      .then(function () {
-        if (_.isFunction($ctrl.config.onDelete)) $ctrl.config.onDelete(file);
-      });
-    }; // }}}
-
-  }],
-  template: "\n\t\t\t<ul ng-if=\"!$ctrl.config.listMode || $ctrl.config.listMode == 'list'\" class=\"list-group\">\n\t\t\t\t<a ng-repeat=\"file in $ctrl.data track by file.name\" class=\"list-group-item\" href=\"{{file.url}}\" target=\"_blank\">\n\t\t\t\t\t<span class=\"badge\">{{file.size | filesize}}</span>\n\t\t\t\t\t<button ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file); $event.preventDefault()\" type=\"button\" class=\"btn btn-danger btn-sm visible-parent-hover pull-right m-t--5 m-r-5\"><i class=\"fa fa-trash\"></i></button>\n\t\t\t\t\t<i ng-class=\"file.icon\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</a>\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div ng-if=\"$ctrl.config.listMode == 'thumbnails'\" class=\"row\" style=\"display:flex; flex-wrap: wrap\">\n\t\t\t\t<div ng-repeat=\"file in $ctrl.data track by file.name\" class=\"col-xs-6 col-md-3 m-b-10 visible-parent-hover-target\">\n\t\t\t\t\t<a class=\"thumbnail\" href=\"{{file.url}}\" target=\"_blank\" style=\"height: 100%; display: flex; align-items: center; justify-content: center\">\n\t\t\t\t\t\t<img ng-if=\"file.thumbnail\" src=\"{{file.url}}\"/>\n\t\t\t\t\t\t<div ng-if=\"!file.thumbnail\" class=\"text-center\"><i ng-class=\"file.icon\" class=\"fa-5x\"></i></div>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file)\" class=\"btn btn-circle btn-danger visible-parent-hover\" style=\"position: absolute; bottom: 15px; right: 20px\">\n\t\t\t\t\t\t<i class=\"fa fa-fw fa-lg fa-trash\"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver file upload
@@ -1297,6 +1193,110 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<a ng-click=\"$ctrl.click()\" class=\"btn btn-primary hidden-print\" style=\"margin-bottom:10px\">\n\t\t\t\t<i ng-class=\"$ctrl.icon || 'fa fa-file'\"></i>\n\t\t\t\t{{$ctrl.selectedFile || $ctrl.placeholder || 'Upload file...'}}\n\t\t\t</a>\n\t\t\t<div ng-if=\"$ctrl.config.showList === undefined || $ctrl.config.showList\">\n\t\t\t\t<mg-file-list config=\"$ctrl.listConfig\" data=\"$ctrl.data\"></mg-file-list>\n\t\t\t</div>\n\t\t\t<ul ng-if=\"$ctrl.config.showUploading === undefined || $ctrl.config.showUploading\" class=\"list-group\">\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div style=\"display: none\"><input type=\"file\" name=\"file\"/></div>\n\t\t"
+});
+/**
+* MacGyver file list display
+* This is an optional component inside mgFileList - if you just want a simple uploader you should see that component instead
+* @param {Object} config The config specification
+* @param {boolean} [config.allowDelete=true] Whether to allow file deletion
+* @param {string,function} [config.urlQuery] The URL to query for files. If unset $macgyver.settings.urlResolver is used
+* @param {string,function} [config.urlDelete] The URL to delete files from. If unset $macgyver.settings.urlResolver is used
+* @param {string} [config.listMode='list'] The list method to use
+* @param {function} [config.onDelete] Optional callback to fire when a file has been deleted
+* @param {Array} [data] Optional array of files, if this is not set data will be populated via config.urlQuery instead
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgFileList', {
+    title: 'File list',
+    icon: 'fa fa-files-o',
+    category: 'Files and uploads',
+    config: {
+      allowDelete: {
+        type: 'mgToggle',
+        "default": true
+      },
+      listMode: {
+        type: 'mgChoiceButtons',
+        "enum": ['list', 'thumbnails'],
+        "default": 'list'
+      }
+    }
+  });
+}]).component('mgFileList', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$element", "$http", "$macgyver", "$scope", "$timeout", function controller($element, $http, $macgyver, $scope, $timeout) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+    $ctrl.thumbnailAble = ['png', 'jpg', 'jpeg', 'gif', 'webm', 'svg']; // URL storage {{{
+
+    $ctrl.urls = {}; // These all get their defaults in $onInit
+
+    $ctrl.getUrl = function (type, context) {
+      if (_.isString($ctrl.urls[type])) {
+        return $ctrl.urls[type]; // Already a string - just return
+      } else if (_.isFunction($ctrl.urls[type])) {
+        // Resolve it using a context
+        return $ctrl.urls[type](Object.assign({}, {
+          type: type,
+          widget: 'mgFileList',
+          path: $macgyver.getPath($scope)
+        }, context));
+      } else {
+        throw new Error('Unknown URL type: ' + type);
+      }
+    }; // }}}
+    // Init {{{
+
+
+    $ctrl.$onInit = function () {
+      $ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
+
+      $ctrl.urls["delete"] = $ctrl.config.urlDelete || $macgyver.settings.urlResolver || function (o) {
+        return "/api/widgets/".concat(o.path);
+      };
+
+      $ctrl.refresh();
+    }; // }}}
+    // Fetch data from server {{{
+
+
+    $ctrl.refresh = function () {
+      if (!_.isEmpty($ctrl.data)) {
+        // Use data
+        $ctrl.data = $ctrl.data;
+      } else {
+        // Fetch data via URL
+        $http.get($ctrl.getUrl('query')).then(function (data) {
+          return $ctrl.data = data.data.map(function (file) {
+            if (!_.isString(file.thumbnail)) file.thumbnail = $ctrl.thumbnailAble.includes(file.ext);
+            return file;
+          });
+        });
+      }
+    }; // }}}
+    // External events {{{
+
+
+    $scope.$on('mg.refreshUploads', function () {
+      return $ctrl.refresh();
+    }); // }}}
+    // Deal with deletes {{{
+
+    $ctrl["delete"] = function (file) {
+      return $http["delete"]($ctrl.getUrl('delete', {
+        file: file.name
+      })).then($ctrl.refresh, $ctrl.refresh) // Whatever happens - refresh
+      .then(function () {
+        if (_.isFunction($ctrl.config.onDelete)) $ctrl.config.onDelete(file);
+      });
+    }; // }}}
+
+  }],
+  template: "\n\t\t\t<ul ng-if=\"!$ctrl.config.listMode || $ctrl.config.listMode == 'list'\" class=\"list-group\">\n\t\t\t\t<a ng-repeat=\"file in $ctrl.data track by file.name\" class=\"list-group-item\" href=\"{{file.url}}\" target=\"_blank\">\n\t\t\t\t\t<span class=\"badge\">{{file.size | filesize}}</span>\n\t\t\t\t\t<button ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file); $event.preventDefault()\" type=\"button\" class=\"btn btn-danger btn-sm visible-parent-hover pull-right m-t--5 m-r-5\"><i class=\"fa fa-trash\"></i></button>\n\t\t\t\t\t<i ng-class=\"file.icon\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</a>\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div ng-if=\"$ctrl.config.listMode == 'thumbnails'\" class=\"row\" style=\"display:flex; flex-wrap: wrap\">\n\t\t\t\t<div ng-repeat=\"file in $ctrl.data track by file.name\" class=\"col-xs-6 col-md-3 m-b-10 visible-parent-hover-target\">\n\t\t\t\t\t<a class=\"thumbnail\" href=\"{{file.url}}\" target=\"_blank\" style=\"height: 100%; display: flex; align-items: center; justify-content: center\">\n\t\t\t\t\t\t<img ng-if=\"file.thumbnail\" src=\"{{file.url}}\"/>\n\t\t\t\t\t\t<div ng-if=\"!file.thumbnail\" class=\"text-center\"><i ng-class=\"file.icon\" class=\"fa-5x\"></i></div>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file)\" class=\"btn btn-circle btn-danger visible-parent-hover\" style=\"position: absolute; bottom: 15px; right: 20px\">\n\t\t\t\t\t\t<i class=\"fa fa-fw fa-lg fa-trash\"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver form

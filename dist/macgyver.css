@@ -1,5 +1,10 @@
 .p-t-5 { padding-top: 5px }
 
+/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
+mg-choice-buttons .fa.fa-fw {
+	height: 1em;
+}
+
 @media print {
 	/* Disable dropdown icons when printing */
 	mg-choice-dropdown .selectize-input::after {
@@ -14,11 +19,6 @@
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
-/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
-mg-choice-buttons .fa.fa-fw {
-	height: 1em;
-}
-
 /* mgContainerRowLarge {{{ */
 .row.mgContainerRowLarge {
 	font-size: 200%;
@@ -393,6 +393,13 @@ mg-form .table-compact .btn {
 .table-darker.table-bordered > thead > tr > td,
 .table-darker.table-bordered > thead > tr > th {
 	border-color: black;
+}
+
+.table-compact input[type="date"].form-control,
+.table-compact input[type="time"].form-control,
+.table-compact input[type="datetime-local"].form-control,
+.table-compact input[type="month"].form-control {
+	line-height: inherit;
 }
 
 @media print {
