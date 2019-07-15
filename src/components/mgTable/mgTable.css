@@ -29,6 +29,7 @@ mg-form .table-compact .form-control-static {
 	background: transparent;
   border-color: transparent;
 	box-sizing: border-box;
+	height: auto;
 	min-height: auto;
   padding: 0;
 }
