@@ -126,3 +126,10 @@ mg-form .table-compact .btn {
 .table-darker.table-bordered > thead > tr > th {
 	border-color: black;
 }
+
+.table-compact input[type="date"].form-control,
+.table-compact input[type="time"].form-control,
+.table-compact input[type="datetime-local"].form-control,
+.table-compact input[type="month"].form-control {
+	line-height: inherit;
+}
