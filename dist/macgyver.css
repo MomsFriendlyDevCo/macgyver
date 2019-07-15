@@ -1,10 +1,5 @@
 .p-t-5 { padding-top: 5px }
 
-/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
-mg-choice-buttons .fa.fa-fw {
-	height: 1em;
-}
-
 @media print {
 	/* Disable dropdown icons when printing */
 	mg-choice-dropdown .selectize-input::after {
@@ -19,6 +14,11 @@ mg-choice-buttons .fa.fa-fw {
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
+/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
+mg-choice-buttons .fa.fa-fw {
+	height: 1em;
+}
+
 /* mgContainerRowLarge {{{ */
 .row.mgContainerRowLarge {
 	font-size: 200%;
@@ -292,10 +292,13 @@ mg-form .table-compact .form-group {
 
 mg-form .table-compact select,
 mg-form .table-compact input,
-mg-form .table-compact .form-control {
+mg-form .table-compact .form-control,
+mg-form .table-compact .form-control-static {
 	background: transparent;
   border-color: transparent;
 	box-sizing: border-box;
+	height: auto;
+	min-height: auto;
   padding: 0;
 }
 
@@ -362,10 +365,6 @@ mg-form .table-compact > tfoot > tr > td {
 	padding: 0;
 }
 
-mg-form .table-compact .form-control {
-	height: auto;
-}
-
 mg-table td > .btn {
 	height: auto;
 }
@@ -383,7 +382,7 @@ mg-form .table-compact .btn {
 	line-height: normal;
 }
 
-mg-table .table-darker {
+.table-darker {
 	border-color: black;
 }
 

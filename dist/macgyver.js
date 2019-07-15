@@ -541,38 +541,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"alert\" ng-class=\"$ctrl.config.style\">{{$ctrl.config.text || $scope.data}}</div>\n\t\t"
 });
 /**
-* MacGyver toggle
-* @param {Object} config The config specification
-* @param {boolean} data The state of the checkbox
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgCheckBox', {
-    title: 'Check Box',
-    icon: 'fa fa-check-square-o',
-    category: 'Simple Inputs',
-    config: {},
-    format: function format(v) {
-      return v ? 'Yes' : 'No';
-    },
-    formatAlign: 'center'
-  });
-}]).component('mgCheckBox', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
-});
-/**
 * MacGyver selector of an item from a small list of enums
 * @param {Object} config The config specification
 * @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
@@ -655,6 +623,38 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver toggle
+* @param {Object} config The config specification
+* @param {boolean} data The state of the checkbox
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgCheckBox', {
+    title: 'Check Box',
+    icon: 'fa fa-check-square-o',
+    category: 'Simple Inputs',
+    config: {},
+    format: function format(v) {
+      return v ? 'Yes' : 'No';
+    },
+    formatAlign: 'center'
+  });
+}]).component('mgCheckBox', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
 * MacGyver selector of an item from a list of enums
@@ -2143,6 +2143,45 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
         "default": 1,
         min: 1,
         max: 100
+      },
+      style: {
+        type: 'mgChoiceDropdown',
+        title: 'Grid style',
+        help: 'How to style the grid',
+        "default": 'table-bordered',
+        "enum": [{
+          id: '',
+          title: 'Bordered',
+          "class": 'table-bordered'
+        }, {
+          id: 'mgTableBorderless',
+          title: 'Borderless',
+          "class": 'table-borderless'
+        }, {
+          id: 'mgTableCondensed',
+          title: 'Condensed',
+          "class": 'table-condensed'
+        }]
+      },
+      styleCompact: {
+        type: 'mgToggle',
+        title: 'Compact forms',
+        "default": false
+      },
+      styleDarker: {
+        type: 'mgToggle',
+        title: 'Darker borders',
+        "default": false
+      },
+      styleHover: {
+        type: 'mgToggle',
+        title: 'Hover rows',
+        "default": true
+      },
+      styleStriped: {
+        type: 'mgToggle',
+        title: 'Striped rows',
+        "default": true
       }
     }
   });
@@ -2204,7 +2243,7 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     });
   }],
   template: ["$macgyver", function template($macgyver) {
-    return "\n\t\t\t<table class=\"table table-striped table-bordered\">\n\t\t\t\t<tr ng-repeat=\"row in $ctrl.config.items\">\n\t\t\t\t\t<td ng-repeat=\"w in row.items\" ng-switch=\"w.type\">\n\t\t\t\t\t\t<mg-container ng-if=\"w.type=='mgContainer'\" data=\"$ctrl.data[w.id]\" config=\"w\"></mg-container>\n\t\t\t\t\t\t<div ng-if=\"w.type!='mgContainer'\" class=\"alert alert-danger\">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t";
+    return "\n\t\t\t<table class=\"table\" ng-class=\"[\n\t\t\t\t$ctrl.config.style ? $ctrl.config.style : 'table-bordered',\n\t\t\t\t$ctrl.config.styleHover ? 'table-hover' : undefined,\n\t\t\t\t$ctrl.config.styleStriped ? 'table-striped' : undefined,\n\t\t\t\t$ctrl.config.styleCompact ? 'table-compact' : undefined,\n\t\t\t\t$ctrl.config.styleDarker ? 'table-darker' : undefined\n\t\t\t]\">\n\t\t\t\t<tr ng-repeat=\"row in $ctrl.config.items\">\n\t\t\t\t\t<td ng-repeat=\"w in row.items\" ng-switch=\"w.type\">\n\t\t\t\t\t\t<mg-container ng-if=\"w.type=='mgContainer'\" data=\"$ctrl.data[w.id]\" config=\"w\"></mg-container>\n\t\t\t\t\t\t<div ng-if=\"w.type!='mgContainer'\" class=\"alert alert-danger\">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t";
   }]
 });
 /**
