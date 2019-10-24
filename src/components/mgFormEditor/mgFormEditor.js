@@ -156,7 +156,8 @@ angular
 
 				// Get Human Readable Name for the edit widget. If error jsut use vanilla display
 				if (node.type && typeof node.type == 'string') {
-					$ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim()
+					$ctrl.widgetName = ' - ' + node.type.replace(/^mg/i, '')
+						.replace(/([A-Z])/g, ' $1').trim();
 				}
 
 				// Select the Angular data element
