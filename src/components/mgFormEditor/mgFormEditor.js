@@ -40,8 +40,28 @@ angular
 			*/
 			$ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
+
+			/**
+			* Traverse widget adding missing id
+			* @params {Object} [widget] Widget to update
+			* @returns {Promise} A promise which will resolve when the tree has been updated
+			*/
+
+			/*
+			$ctrl.widgetIds = function(widget) {
+				// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+				var tryIndex = 1;
+				var tryName = widget.type;
+				while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+					tryName = widget.type + ++tryIndex;
+				}
+				// }}}
+			};
+			*/
+
 			/**
 			* Paste a table of widgets
+			* @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
 			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
 			*/
 			$ctrl.widgetPaste = function(widget) {
@@ -49,6 +69,8 @@ angular
 				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
 				if (!node) return; // Didn't find anything - do nothing
 				console.log('widgetPaste', node);
+
+
 
 				return navigator.clipboard.readText()
 					.then(content => {
@@ -70,9 +92,8 @@ angular
 							throw new Error('Not implemented');
 						}
 
-						console.log('layout', layout, typeof layout);
 						node.items = layout.map(row => {
-							if (row && row.length !== node.cols) return;
+							if (!row || row.length !== node.cols) return;
 							return {
 								type: 'mgGridRow',
 								items: row.map(col => {
@@ -91,47 +112,21 @@ angular
 								})
 							};
 						});
-						node.items = node.items.filter(item => typeof item !== 'undefined');
+						node.items = node.items.filter(w => typeof w !== 'undefined');
 						node.rows = node.items.length;
 
-						// FIXME: Recursive traverse, Generate IDs for anything within the tree.
-						node.items = node.items.map(row => {
-							// TODO: Encapsulate
+						// Traverse tree setting missing ids
+						$macgyver.forEach(node, w => {
+							if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
+
 							// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
 							var tryIndex = 1;
-							var tryName = row.type + tryIndex;
+							var tryName = w.type;
 							while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-								tryName = row.type + ++tryIndex;
+								tryName = w.type + ++tryIndex;
 							}
 							// }}}
-
-							row.id = tryName;
-							row.items = row.items.map(col => {
-								// TODO: Encapsulate
-								// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-								var tryIndex = 1;
-								var tryName = col.type + tryIndex;
-								while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-									tryName = col.type + ++tryIndex;
-								}
-								// }}}
-
-								col.id = tryName;
-								col.items = col.items.map(itm => {
-									// TODO: Encapsulate
-									// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-									var tryIndex = 1;
-									var tryName = itm.type + tryIndex;
-									while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-										tryName = itm.type + ++tryIndex;
-									}
-									// }}}
-									itm.id = tryName;
-									return itm;
-								});
-								return col;
-							})
-							return row;
+							w.id = tryName;
 						});
 
 						console.log('items', node.items, node.rows, $ctrl.config);
