@@ -41,6 +41,106 @@ angular
 			$ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
 			/**
+			* Paste a table of widgets
+			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+			*/
+			$ctrl.widgetPaste = function(widget) {
+				// Work out what item we are currently hovering over
+				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				if (!node) return; // Didn't find anything - do nothing
+				console.log('widgetPaste', node);
+
+				return navigator.clipboard.readText()
+					.then(content => {
+						console.log('GOT RAW', node, JSON.stringify(content));
+						if (!content) return;
+
+						var layout;
+						// LibreOffice: CRLF delimited, no rows
+						if (content.indexOf('\t') === -1) {
+							// "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
+							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
+							layout = _(content)
+								.split('\n')
+								.chunk(node.cols)
+								.value();
+
+						// MS Office: Tab delimited, CRLF rows
+						} else {
+							throw new Error('Not implemented');
+						}
+
+						console.log('layout', layout, typeof layout);
+						node.items = layout.map(row => {
+							if (row && row.length !== node.cols) return;
+							return {
+								type: 'mgGridRow',
+								items: row.map(col => {
+									return {
+										type: 'mgContainer',
+										items: [
+											{
+												"type": "mgHeading",
+												"showTitle": false,
+												"rowClass": "",
+												"title": "",
+												"text": col
+											}
+										]
+									};
+								})
+							};
+						});
+						node.items = node.items.filter(item => typeof item !== 'undefined');
+						node.rows = node.items.length;
+
+						// FIXME: Recursive traverse, Generate IDs for anything within the tree.
+						node.items = node.items.map(row => {
+							// TODO: Encapsulate
+							// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+							var tryIndex = 1;
+							var tryName = row.type + tryIndex;
+							while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+								tryName = row.type + ++tryIndex;
+							}
+							// }}}
+
+							row.id = tryName;
+							row.items = row.items.map(col => {
+								// TODO: Encapsulate
+								// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+								var tryIndex = 1;
+								var tryName = col.type + tryIndex;
+								while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+									tryName = col.type + ++tryIndex;
+								}
+								// }}}
+
+								col.id = tryName;
+								col.items = col.items.map(itm => {
+									// TODO: Encapsulate
+									// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+									var tryIndex = 1;
+									var tryName = itm.type + tryIndex;
+									while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+										tryName = itm.type + ++tryIndex;
+									}
+									// }}}
+									itm.id = tryName;
+									return itm;
+								});
+								return col;
+							})
+							return row;
+						});
+
+						console.log('items', node.items, node.rows, $ctrl.config);
+					});
+					//.catch(e => console.log('ERROR', e.toString()));
+
+			};
+
+			/**
 			* Add a new widget
 			* @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
 			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
@@ -414,6 +514,7 @@ angular
 						case 'add': $ctrl.widgetAdd(); break;
 						case 'edit': $ctrl.widgetEdit(); break;
 						case 'delete': $ctrl.widgetDelete(); break;
+						case 'paste': $ctrl.widgetPaste(); break;
 						case 'dropdown':
 							// FIXME: Not yet working
 							$element.find('.mgFormEditor-mask-buttons .dropdown-toggle')
