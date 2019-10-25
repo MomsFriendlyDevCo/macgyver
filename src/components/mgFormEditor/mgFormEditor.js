@@ -40,25 +40,6 @@ angular
 			*/
 			$ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
-
-			/**
-			* Traverse widget adding missing id
-			* @params {Object} [widget] Widget to update
-			* @returns {Promise} A promise which will resolve when the tree has been updated
-			*/
-
-			/*
-			$ctrl.widgetIds = function(widget) {
-				// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-				var tryIndex = 1;
-				var tryName = widget.type;
-				while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-					tryName = widget.type + ++tryIndex;
-				}
-				// }}}
-			};
-			*/
-
 			/**
 			* Paste a table of widgets
 			* @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
@@ -68,9 +49,6 @@ angular
 				// Work out what item we are currently hovering over
 				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
 				if (!node) return; // Didn't find anything - do nothing
-				console.log('widgetPaste', node);
-
-
 
 				return navigator.clipboard.readText()
 					.then(content => {
@@ -132,7 +110,6 @@ angular
 						console.log('items', node.items, node.rows, $ctrl.config);
 					});
 					//.catch(e => console.log('ERROR', e.toString()));
-
 			};
 
 			/**
