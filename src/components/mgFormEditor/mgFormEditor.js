@@ -71,10 +71,13 @@ angular
 						}
 
 						node.items = layout.map(row => {
-							if (!row || row.length !== node.cols) return;
+							if (!row) return;
+							// Add extra cols when paste is larger
+							node.cols = Math.max(node.cols, row.length);
 							return {
 								type: 'mgGridRow',
 								items: row.map(col => {
+									if (!col) return;
 									return {
 										type: 'mgContainer',
 										items: [
