@@ -56,7 +56,7 @@ angular
 						if (!content) return;
 
 						var layout;
-						// LibreOffice: CRLF delimited, no rows
+						// LibreOffice: LF delimited, no rows
 						if (content.indexOf('\t') === -1) {
 							// "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
 							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
@@ -70,7 +70,7 @@ angular
 							throw new Error('Not implemented');
 						}
 
-						node.items = layout.map(row => {
+						node.items = layout.map((row, rowi) => {
 							if (!row) return;
 							// Add extra cols when paste is larger
 							node.cols = Math.max(node.cols, row.length);
@@ -78,11 +78,14 @@ angular
 								type: 'mgGridRow',
 								items: row.map(col => {
 									if (!col) return;
+
+									// First row has headings
+									var type = (rowi === 0)?'mgHeading':'mgHtml';
 									return {
 										type: 'mgContainer',
 										items: [
 											{
-												"type": "mgHeading",
+												"type": type,
 												"showTitle": false,
 												"rowClass": "",
 												"title": "",
@@ -94,7 +97,7 @@ angular
 							};
 						});
 						node.items = node.items.filter(w => typeof w !== 'undefined');
-						node.rows = node.items.length;
+						node.rows = node.items.length - 1;
 
 						// Traverse tree setting missing ids
 						$macgyver.forEach(node, w => {

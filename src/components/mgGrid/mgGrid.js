@@ -69,7 +69,6 @@ angular
 			$scope.$watchGroup(['$ctrl.config.rows', '$ctrl.config.cols'], ()=> {
 				if (_.has($ctrl, 'config.rows')) { // Rows has been set - probably by the user editing the widget properties
 					if ($ctrl.config.rows < $ctrl.config.items.length) { // Removing some items
-						debugger;
 						$ctrl.config.items = $ctrl.config.items.slice(0, $ctrl.config.rows);
 					} else if ($ctrl.config.rows > $ctrl.config.items.length) { // Adding some rows
 						_.range($ctrl.config.items.length, $ctrl.config.rows).forEach(i => {
