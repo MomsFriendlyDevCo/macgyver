@@ -62,6 +62,7 @@ angular
 							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
 							layout = _(content)
 								.split('\n')
+								.compact()
 								.chunk(node.cols)
 								.value();
 
@@ -70,6 +71,7 @@ angular
 							// "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
 							layout = _(content)
 								.split('\r\n')
+								.compact()
 								.value();
 							layout = layout.map(i => i.split('\t'));
 						}
@@ -95,8 +97,6 @@ angular
 									]
 								};
 							});
-							// FIXME: `compact` does the same thing.
-							cols = cols.filter(w => typeof w !== 'undefined');
 							// Add extra cols when paste is larger
 							node.cols = Math.max(node.cols, cols.length);
 							return {
@@ -104,8 +104,6 @@ angular
 								items: cols
 							};
 						});
-						// FIXME: `compact` does the same thing.
-						node.items = node.items.filter(w => typeof w !== 'undefined');
 						node.rows = node.items.length - 1;
 
 						// Traverse tree setting missing ids
