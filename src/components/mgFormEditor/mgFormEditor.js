@@ -52,7 +52,6 @@ angular
 
 				return navigator.clipboard.readText()
 					.then(content => {
-						console.log('GOT RAW', node, JSON.stringify(content));
 						if (!content) return;
 
 						var layout;
@@ -72,28 +71,31 @@ angular
 
 						node.items = layout.map((row, rowi) => {
 							if (!row) return;
+
+							var cols = row.map(col => {
+								if (!col) return;
+
+								// First row has headings
+								var type = (rowi === 0)?'mgHeading':'mgHtml';
+								return {
+									type: 'mgContainer',
+									items: [
+										{
+											"type": type,
+											"showTitle": false,
+											"rowClass": "",
+											"title": "",
+											"text": col
+										}
+									]
+								};
+							});
+							cols = cols.filter(w => typeof w !== 'undefined');
 							// Add extra cols when paste is larger
-							node.cols = Math.max(node.cols, row.length);
+							node.cols = Math.max(node.cols, cols.length);
 							return {
 								type: 'mgGridRow',
-								items: row.map(col => {
-									if (!col) return;
-
-									// First row has headings
-									var type = (rowi === 0)?'mgHeading':'mgHtml';
-									return {
-										type: 'mgContainer',
-										items: [
-											{
-												"type": type,
-												"showTitle": false,
-												"rowClass": "",
-												"title": "",
-												"text": col
-											}
-										]
-									};
-								})
+								items: cols
 							};
 						});
 						node.items = node.items.filter(w => typeof w !== 'undefined');
@@ -112,8 +114,6 @@ angular
 							// }}}
 							w.id = tryName;
 						});
-
-						console.log('items', node.items, node.rows, $ctrl.config);
 					});
 					//.catch(e => console.log('ERROR', e.toString()));
 			};
