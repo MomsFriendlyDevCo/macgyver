@@ -1,5 +1,3 @@
-import { unescape } from "querystring";
-
 /**
 * MacGyver form editor
 * Meta component to edit a form

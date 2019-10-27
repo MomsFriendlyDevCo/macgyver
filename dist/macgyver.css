@@ -186,11 +186,6 @@ mg-number input[type=number]::-webkit-inner-spin-button {
 	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
-mg-seperator > hr {
-	margin-top: 0px;
-	margin-bottom: 10px;
-}
-
 mg-placeholder > div {
 	height: 100px;
 	display: flex;
@@ -235,6 +230,11 @@ mg-placeholder > .placeholder-construction > .placeholder-text {
 	text-shadow: -2px -2px 1px #000, 2px -2px 1px #000, -2px 2px 1px #000, 2px 2px 1px #000;
 }
 /* }}} */
+
+mg-seperator > hr {
+	margin-top: 0px;
+	margin-bottom: 10px;
+}
 
 mg-signature .form-control-static {
 	display: block;
