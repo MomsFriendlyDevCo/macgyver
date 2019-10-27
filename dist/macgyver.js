@@ -817,62 +817,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
 });
 /**
-* MacGyver date input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {Date} [config.min] The minimum allowable date
-* @param {Date} [config.max] The maximum allowable date
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgDate', {
-    title: 'Date selection',
-    icon: 'fa fa-calendar',
-    category: 'Simple Inputs',
-    config: {
-      min: {
-        type: 'mgDate',
-        title: 'Earliest date'
-      },
-      max: {
-        type: 'mgDate',
-        title: 'Latest date'
-      },
-      required: {
-        type: 'mgToggle',
-        "default": false
-      }
-    },
-    format: function format(v) {
-      if (!v) return '';
-      var d = v instanceof Date ? v : new Date(v);
-      console.log('mgDate SHOULD BE DATE', d);
-      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-    },
-    formatAlign: 'center'
-  });
-}]).component('mgDate', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.validate = function () {
-      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required"), $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && "".concat($ctrl.config.title, " is too early (earliest date is ").concat($ctrl.config.min, ")"), $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && "".concat($ctrl.config.title, " is too late (latest date is ").concat($ctrl.config.max, ")")];
-    }; // Adopt default  if no data value is given {{{
-
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
-});
-/**
 * MacGyver component loader
 * This is a meta component that loads other dynamic components as an array
 * @param {Object} config The config specification
@@ -1012,6 +956,62 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   }]
 });
 /**
+* MacGyver date input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {Date} [config.min] The minimum allowable date
+* @param {Date} [config.max] The maximum allowable date
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgDate', {
+    title: 'Date selection',
+    icon: 'fa fa-calendar',
+    category: 'Simple Inputs',
+    config: {
+      min: {
+        type: 'mgDate',
+        title: 'Earliest date'
+      },
+      max: {
+        type: 'mgDate',
+        title: 'Latest date'
+      },
+      required: {
+        type: 'mgToggle',
+        "default": false
+      }
+    },
+    format: function format(v) {
+      if (!v) return '';
+      var d = v instanceof Date ? v : new Date(v);
+      console.log('mgDate SHOULD BE DATE', d);
+      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+    },
+    formatAlign: 'center'
+  });
+}]).component('mgDate', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.validate = function () {
+      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required"), $ctrl.config.min && _.isString($ctrl.data) && $ctrl.data < $ctrl.config.min && "".concat($ctrl.config.title, " is too early (earliest date is ").concat($ctrl.config.min, ")"), $ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && "".concat($ctrl.config.title, " is too late (latest date is ").concat($ctrl.config.max, ")")];
+    }; // Adopt default  if no data value is given {{{
+
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
+});
+/**
 * MacGyver text input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -1058,141 +1058,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
-});
-/**
-* MacGyver file upload
-* NOTE: This module optionally uses mgFileList by default. You can override this if needed to only display an uploader.
-* @param {Object} config The config specification
-* @param {string} [config.icon="fa fa-file"] The icon class to display in the file selection button
-* @param {string} [config.placeholder="Upload file..."] Placeholder text to display when no file is selected
-* @param {string} [config.showList=true] Whether to automatically display a file list
-* @param {string} [config.listMode='files'] The list mode display to use
-* @param {string} [config.showUploading=true] Whether to display uploading files
-* @param {boolean} [config.allowDelete=true] Whether to allow file deletion
-* @param {string|function} [config.urlQuery] The URL to query for files. If unset $macgyver.settings.urlResolver is used
-* @param {string|function} [config.urlUpload] The URL to upload files to. If unset $macgyver.settings.urlResolver is used
-* @param {string|function} [config.urlDelete] The URL to delete files from. If unset $macgyver.settings.urlResolver is used
-* @param {function} [config.onUpload] Callback to fire when a file is uploaded (as well as firing a `$broadcast('mg.refreshUploads')`)
-* @param {*} data The state data
-* @emits mg.refreshUploads Fired when all upload lists should refresh their contents as a file upload has just taken place
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgFileUpload', {
-    title: 'File upload',
-    icon: 'fa fa-file-o',
-    category: 'Files and uploads',
-    config: {
-      icon: {
-        type: 'mgText',
-        "default": 'fa fa-file-text'
-      },
-      placeholder: {
-        type: 'mgText',
-        "default": 'Upload file...',
-        help: 'Ghost text to display when no file is present'
-      },
-      allowDelete: {
-        type: 'mgToggle',
-        "default": true
-      },
-      showList: {
-        type: 'mgToggle',
-        "default": true,
-        help: 'Show a list of files already uploaded'
-      },
-      listMode: {
-        type: 'mgChoiceButtons',
-        "enum": ['list', 'thumbnails'],
-        "default": 'list'
-      },
-      // NOTE: This is really just inherited by the mgFileList child element
-      showUploading: {
-        type: 'mgToggle',
-        "default": true
-      }
-    }
-  });
-}]).component('mgFileUpload', {
-  bindings: {
-    config: '<',
-    data: '=?'
-  },
-  controller: ["$element", "$http", "$macgyver", "$scope", "$timeout", function controller($element, $http, $macgyver, $scope, $timeout) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // URL storage {{{
-
-    $ctrl.urls = {}; // These all get their defaults in $onInit
-
-    $ctrl.getUrl = function (type, context) {
-      if (_.isString($ctrl.urls[type])) {
-        return url[type]; // Already a string - just return
-      } else if (_.isFunction($ctrl.urls[type])) {
-        // Resolve it using a context
-        return $ctrl.urls[type](Object.assign({}, {
-          type: type,
-          widget: 'mgFileUpload',
-          path: $macgyver.getPath($scope)
-        }, context));
-      } else {
-        throw new Error('Unknown URL type: ' + type);
-      }
-    }; // }}}
-    // Init {{{
-
-
-    $ctrl.$onInit = function () {
-      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
-        return "/api/widgets/".concat(o.path);
-      }; // Setup the child list widget with the same path as this object
-
-
-      $ctrl.listConfig = angular.extend({}, $ctrl.config, {
-        mgPath: $macgyver.getPath($scope)
-      });
-    }; // }}}
-    // Deal with new uploads {{{
-
-
-    $ctrl.selectedFile;
-    $ctrl.uploading = [];
-
-    $ctrl.click = function () {
-      return $element.find('input[type=file]').trigger('click');
-    };
-
-    $element.find('input[type=file]').on('change', function () {
-      var _this = this;
-
-      $timeout(function () {
-        // Attach to file widget and listen for change events so we can update the text
-        var filename = $(_this).val().replace(/\\/g, '/').replace(/.*\//, ''); // Tidy up the file name
-
-        var formData = new FormData();
-        formData.append('file', _this.files[0]);
-        $ctrl.uploading.push({
-          name: filename,
-          $promise: $http.post($ctrl.getUrl('upload', {
-            file: filename
-          }), formData, {
-            headers: {
-              'Content-Type': undefined
-            },
-            // Need to override the headers so that angular changes them over into multipart/mime
-            transformRequest: angular.identity
-          }).then(function () {
-            $ctrl.uploading = $ctrl.uploading.filter(function (i) {
-              return i.name != filename;
-            }); // Remove this item from the upload list
-
-            if (_.isFunction($ctrl.config.onUpload)) $ctrl.config.onUpload();
-            $macgyver.broadcast($scope, 'mg.refreshUploads'); // Tell all file displays to refresh their contents
-          })
-        });
-      });
-    }); // }}}
-  }],
-  template: "\n\t\t\t<a ng-click=\"$ctrl.click()\" class=\"btn btn-primary hidden-print\" style=\"margin-bottom:10px\">\n\t\t\t\t<i ng-class=\"$ctrl.icon || 'fa fa-file'\"></i>\n\t\t\t\t{{$ctrl.selectedFile || $ctrl.placeholder || 'Upload file...'}}\n\t\t\t</a>\n\t\t\t<div ng-if=\"$ctrl.config.showList === undefined || $ctrl.config.showList\">\n\t\t\t\t<mg-file-list config=\"$ctrl.listConfig\" data=\"$ctrl.data\"></mg-file-list>\n\t\t\t</div>\n\t\t\t<ul ng-if=\"$ctrl.config.showUploading === undefined || $ctrl.config.showUploading\" class=\"list-group\">\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div style=\"display: none\"><input type=\"file\" name=\"file\"/></div>\n\t\t"
 });
 /**
 * MacGyver file list display
@@ -1439,11 +1304,89 @@ angular.module('macgyver').component('mgFormEditor', {
     $ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
     /**
+    * Paste a table of widgets
+    * @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
+    * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+    */
+
+    $ctrl.widgetPaste = function (widget) {
+      // Work out what item we are currently hovering over
+      var node = widget || TreeTools.find($ctrl.config, {
+        id: $ctrl.selectedWidget.id
+      }, {
+        childNode: 'items'
+      });
+      if (!node) return; // Didn't find anything - do nothing
+
+      return navigator.clipboard.readText().then(function (content) {
+        if (!content) return;
+        var layout; // LibreOffice: LF delimited, no rows
+        // FIXME: What if the content rather than the delimiter contained a tab character?
+
+        if (content.indexOf('\t') === -1) {
+          // "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
+          if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
+          layout = _(content).split('\n').compact().chunk(node.cols).value(); // MS Office: Tab delimited, CRLF rows
+        } else {
+          // "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
+          layout = _(content).split('\r\n').compact().value();
+          layout = layout.map(function (i) {
+            return i.split('\t');
+          });
+        }
+
+        node.items = layout.map(function (row, rowi) {
+          if (!row) return;
+          var cols = row.map(function (col) {
+            if (!col) return; // First row has headings
+
+            var type = rowi === 0 ? 'mgHeading' : 'mgHtml';
+            return {
+              type: 'mgContainer',
+              items: [{
+                "type": type,
+                "showTitle": false,
+                "rowClass": "",
+                "title": "",
+                "text": col
+              }]
+            };
+          }); // Add extra cols when paste is larger
+
+          node.cols = Math.max(node.cols, cols.length);
+          return {
+            type: 'mgGridRow',
+            items: cols
+          };
+        });
+        node.rows = node.items.length - 1; // Traverse tree setting missing ids
+
+        $macgyver.forEach(node, function (w) {
+          if (Object.prototype.hasOwnProperty.call(w, 'id')) return; // Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+
+          var tryIndex = 1;
+          var tryName = w.type;
+
+          while (TreeTools.find($ctrl.config, {
+            id: tryName
+          }, {
+            childNode: 'items'
+          })) {
+            tryName = w.type + ++tryIndex;
+          } // }}}
+
+
+          w.id = tryName;
+        });
+      }); //.catch(e => console.log('ERROR', e.toString()));
+    };
+    /**
     * Add a new widget
     * @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
     * @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
     * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
     */
+
 
     $ctrl.widgetAdd = function () {
       var direction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'below';
@@ -1608,7 +1551,7 @@ angular.module('macgyver').component('mgFormEditor', {
 
 
         if (node.type && typeof node.type == 'string') {
-          $ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim();
+          $ctrl.widgetName = ' - ' + node.type.replace(/^mg/i, '').replace(/([A-Z])/g, ' $1').trim();
         } // Select the Angular data element
 
 
@@ -1671,7 +1614,8 @@ angular.module('macgyver').component('mgFormEditor', {
               if (!p.title) p.title = _.startCase(k);
               return p;
             }).value()
-          }].filter(function (widget) {
+          } // }}}
+          ].filter(function (widget) {
             return widget.type != 'mgContainer' || widget.items.length > 0;
           }) // Remove empty containers
 
@@ -1919,6 +1863,10 @@ angular.module('macgyver').component('mgFormEditor', {
             $ctrl.widgetDelete();
             break;
 
+          case 'paste':
+            $ctrl.widgetPaste();
+            break;
+
           case 'dropdown':
             // FIXME: Not yet working
             $element.find('.mgFormEditor-mask-buttons .dropdown-toggle').attr('data-toggle', 'dropdown') // Have to set this for Bootstrap'py reasons
@@ -2116,6 +2064,141 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"alert alert-success mgComponentEditorInserter\">\n\t\t\t\t<div ng-click=\"$ctrl.widgetAddChild()\">\n\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\tAdd widget\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
 });
 /**
+* MacGyver file upload
+* NOTE: This module optionally uses mgFileList by default. You can override this if needed to only display an uploader.
+* @param {Object} config The config specification
+* @param {string} [config.icon="fa fa-file"] The icon class to display in the file selection button
+* @param {string} [config.placeholder="Upload file..."] Placeholder text to display when no file is selected
+* @param {string} [config.showList=true] Whether to automatically display a file list
+* @param {string} [config.listMode='files'] The list mode display to use
+* @param {string} [config.showUploading=true] Whether to display uploading files
+* @param {boolean} [config.allowDelete=true] Whether to allow file deletion
+* @param {string|function} [config.urlQuery] The URL to query for files. If unset $macgyver.settings.urlResolver is used
+* @param {string|function} [config.urlUpload] The URL to upload files to. If unset $macgyver.settings.urlResolver is used
+* @param {string|function} [config.urlDelete] The URL to delete files from. If unset $macgyver.settings.urlResolver is used
+* @param {function} [config.onUpload] Callback to fire when a file is uploaded (as well as firing a `$broadcast('mg.refreshUploads')`)
+* @param {*} data The state data
+* @emits mg.refreshUploads Fired when all upload lists should refresh their contents as a file upload has just taken place
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgFileUpload', {
+    title: 'File upload',
+    icon: 'fa fa-file-o',
+    category: 'Files and uploads',
+    config: {
+      icon: {
+        type: 'mgText',
+        "default": 'fa fa-file-text'
+      },
+      placeholder: {
+        type: 'mgText',
+        "default": 'Upload file...',
+        help: 'Ghost text to display when no file is present'
+      },
+      allowDelete: {
+        type: 'mgToggle',
+        "default": true
+      },
+      showList: {
+        type: 'mgToggle',
+        "default": true,
+        help: 'Show a list of files already uploaded'
+      },
+      listMode: {
+        type: 'mgChoiceButtons',
+        "enum": ['list', 'thumbnails'],
+        "default": 'list'
+      },
+      // NOTE: This is really just inherited by the mgFileList child element
+      showUploading: {
+        type: 'mgToggle',
+        "default": true
+      }
+    }
+  });
+}]).component('mgFileUpload', {
+  bindings: {
+    config: '<',
+    data: '=?'
+  },
+  controller: ["$element", "$http", "$macgyver", "$scope", "$timeout", function controller($element, $http, $macgyver, $scope, $timeout) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // URL storage {{{
+
+    $ctrl.urls = {}; // These all get their defaults in $onInit
+
+    $ctrl.getUrl = function (type, context) {
+      if (_.isString($ctrl.urls[type])) {
+        return url[type]; // Already a string - just return
+      } else if (_.isFunction($ctrl.urls[type])) {
+        // Resolve it using a context
+        return $ctrl.urls[type](Object.assign({}, {
+          type: type,
+          widget: 'mgFileUpload',
+          path: $macgyver.getPath($scope)
+        }, context));
+      } else {
+        throw new Error('Unknown URL type: ' + type);
+      }
+    }; // }}}
+    // Init {{{
+
+
+    $ctrl.$onInit = function () {
+      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
+        return "/api/widgets/".concat(o.path);
+      }; // Setup the child list widget with the same path as this object
+
+
+      $ctrl.listConfig = angular.extend({}, $ctrl.config, {
+        mgPath: $macgyver.getPath($scope)
+      });
+    }; // }}}
+    // Deal with new uploads {{{
+
+
+    $ctrl.selectedFile;
+    $ctrl.uploading = [];
+
+    $ctrl.click = function () {
+      return $element.find('input[type=file]').trigger('click');
+    };
+
+    $element.find('input[type=file]').on('change', function () {
+      var _this = this;
+
+      $timeout(function () {
+        // Attach to file widget and listen for change events so we can update the text
+        var filename = $(_this).val().replace(/\\/g, '/').replace(/.*\//, ''); // Tidy up the file name
+
+        var formData = new FormData();
+        formData.append('file', _this.files[0]);
+        $ctrl.uploading.push({
+          name: filename,
+          $promise: $http.post($ctrl.getUrl('upload', {
+            file: filename
+          }), formData, {
+            headers: {
+              'Content-Type': undefined
+            },
+            // Need to override the headers so that angular changes them over into multipart/mime
+            transformRequest: angular.identity
+          }).then(function () {
+            $ctrl.uploading = $ctrl.uploading.filter(function (i) {
+              return i.name != filename;
+            }); // Remove this item from the upload list
+
+            if (_.isFunction($ctrl.config.onUpload)) $ctrl.config.onUpload();
+            $macgyver.broadcast($scope, 'mg.refreshUploads'); // Tell all file displays to refresh their contents
+          })
+        });
+      });
+    }); // }}}
+  }],
+  template: "\n\t\t\t<a ng-click=\"$ctrl.click()\" class=\"btn btn-primary hidden-print\" style=\"margin-bottom:10px\">\n\t\t\t\t<i ng-class=\"$ctrl.icon || 'fa fa-file'\"></i>\n\t\t\t\t{{$ctrl.selectedFile || $ctrl.placeholder || 'Upload file...'}}\n\t\t\t</a>\n\t\t\t<div ng-if=\"$ctrl.config.showList === undefined || $ctrl.config.showList\">\n\t\t\t\t<mg-file-list config=\"$ctrl.listConfig\" data=\"$ctrl.data\"></mg-file-list>\n\t\t\t</div>\n\t\t\t<ul ng-if=\"$ctrl.config.showUploading === undefined || $ctrl.config.showUploading\" class=\"list-group\">\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div style=\"display: none\"><input type=\"file\" name=\"file\"/></div>\n\t\t"
+});
+/**
 * MacGyver component layout for grids
 * This container displays an array (rows) or arrays (columns) of widgets (items)
 * @param {Object} config The config specification
@@ -2208,7 +2291,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
         // Rows has been set - probably by the user editing the widget properties
         if ($ctrl.config.rows < $ctrl.config.items.length) {
           // Removing some items
-          debugger;
           $ctrl.config.items = $ctrl.config.items.slice(0, $ctrl.config.rows);
         } else if ($ctrl.config.rows > $ctrl.config.items.length) {
           // Adding some rows

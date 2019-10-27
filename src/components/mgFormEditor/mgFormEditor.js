@@ -41,6 +41,89 @@ angular
 			$ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
 			/**
+			* Paste a table of widgets
+			* @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
+			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+			*/
+			$ctrl.widgetPaste = function(widget) {
+				// Work out what item we are currently hovering over
+				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				if (!node) return; // Didn't find anything - do nothing
+
+				return navigator.clipboard.readText()
+					.then(content => {
+						if (!content) return;
+
+						var layout;
+						// LibreOffice: LF delimited, no rows
+						// FIXME: What if the content rather than the delimiter contained a tab character?
+						if (content.indexOf('\t') === -1) {
+							// "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
+							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
+							layout = _(content)
+								.split('\n')
+								.compact()
+								.chunk(node.cols)
+								.value();
+
+						// MS Office: Tab delimited, CRLF rows
+						} else {
+							// "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
+							layout = _(content)
+								.split('\r\n')
+								.compact()
+								.value();
+							layout = layout.map(i => i.split('\t'));
+						}
+
+						node.items = layout.map((row, rowi) => {
+							if (!row) return;
+
+							var cols = row.map(col => {
+								if (!col) return;
+
+								// First row has headings
+								var type = (rowi === 0)?'mgHeading':'mgHtml';
+								return {
+									type: 'mgContainer',
+									items: [
+										{
+											"type": type,
+											"showTitle": false,
+											"rowClass": "",
+											"title": "",
+											"text": col
+										}
+									]
+								};
+							});
+							// Add extra cols when paste is larger
+							node.cols = Math.max(node.cols, cols.length);
+							return {
+								type: 'mgGridRow',
+								items: cols
+							};
+						});
+						node.rows = node.items.length - 1;
+
+						// Traverse tree setting missing ids
+						$macgyver.forEach(node, w => {
+							if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
+
+							// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+							var tryIndex = 1;
+							var tryName = w.type;
+							while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+								tryName = w.type + ++tryIndex;
+							}
+							// }}}
+							w.id = tryName;
+						});
+					});
+					//.catch(e => console.log('ERROR', e.toString()));
+			};
+
+			/**
 			* Add a new widget
 			* @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
 			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
@@ -156,7 +239,8 @@ angular
 
 				// Get Human Readable Name for the edit widget. If error jsut use vanilla display
 				if (node.type && typeof node.type == 'string') {
-					$ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim()
+					$ctrl.widgetName = ' - ' + node.type.replace(/^mg/i, '')
+						.replace(/([A-Z])/g, ' $1').trim();
 				}
 
 				// Select the Angular data element
@@ -413,6 +497,7 @@ angular
 						case 'add': $ctrl.widgetAdd(); break;
 						case 'edit': $ctrl.widgetEdit(); break;
 						case 'delete': $ctrl.widgetDelete(); break;
+						case 'paste': $ctrl.widgetPaste(); break;
 						case 'dropdown':
 							// FIXME: Not yet working
 							$element.find('.mgFormEditor-mask-buttons .dropdown-toggle')
