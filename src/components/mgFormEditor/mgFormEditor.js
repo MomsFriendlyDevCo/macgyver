@@ -58,6 +58,9 @@ angular
 						// LibreOffice: LF delimited, no rows
 						// FIXME: What if the content rather than the delimiter contained a tab character?
 						if (content.indexOf('\t') === -1) {
+							// We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
+							throw new Error('Not implemented');
+							/*
 							// "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
 							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
 							layout = _(content)
@@ -65,7 +68,7 @@ angular
 								.compact()
 								.chunk(node.cols)
 								.value();
-
+							*/
 						// MS Office: Tab delimited, CRLF rows
 						} else {
 							// "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
