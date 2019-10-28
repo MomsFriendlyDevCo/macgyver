@@ -80,7 +80,10 @@ angular
 							if (!row) return;
 
 							var cols = row.map(col => {
-								if (!col) return;
+								if (!col) return {
+									type: 'mgContainer',
+									items: []
+								};
 
 								// First row has headings
 								var type = (rowi === 0)?'mgHeading':'mgHtml';
