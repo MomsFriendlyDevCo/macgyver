@@ -63,11 +63,29 @@ angular
 
 							// MS Office: Tab delimited, CRLF rows
 						} else {
+							if (!node.cols || node.cols < 0) return alert('Number of cols must be set to paste tables.');
+							/*
 							// NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
-							if (!node.cols) throw new Error('cols must be defined to paste tables.');
 							var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
-
 							layout = _(matches)
+								.compact()
+								.chunk(node.cols)
+								.value();
+							*/
+
+							// Tabs not allowed, last col does not support line-breaks.
+							var bytab = _(content)
+								.split('\t');
+							var reordered = [];
+							bytab.forEach((c, i) => {
+								if (reordered.length % node.cols === 0) {
+									reordered.push(c.substr(0, c.indexOf('\n')));
+									reordered.push(c.substr(c.indexOf('\n') + 1));
+								} else {
+									reordered.push(c);
+								}
+							});
+							layout = _(reordered)
 								.compact()
 								.chunk(node.cols)
 								.value();
