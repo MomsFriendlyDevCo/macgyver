@@ -756,6 +756,67 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
 });
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].icon] Optional icon to display for each item
+* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgChoiceRadio', {
+    title: 'Radio multiple-choice',
+    icon: 'fa fa-list-ul',
+    category: 'Choice Selectors',
+    config: {
+      "enum": {
+        type: 'mgList',
+        title: 'The list of items to display',
+        "default": ['Foo', 'Bar', 'Baz']
+      }
+    },
+    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+
+  });
+}]).component('mgChoiceRadio', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+
+    $ctrl.enumIter = []; // Cleaned up version of enum
+
+    $scope.$watchCollection('$ctrl.config.enum', function () {
+      if (!$ctrl.config["enum"]) return; // No data yet
+
+      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
+        // Array of strings
+        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
+          return {
+            id: _.camelCase(i),
+            title: i
+          };
+        });
+      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
+        // Collection
+        $ctrl.enumIter = $ctrl.config["enum"];
+      }
+    }); // }}}
+    // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
+});
+/**
 * MacGyver component loader
 * This is a meta component that loads other dynamic components as an array
 * @param {Object} config The config specification
@@ -895,67 +956,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   }]
 });
 /**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgChoiceRadio', {
-    title: 'Radio multiple-choice',
-    icon: 'fa fa-list-ul',
-    category: 'Choice Selectors',
-    config: {
-      "enum": {
-        type: 'mgList',
-        title: 'The list of items to display',
-        "default": ['Foo', 'Bar', 'Baz']
-      }
-    },
-    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-
-  });
-}]).component('mgChoiceRadio', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-
-    $ctrl.enumIter = []; // Cleaned up version of enum
-
-    $scope.$watchCollection('$ctrl.config.enum', function () {
-      if (!$ctrl.config["enum"]) return; // No data yet
-
-      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
-        // Array of strings
-        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
-          return {
-            id: _.camelCase(i),
-            title: i
-          };
-        });
-      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
-        // Collection
-        $ctrl.enumIter = $ctrl.config["enum"];
-      }
-    }); // }}}
-    // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
-});
-/**
 * MacGyver date input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -1010,6 +1010,54 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
+});
+/**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text when the textbox is empty
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgEmail', {
+    title: 'Email address',
+    icon: 'fa fa-envelope-o',
+    category: 'Simple Inputs',
+    config: {
+      placeholder: {
+        type: 'mgText',
+        help: 'Ghost text to display when the text box has no value'
+      },
+      required: {
+        type: 'mgToggle',
+        "default": false
+      }
+    },
+    format: function format(v) {
+      if (!v) return '';
+      return "<a href=\"mailto:".concat(v, "\">").concat(v, "</a>");
+    }
+  });
+}]).component('mgEmail', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.validate = function () {
+      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
+    }; // Adopt default  if no data value is given {{{
+
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
 });
 /**
 * MacGyver file list display
@@ -1114,54 +1162,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<ul ng-if=\"!$ctrl.config.listMode || $ctrl.config.listMode == 'list'\" class=\"list-group\">\n\t\t\t\t<a ng-repeat=\"file in $ctrl.data track by file.name\" class=\"list-group-item\" href=\"{{file.url}}\" target=\"_blank\">\n\t\t\t\t\t<span class=\"badge\">{{file.size | filesize}}</span>\n\t\t\t\t\t<button ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file); $event.preventDefault()\" type=\"button\" class=\"btn btn-danger btn-sm visible-parent-hover pull-right m-t--5 m-r-5\"><i class=\"fa fa-trash\"></i></button>\n\t\t\t\t\t<i ng-class=\"file.icon\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</a>\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div ng-if=\"$ctrl.config.listMode == 'thumbnails'\" class=\"row\" style=\"display:flex; flex-wrap: wrap\">\n\t\t\t\t<div ng-repeat=\"file in $ctrl.data track by file.name\" class=\"col-xs-6 col-md-3 m-b-10 visible-parent-hover-target\">\n\t\t\t\t\t<a class=\"thumbnail\" href=\"{{file.url}}\" target=\"_blank\" style=\"height: 100%; display: flex; align-items: center; justify-content: center\">\n\t\t\t\t\t\t<img ng-if=\"file.thumbnail\" src=\"{{file.url}}\"/>\n\t\t\t\t\t\t<div ng-if=\"!file.thumbnail\" class=\"text-center\"><i ng-class=\"file.icon\" class=\"fa-5x\"></i></div>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file)\" class=\"btn btn-circle btn-danger visible-parent-hover\" style=\"position: absolute; bottom: 15px; right: 20px\">\n\t\t\t\t\t\t<i class=\"fa fa-fw fa-lg fa-trash\"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
-});
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text when the textbox is empty
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgEmail', {
-    title: 'Email address',
-    icon: 'fa fa-envelope-o',
-    category: 'Simple Inputs',
-    config: {
-      placeholder: {
-        type: 'mgText',
-        help: 'Ghost text to display when the text box has no value'
-      },
-      required: {
-        type: 'mgToggle',
-        "default": false
-      }
-    },
-    format: function format(v) {
-      if (!v) return '';
-      return "<a href=\"mailto:".concat(v, "\">").concat(v, "</a>");
-    }
-  });
-}]).component('mgEmail', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.validate = function () {
-      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
-    }; // Adopt default  if no data value is given {{{
-
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
 });
 /**
 * MacGyver file upload
@@ -1460,39 +1460,25 @@ angular.module('macgyver').component('mgFormEditor', {
 
         if (content.indexOf('\t') === -1) {
           // We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
-          throw new Error('Not implemented');
-          /*
-          // "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
-          if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
-          layout = _(content)
-          	.split('\n')
-          	.compact()
-          	.chunk(node.cols)
-          	.value();
-          */
-          // MS Office: Tab delimited, CRLF rows
+          throw new Error('Not implemented'); // MS Office: Tab delimited, CRLF rows
         } else {
-          // "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
-          // Strip out protected whitespace before splitting.
-          // FIXME: Use `{n}` for repeats
-          var cleaned = content.replace(new RegExp('(?<=\~\~\~)(.*)\n+(.*)(?=\~\~)', 'gm'), '$1<CRLF>$2');
-          /*
-          .replace(
-          	new RegExp('(?<=\~\~\~)(.*)\t+(.*)(?=\~\~)', 'gm')
-          	, '$1<TAB>$2'
-          );
-          */
-
-          layout = _(cleaned).split('\n').compact().value();
-          layout = layout.map(function (i) {
-            return i.split('\t');
-          });
+          // NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
+          if (!node.cols) throw new Error('cols must be defined to paste tables.');
+          var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
+          layout = _(matches).compact().chunk(node.cols).value();
         }
 
         node.items = layout.map(function (row, rowi) {
           if (!row) return;
           var cols = row.map(function (col) {
-            // First row has headings
+            if (!col) {
+              return {
+                type: 'mgContainer',
+                items: []
+              };
+            } // First row has headings
+
+
             var type = rowi === 0 ? 'mgHeading' : 'mgHtml';
             return {
               type: 'mgContainer',
@@ -1501,7 +1487,7 @@ angular.module('macgyver').component('mgFormEditor', {
                 "showTitle": false,
                 "rowClass": "",
                 "title": "",
-                "text": col || ''
+                "text": col
               }]
             };
           }); // Add extra cols when paste is larger
@@ -1515,8 +1501,8 @@ angular.module('macgyver').component('mgFormEditor', {
         node.rows = node.items.length; // Traverse tree
 
         $macgyver.forEach(node, function (w) {
-          // Re-apply cleaned line-breaks or tabs.
-          if (w.text) w.text = w.text.replace('~~~', '').replace('~~', '').replace('<CRLF>', '<br>').replace('<TAB>', '&nbsp;&nbsp;&nbsp;&nbsp;'); // Generate any missing ids
+          // Remove markup and re-apply line-breaks or tabs.
+          if (w.text) w.text = w.text.replace('<cell>', '').replace('</cell>', '').replace(new RegExp('\r', 'g'), '').replace(new RegExp('\n', 'g'), '<br>').replace(new RegExp('\t', 'g'), '&nbsp;&nbsp;&nbsp;&nbsp;'); // Generate any missing ids
 
           if (Object.prototype.hasOwnProperty.call(w, 'id')) return; // Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
 
