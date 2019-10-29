@@ -60,43 +60,30 @@ angular
 						if (content.indexOf('\t') === -1) {
 							// We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
 							throw new Error('Not implemented');
-							/*
-							// "ColA\nColB\nColC\nColD\n1-A\n0\n0\n0\n2-A\n0\n0\n0\n3-A\n0\n0\n0\n4-A\n0\n0\n0\n5-A\n0\n0\n0\n"
-							if (!node.cols) throw new Error('cols must be defined to paste LibreOffice tables.');
-							layout = _(content)
-								.split('\n')
+
+							// MS Office: Tab delimited, CRLF rows
+						} else {
+							// NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
+							if (!node.cols) throw new Error('cols must be defined to paste tables.');
+							var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
+
+							layout = _(matches)
 								.compact()
 								.chunk(node.cols)
 								.value();
-							*/
-						// MS Office: Tab delimited, CRLF rows
-						} else {
-							// "ColA\tColB\tColC\tColD\r\n1-A\t0\t0\t0\r\n2-A\t0\t0\t0\r\n3-A\t0\t0\t0\r\n4-A\t0\t0\t0\r\n5-A\t0\t0\t0\r\n"
-							// Strip out protected whitespace before splitting.
-							// FIXME: Use `{n}` for repeats
-							var cleaned = content
-								.replace(
-									new RegExp('(?<=\~\~\~)(.*)\n+(.*)(?=\~\~)', 'gm')
-									, '$1<CRLF>$2'
-								);
-								/*
-								.replace(
-									new RegExp('(?<=\~\~\~)(.*)\t+(.*)(?=\~\~)', 'gm')
-									, '$1<TAB>$2'
-								);
-								*/
-
-							layout = _(cleaned)
-								.split('\n')
-								.compact()
-								.value();
-							layout = layout.map(i => i.split('\t'));
 						}
 
 						node.items = layout.map((row, rowi) => {
 							if (!row) return;
 
 							var cols = row.map(col => {
+								if (!col) {
+									return {
+										type: 'mgContainer',
+										items: []
+									};
+								}
+
 								// First row has headings
 								var type = (rowi === 0)?'mgHeading':'mgHtml';
 								return {
@@ -107,7 +94,7 @@ angular
 											"showTitle": false,
 											"rowClass": "",
 											"title": "",
-											"text": col || ''
+											"text": col
 										}
 									]
 								};
@@ -123,16 +110,15 @@ angular
 
 						// Traverse tree
 						$macgyver.forEach(node, w => {
+							// Remove markup and re-apply line-breaks or tabs.
+							if (w.text) w.text = w.text
+								.replace('<cell>', '')
+								.replace('</cell>', '')
+								.replace(new RegExp('\r', 'g'), '')
+								.replace(new RegExp('\n', 'g'), '<br>')
+								.replace(new RegExp('\t', 'g'), '&nbsp;&nbsp;&nbsp;&nbsp;');
 
-							// Re-apply cleaned line-breaks or tabs.
-							if (w.text)
-								w.text = w.text
-									.replace('~~~', '')
-									.replace('~~', '')
-									.replace('<CRLF>', '<br>')
-									.replace('<TAB>', '&nbsp;&nbsp;&nbsp;&nbsp;');
-
-							// Generate any missing ids
+								// Generate any missing ids
 							if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
 
 							// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
