@@ -45,7 +45,7 @@ angular
 			* @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
 			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
 			*/
-			$ctrl.widgetPaste = function(widget) {
+			$ctrl.widgetPaste = function(widget, verb) {
 				// Work out what item we are currently hovering over
 				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
 				if (!node) return; // Didn't find anything - do nothing
@@ -55,40 +55,50 @@ angular
 						if (!content) return;
 
 						var layout;
-						// LibreOffice: LF delimited, no rows
-						// FIXME: What if the content rather than the delimiter contained a tab character?
-						if (content.indexOf('\t') === -1) {
-							// We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
-							throw new Error('Not implemented');
+						switch (verb) {
+							case 'JSON':
+								// Flatten first dimension which is a list of separate tables
+								layout = _(JSON.parse(content))
+									.flatten()
+									.value();
+								break;
 
-							// MS Office: Tab delimited, CRLF rows
-						} else {
-							if (!node.cols || node.cols < 0) return alert('Number of cols must be set to paste tables.');
-							/*
-							// NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
-							var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
-							layout = _(matches)
-								.compact()
-								.chunk(node.cols)
-								.value();
-							*/
+							case 'TSV':
+							default:
+								// LibreOffice: LF delimited, no rows
+								if (content.indexOf('\t') === -1) {
+									// We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
+									throw new Error('Not implemented');
 
-							// Tabs not allowed, last col does not support line-breaks.
-							var bytab = _(content)
-								.split('\t');
-							var reordered = [];
-							bytab.forEach((c, i) => {
-								if (reordered.length % node.cols === 0) {
-									reordered.push(c.substr(0, c.indexOf('\n')));
-									reordered.push(c.substr(c.indexOf('\n') + 1));
+									// MS Office: Tab delimited, CRLF rows
 								} else {
-									reordered.push(c);
+									if (!node.cols || node.cols < 0) return alert('Number of cols must be set to paste tables.');
+									/*
+									// NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
+									var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
+									layout = _(matches)
+										.compact()
+										.chunk(node.cols)
+										.value();
+									*/
+
+									// Tabs not allowed, last col does not support line-breaks.
+									var bytab = _(content)
+										.split('\t');
+									var reordered = [];
+									bytab.forEach((c, i) => {
+										if (reordered.length % node.cols === 0) {
+											reordered.push(c.substr(0, c.indexOf('\n')));
+											reordered.push(c.substr(c.indexOf('\n') + 1));
+										} else {
+											reordered.push(c);
+										}
+									});
+									layout = _(reordered)
+										.compact()
+										.chunk(node.cols)
+										.value();
 								}
-							});
-							layout = _(reordered)
-								.compact()
-								.chunk(node.cols)
-								.value();
 						}
 
 						node.items = layout.map((row, rowi) => {
@@ -526,7 +536,8 @@ angular
 						case 'add': $ctrl.widgetAdd(); break;
 						case 'edit': $ctrl.widgetEdit(); break;
 						case 'delete': $ctrl.widgetDelete(); break;
-						case 'paste': $ctrl.widgetPaste(); break;
+						case 'pasteTsv': $ctrl.widgetPaste($ctrl.selectedWidget, 'TSV'); break;
+						case 'pasteJson': $ctrl.widgetPaste($ctrl.selectedWidget, 'JSON'); break;
 						case 'dropdown':
 							// FIXME: Not yet working
 							$element.find('.mgFormEditor-mask-buttons .dropdown-toggle')
