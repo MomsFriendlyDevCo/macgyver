@@ -29,7 +29,11 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 				dropdown: [
 					{action: 'edit', icon: 'fa fa-fw fa-pencil', title: 'Edit', selectedWidgetOnly: true},
 					// TODO: Also support tables for paste operation?
-					{action: 'paste', icon: 'fa fa-fw fa-paste', title: 'Paste table',
+					{action: 'pasteTsv', icon: 'fa fa-fw fa-paste', title: 'Paste TSV table',
+						show: widget => (widget && widget.type === 'mgGrid'),
+						selectedWidgetOnly: true
+					},
+					{action: 'pasteJson', icon: 'fa fa-fw fa-paste', title: 'Paste JSON table',
 						show: widget => (widget && widget.type === 'mgGrid'),
 						selectedWidgetOnly: true
 					},
