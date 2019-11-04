@@ -1485,20 +1485,20 @@ angular.module('macgyver').component('mgFormEditor', {
 
               var reordered = [];
               bytab.forEach(function (c, i) {
-                if (reordered.length % node.cols === 0) {
+                if ((reordered.length + 1) % node.cols === 0) {
                   reordered.push(c.substr(0, c.indexOf('\n')));
                   reordered.push(c.substr(c.indexOf('\n') + 1));
                 } else {
                   reordered.push(c);
                 }
               });
-              layout = _(reordered).compact().chunk(node.cols).value();
+              layout = _(reordered).chunk(node.cols).value();
             }
 
         }
 
         node.items = layout.map(function (row, rowi) {
-          if (!row) return;
+          if (!row || row.length !== node.cols) return;
           var cols = row.map(function (col) {
             if (!col) {
               return {
@@ -1526,6 +1526,9 @@ angular.module('macgyver').component('mgFormEditor', {
             type: 'mgGridRow',
             items: cols
           };
+        });
+        node.items = node.items.filter(function (n) {
+          return typeof n !== 'undefined';
         });
         node.rows = node.items.length; // Traverse tree
 
