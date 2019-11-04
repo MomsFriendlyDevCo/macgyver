@@ -87,7 +87,7 @@ angular
 										.split('\t');
 									var reordered = [];
 									bytab.forEach((c, i) => {
-										if (reordered.length % node.cols === 0) {
+										if ((reordered.length + 1) % node.cols === 0) {
 											reordered.push(c.substr(0, c.indexOf('\n')));
 											reordered.push(c.substr(c.indexOf('\n') + 1));
 										} else {
@@ -95,14 +95,13 @@ angular
 										}
 									});
 									layout = _(reordered)
-										.compact()
 										.chunk(node.cols)
 										.value();
 								}
 						}
 
 						node.items = layout.map((row, rowi) => {
-							if (!row) return;
+							if (!row || row.length !== node.cols) return;
 
 							var cols = row.map(col => {
 								if (!col) {
@@ -134,6 +133,7 @@ angular
 								items: cols
 							};
 						});
+						node.items = node.items.filter(n => typeof n !== 'undefined');
 						node.rows = node.items.length;
 
 						// Traverse tree
