@@ -512,8 +512,10 @@ angular
 				// De-dupe existing ids
 				var exists = [];
 				$macgyver.forEach($ctrl.config, w => {
+					if (!Object.prototype.hasOwnProperty.call(w, 'id')) return;
 					if (exists.indexOf(w.id) === -1)
 						return exists.push(w.id);
+
 					console.log('Duplicate detected', w.id);
 					delete w.id;
 				});
