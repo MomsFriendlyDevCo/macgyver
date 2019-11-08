@@ -546,7 +546,7 @@ angular
 					$macgyver.settings.mgFormEditor.verbs[verbArea]
 						.filter(verb =>
 							(!verb.selectedWidgetOnly || (verb.selectedWidgetOnly && $ctrl.selectedWidget)) // Selected widget filtering
-							&& (!verb.show || verb.show($ctrl.selectedWidget)) // Show function? Use it to determine filtering
+							&& (!verb.show || verb.show($ctrl.selectedWidget, $ctrl.config)) // Show function? Use it to determine filtering
 						)
 						.map(verb => _.mapValues(verb, (v, k) => {
 							if (_.isFunction(v) && k != 'action') { // Translate all functions EXCEPT action
