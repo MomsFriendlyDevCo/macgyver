@@ -163,6 +163,38 @@ angular
 			};
 
 			/**
+			* Duplicate cell contents down an entire column
+			* @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
+			* @todo `verb` in signature for duplicating up/down?
+			* @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+			*/
+			$ctrl.widgetDuplicateCell = function(widget) {
+				// Work out what item we are currently hovering over
+				var node = widget || TreeTools.find($ctrl.config, {id: $ctrl.selectedWidget.id}, {childNode: 'items'});
+				if (!node) return; // Didn't find anything - do nothing
+
+				var parents = TreeTools.parents($ctrl.config, {id: node.id}, {childNode: 'items'})
+				var types = parents.map(p => p.type);
+				var grid_idx = types.lastIndexOf('mgGrid');
+				var row_idx = types.lastIndexOf('mgGridRow');
+				var container_idx = types.lastIndexOf('mgContainer');
+				var grid_row = parents[grid_idx].items.indexOf(parents[row_idx]);
+				var grid_cell = parents[grid_idx].items[grid_row].items.indexOf(parents[container_idx]);
+
+				// Duplicate object and strip ids
+				var duplicate = Object.assign({}, parents[container_idx]);
+				delete duplicate.id;
+				duplicate.items = duplicate.items.map(i => {
+					delete i.id;
+					return i;
+				});
+
+				for (var i=grid_row + 1; i<parents[grid_idx].items.length; i++) {
+					parents[grid_idx].items[i].items[grid_cell] = duplicate;
+				}
+			}
+
+			/**
 			* Add a new widget
 			* @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
 			* @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
@@ -538,6 +570,7 @@ angular
 						case 'delete': $ctrl.widgetDelete(); break;
 						case 'pasteTsv': $ctrl.widgetPaste($ctrl.selectedWidget, 'TSV'); break;
 						case 'pasteJson': $ctrl.widgetPaste($ctrl.selectedWidget, 'JSON'); break;
+						case 'duplicateCell': $ctrl.widgetDuplicateCell(); break;
 						case 'dropdown':
 							// FIXME: Not yet working
 							$element.find('.mgFormEditor-mask-buttons .dropdown-toggle')
