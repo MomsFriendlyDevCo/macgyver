@@ -541,103 +541,36 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"alert\" ng-class=\"$ctrl.config.style\">{{$ctrl.config.text || $scope.data}}</div>\n\t\t"
 });
 /**
-* MacGyver selector of an item from a list of enums
+* MacGyver toggle
 * @param {Object} config The config specification
-* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
-* @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
-* @param {string} [config.textPrompt] The prompt to display in the select box
-* @param {string} [config.textInnerPrompt] The prompt to display when searching
-* @param {string} [config.displayPrimaryField] The main field data to display, mapped from the collection provided in config.enum
-* @param {*} data The state data
+* @param {boolean} data The state of the checkbox
 */
 
 angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgChoiceDropdown', {
-    title: 'Dropdown multiple-choice',
-    icon: 'fa fa-chevron-circle-down',
-    category: 'Choice Selectors',
-    config: {
-      url: {
-        type: 'mgUrl',
-        help: 'Data feed URL'
-      },
-      "enum": {
-        type: 'mgList',
-        title: 'The list of items to display',
-        "default": ['Foo', 'Bar', 'Baz']
-      },
-      textPrompt: {
-        type: 'mgText',
-        "default": 'Choose an item...'
-      },
-      textInnerPrompt: {
-        type: 'mgText',
-        "default": 'Select an item...'
-      },
-      displayPrimaryField: {
-        type: 'mgText',
-        "default": 'title',
-        help: 'The field of each enum item to display as the primary selection text'
-      },
-      displaySecondaryField: {
-        type: 'mgText',
-        help: 'The field of each enum to display as a secondary item'
-      }
+  return $macgyverProvider.register('mgCheckBox', {
+    title: 'Check Box',
+    icon: 'fa fa-check-square-o',
+    category: 'Simple Inputs',
+    config: {},
+    format: function format(v) {
+      return v ? 'Yes' : 'No';
     },
-    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-
+    formatAlign: 'center'
   });
-}]).component('mgChoiceDropdown', {
+}]).component('mgCheckBox', {
   bindings: {
     config: '<',
     data: '='
   },
-  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
     var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-
-    $ctrl.enumIter = []; // Cleaned up version of enum
-
-    $scope.$watchCollection('$ctrl.config.enum', function () {
-      if (!$ctrl.config["enum"]) return; // No data yet
-
-      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
-        // Array of strings
-        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
-          return {
-            id: _.camelCase(i),
-            title: i
-          };
-        });
-      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
-        // Collection
-        $ctrl.enumIter = $ctrl.config["enum"];
-      }
-    }); // }}}
-    // Go fetch the URL contents if $ctrl.config.url is set {{{
-
-    $scope.$watch('$ctrl.url', function () {
-      if (!$ctrl.config.url) return; // No URL to pull
-
-      $http.get($ctrl.config.url).then(function (res) {
-        return $ctrl.enumIter = res.data.map(function (i) {
-          if (i._id) {
-            // Remap _id => id
-            i.id = i._id;
-            delete i._id;
-          }
-
-          return i;
-        });
-      });
-    }); // }}}
-    // Adopt default if no data value is given {{{
+    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
 
     $scope.$watch('$ctrl.data', function () {
       if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
     }); // }}}
   }],
-  template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
+  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
 * MacGyver selector of an item from a small list of enums
@@ -785,36 +718,103 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
 });
 /**
-* MacGyver toggle
+* MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
-* @param {boolean} data The state of the checkbox
+* @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
+* @param {string} [config.url] A URL to a collection. This replaces config.enum if specified.
+* @param {string} [config.textPrompt] The prompt to display in the select box
+* @param {string} [config.textInnerPrompt] The prompt to display when searching
+* @param {string} [config.displayPrimaryField] The main field data to display, mapped from the collection provided in config.enum
+* @param {*} data The state data
 */
 
 angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgCheckBox', {
-    title: 'Check Box',
-    icon: 'fa fa-check-square-o',
-    category: 'Simple Inputs',
-    config: {},
-    format: function format(v) {
-      return v ? 'Yes' : 'No';
+  return $macgyverProvider.register('mgChoiceDropdown', {
+    title: 'Dropdown multiple-choice',
+    icon: 'fa fa-chevron-circle-down',
+    category: 'Choice Selectors',
+    config: {
+      url: {
+        type: 'mgUrl',
+        help: 'Data feed URL'
+      },
+      "enum": {
+        type: 'mgList',
+        title: 'The list of items to display',
+        "default": ['Foo', 'Bar', 'Baz']
+      },
+      textPrompt: {
+        type: 'mgText',
+        "default": 'Choose an item...'
+      },
+      textInnerPrompt: {
+        type: 'mgText',
+        "default": 'Select an item...'
+      },
+      displayPrimaryField: {
+        type: 'mgText',
+        "default": 'title',
+        help: 'The field of each enum item to display as the primary selection text'
+      },
+      displaySecondaryField: {
+        type: 'mgText',
+        help: 'The field of each enum to display as a secondary item'
+      }
     },
-    formatAlign: 'center'
+    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+
   });
-}]).component('mgCheckBox', {
+}]).component('mgChoiceDropdown', {
   bindings: {
     config: '<',
     data: '='
   },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
     var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Adopt default if no data value is given {{{
+    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+
+    $ctrl.enumIter = []; // Cleaned up version of enum
+
+    $scope.$watchCollection('$ctrl.config.enum', function () {
+      if (!$ctrl.config["enum"]) return; // No data yet
+
+      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
+        // Array of strings
+        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
+          return {
+            id: _.camelCase(i),
+            title: i
+          };
+        });
+      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
+        // Collection
+        $ctrl.enumIter = $ctrl.config["enum"];
+      }
+    }); // }}}
+    // Go fetch the URL contents if $ctrl.config.url is set {{{
+
+    $scope.$watch('$ctrl.url', function () {
+      if (!$ctrl.config.url) return; // No URL to pull
+
+      $http.get($ctrl.config.url).then(function (res) {
+        return $ctrl.enumIter = res.data.map(function (i) {
+          if (i._id) {
+            // Remap _id => id
+            i.id = i._id;
+            delete i._id;
+          }
+
+          return i;
+        });
+      });
+    }); // }}}
+    // Adopt default if no data value is given {{{
 
     $scope.$watch('$ctrl.data', function () {
       if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
     }); // }}}
   }],
-  template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
+  template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
 });
 /**
 * MacGyver component loader
@@ -1399,163 +1399,6 @@ angular.module('macgyver').component('mgForm', {
     });
   }],
   template: "\n\t\t\t<form submit=\"$ctrl.submit\" class=\"form-horizontal\">\n\t\t\t\t<div ng-show=\"$ctrl.errors\" class=\"alert alert-warning animate fadeInDown\">\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li ng-repeat=\"err in $ctrl.errors\">{{err.err}}</li>\n\t\t\t\t\t</ul>\n\t\t\t\t</div>\n\n\t\t\t\t<mg-container config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-container>\n\t\t\t</form>\n\t\t"
-});
-/**
-* MacGyver component layout for grids
-* This container displays an array (rows) or arrays (columns) of widgets (items)
-* @param {Object} config The config specification
-* @param {array} config.items A collection of sub-item objects to display
-* @param {array} config.items[] A column definition
-* @param {string} config.items[][].type The type of the object to render. This corresponds to a `mg*` component
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgGrid', {
-    title: 'Grid layout',
-    icon: 'fa fa-dropbox',
-    category: 'Layout',
-    isContainer: true,
-    config: {
-      rows: {
-        type: 'mgNumber',
-        "default": 1,
-        min: 1,
-        max: 100
-      },
-      cols: {
-        type: 'mgNumber',
-        "default": 1,
-        min: 1,
-        max: 100
-      },
-      style: {
-        type: 'mgChoiceDropdown',
-        title: 'Grid style',
-        help: 'How to style the grid',
-        "default": 'table-bordered',
-        "enum": [{
-          id: '',
-          title: 'Bordered',
-          "class": 'table-bordered'
-        }, {
-          id: 'mgTableBorderless',
-          title: 'Borderless',
-          "class": 'table-borderless'
-        }, {
-          id: 'mgTableCondensed',
-          title: 'Condensed',
-          "class": 'table-condensed'
-        }]
-      },
-      styleCompact: {
-        type: 'mgToggle',
-        title: 'Compact forms',
-        "default": false
-      },
-      styleDarker: {
-        type: 'mgToggle',
-        title: 'Darker borders',
-        "default": false
-      },
-      styleHover: {
-        type: 'mgToggle',
-        title: 'Hover rows',
-        "default": true
-      },
-      styleStriped: {
-        type: 'mgToggle',
-        title: 'Striped rows',
-        "default": true
-      }
-    }
-  });
-}]).component('mgGrid', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.$onInit = function () {
-      // Populate rows + cols when we boot
-      if (!$ctrl.config.items) $ctrl.config.items = [];
-      if (!$ctrl.config.rows) $ctrl.config.rows = $ctrl.config.items.length;
-      if (!$ctrl.config.cols) $ctrl.config.cols = Math.max.apply(Math, _toConsumableArray($ctrl.config.items.map(function (i) {
-        return i.items.length;
-      })));
-    };
-
-    $scope.$watchGroup(['$ctrl.config.rows', '$ctrl.config.cols'], function () {
-      if (_.has($ctrl, 'config.rows')) {
-        // Rows has been set - probably by the user editing the widget properties
-        if ($ctrl.config.rows < $ctrl.config.items.length) {
-          // Removing some items
-          $ctrl.config.items = $ctrl.config.items.slice(0, $ctrl.config.rows);
-        } else if ($ctrl.config.rows > $ctrl.config.items.length) {
-          // Adding some rows
-          _.range($ctrl.config.items.length, $ctrl.config.rows).forEach(function (i) {
-            $ctrl.config.items.push({
-              id: $ctrl.config.id + '-row-' + i,
-              type: 'mgGridRow',
-              items: []
-            });
-          });
-        }
-      }
-
-      if (_.has($ctrl, 'config.cols')) {
-        // Verify that all rows have the correct number of row blocks
-        $ctrl.config.items.forEach(function (row, r) {
-          if (row.items.length < $ctrl.config.cols) {
-            // Not enough blocks
-            _.range(row.items.length, $ctrl.config.cols).forEach(function (c) {
-              row.items.push({
-                id: $ctrl.config.id + '-row-' + r + '-col-' + c,
-                type: 'mgContainer',
-                items: []
-              });
-            });
-          } else if (row.items.length > $ctrl.config.cols) {
-            // Too many blocks
-            row.items = row.items.slice(0, $ctrl.config.cols);
-          }
-        });
-      }
-    });
-  }],
-  template: ["$macgyver", function template($macgyver) {
-    return "\n\t\t\t<table class=\"table\" ng-class=\"[\n\t\t\t\t$ctrl.config.style ? $ctrl.config.style : 'table-bordered',\n\t\t\t\t$ctrl.config.styleHover ? 'table-hover' : undefined,\n\t\t\t\t$ctrl.config.styleStriped ? 'table-striped' : undefined,\n\t\t\t\t$ctrl.config.styleCompact ? 'table-compact' : undefined,\n\t\t\t\t$ctrl.config.styleDarker ? 'table-darker' : undefined\n\t\t\t]\">\n\t\t\t\t<tr ng-repeat=\"row in $ctrl.config.items\">\n\t\t\t\t\t<td ng-repeat=\"w in row.items\" ng-switch=\"w.type\">\n\t\t\t\t\t\t<mg-container ng-if=\"w.type=='mgContainer'\" data=\"$ctrl.data[w.id]\" config=\"w\"></mg-container>\n\t\t\t\t\t\t<div ng-if=\"w.type!='mgContainer'\" class=\"alert alert-danger\">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t";
-  }]
-});
-/**
-* MacGyver component layout for grid rows
-* This is really just a virtual wrapper around content and doesnt serve any purpose except to identify what is a grid row in the hierarchy
-* This container displays an array (rows) or arrays (columns) of widgets (items)
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgGridRow', {
-    title: 'Grid row layout',
-    icon: 'fa fa-dropbox',
-    category: 'Layout',
-    isContainer: true,
-    userPlaceable: false,
-    config: {}
-  });
-}]).component('mgGridRow', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-  }]
 });
 /**
 * MacGyver form editor
@@ -2195,7 +2038,7 @@ angular.module('macgyver').component('mgFormEditor', {
         return (// Flatten all properties down, if they are a function use the return value of that function
           $macgyver.settings.mgFormEditor.verbs[verbArea].filter(function (verb) {
             return (!verb.selectedWidgetOnly || verb.selectedWidgetOnly && $ctrl.selectedWidget) && ( // Selected widget filtering
-            !verb.show || verb.show($ctrl.selectedWidget));
+            !verb.show || verb.show($ctrl.selectedWidget, $ctrl.config));
           } // Show function? Use it to determine filtering
           ).map(function (verb) {
             return _.mapValues(verb, function (v, k) {
@@ -2448,6 +2291,163 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     });
   }],
   template: "\n\t\t\t<div class=\"alert alert-success mgComponentEditorInserter\">\n\t\t\t\t<div ng-click=\"$ctrl.widgetAddChild()\">\n\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\tAdd widget\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver component layout for grids
+* This container displays an array (rows) or arrays (columns) of widgets (items)
+* @param {Object} config The config specification
+* @param {array} config.items A collection of sub-item objects to display
+* @param {array} config.items[] A column definition
+* @param {string} config.items[][].type The type of the object to render. This corresponds to a `mg*` component
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgGrid', {
+    title: 'Grid layout',
+    icon: 'fa fa-dropbox',
+    category: 'Layout',
+    isContainer: true,
+    config: {
+      rows: {
+        type: 'mgNumber',
+        "default": 1,
+        min: 1,
+        max: 100
+      },
+      cols: {
+        type: 'mgNumber',
+        "default": 1,
+        min: 1,
+        max: 100
+      },
+      style: {
+        type: 'mgChoiceDropdown',
+        title: 'Grid style',
+        help: 'How to style the grid',
+        "default": 'table-bordered',
+        "enum": [{
+          id: '',
+          title: 'Bordered',
+          "class": 'table-bordered'
+        }, {
+          id: 'mgTableBorderless',
+          title: 'Borderless',
+          "class": 'table-borderless'
+        }, {
+          id: 'mgTableCondensed',
+          title: 'Condensed',
+          "class": 'table-condensed'
+        }]
+      },
+      styleCompact: {
+        type: 'mgToggle',
+        title: 'Compact forms',
+        "default": false
+      },
+      styleDarker: {
+        type: 'mgToggle',
+        title: 'Darker borders',
+        "default": false
+      },
+      styleHover: {
+        type: 'mgToggle',
+        title: 'Hover rows',
+        "default": true
+      },
+      styleStriped: {
+        type: 'mgToggle',
+        title: 'Striped rows',
+        "default": true
+      }
+    }
+  });
+}]).component('mgGrid', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.$onInit = function () {
+      // Populate rows + cols when we boot
+      if (!$ctrl.config.items) $ctrl.config.items = [];
+      if (!$ctrl.config.rows) $ctrl.config.rows = $ctrl.config.items.length;
+      if (!$ctrl.config.cols) $ctrl.config.cols = Math.max.apply(Math, _toConsumableArray($ctrl.config.items.map(function (i) {
+        return i.items.length;
+      })));
+    };
+
+    $scope.$watchGroup(['$ctrl.config.rows', '$ctrl.config.cols'], function () {
+      if (_.has($ctrl, 'config.rows')) {
+        // Rows has been set - probably by the user editing the widget properties
+        if ($ctrl.config.rows < $ctrl.config.items.length) {
+          // Removing some items
+          $ctrl.config.items = $ctrl.config.items.slice(0, $ctrl.config.rows);
+        } else if ($ctrl.config.rows > $ctrl.config.items.length) {
+          // Adding some rows
+          _.range($ctrl.config.items.length, $ctrl.config.rows).forEach(function (i) {
+            $ctrl.config.items.push({
+              id: $ctrl.config.id + '-row-' + i,
+              type: 'mgGridRow',
+              items: []
+            });
+          });
+        }
+      }
+
+      if (_.has($ctrl, 'config.cols')) {
+        // Verify that all rows have the correct number of row blocks
+        $ctrl.config.items.forEach(function (row, r) {
+          if (row.items.length < $ctrl.config.cols) {
+            // Not enough blocks
+            _.range(row.items.length, $ctrl.config.cols).forEach(function (c) {
+              row.items.push({
+                id: $ctrl.config.id + '-row-' + r + '-col-' + c,
+                type: 'mgContainer',
+                items: []
+              });
+            });
+          } else if (row.items.length > $ctrl.config.cols) {
+            // Too many blocks
+            row.items = row.items.slice(0, $ctrl.config.cols);
+          }
+        });
+      }
+    });
+  }],
+  template: ["$macgyver", function template($macgyver) {
+    return "\n\t\t\t<table class=\"table\" ng-class=\"[\n\t\t\t\t$ctrl.config.style ? $ctrl.config.style : 'table-bordered',\n\t\t\t\t$ctrl.config.styleHover ? 'table-hover' : undefined,\n\t\t\t\t$ctrl.config.styleStriped ? 'table-striped' : undefined,\n\t\t\t\t$ctrl.config.styleCompact ? 'table-compact' : undefined,\n\t\t\t\t$ctrl.config.styleDarker ? 'table-darker' : undefined\n\t\t\t]\">\n\t\t\t\t<tr ng-repeat=\"row in $ctrl.config.items\">\n\t\t\t\t\t<td ng-repeat=\"w in row.items\" ng-switch=\"w.type\">\n\t\t\t\t\t\t<mg-container ng-if=\"w.type=='mgContainer'\" data=\"$ctrl.data[w.id]\" config=\"w\"></mg-container>\n\t\t\t\t\t\t<div ng-if=\"w.type!='mgContainer'\" class=\"alert alert-danger\">Child cell elements within a mgGrid must always be an mgContainer</div>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</table>\n\t\t";
+  }]
+});
+/**
+* MacGyver component layout for grid rows
+* This is really just a virtual wrapper around content and doesnt serve any purpose except to identify what is a grid row in the hierarchy
+* This container displays an array (rows) or arrays (columns) of widgets (items)
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgGridRow', {
+    title: 'Grid row layout',
+    icon: 'fa fa-dropbox',
+    category: 'Layout',
+    isContainer: true,
+    userPlaceable: false,
+    config: {}
+  });
+}]).component('mgGridRow', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }]
 });
 /**
 * MacGyver static header
@@ -2940,29 +2940,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.style || 'placeholder-box'\" style=\"height: {{$ctrl.config.height || 'auto'}}\">\n\t\t\t\t<div ng-if=\"$ctrl.config.text\" class=\"placeholder-text\" ng-bind=\"$ctrl.config.text\"></div>\n\t\t\t</div>\n\t\t"
 });
 /**
-* MacGyver horizontal seperator
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgSeperator', {
-    title: 'Seperator',
-    icon: 'fa fa-minus',
-    category: 'General Decoration'
-  });
-}]).component('mgSeperator', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-  }],
-  template: "\n\t\t\t<hr/>\n\t\t"
-});
-/**
 * MacGyver Signature directive
 * @require angular-ui-scribble
 * @param {Object} config The config specification
@@ -3070,6 +3047,29 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<div ng-if=\"$ctrl.files && $ctrl.files.length\" class=\"visible-parent-hover-target\">\n\t\t\t\t<img ng-src=\"{{$ctrl.files[0].url}}\" class=\"img-responsive\"/>\n\t\t\t\t<a ng-click=\"$ctrl.delete()\" class=\"btn btn-danger btn-circle btn-lg btn-fab visible-parent-hover\" tooltip=\"Delete the signature\" tooltip-tether=\"true\"><i class=\"fa fa-fw fa-trash\"></i></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"!$ctrl.files || !$ctrl.files.length\">\n\t\t\t\t<div ng-if=\"$ctrl.isUploading\" class=\"alert alert-info font-lg\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<div ng-if=\"!$ctrl.isUploading\">\n\t\t\t\t\t<ui-scribble editable=\"false\" callback=\"$ctrl.getSignature(dataURI, blob)\"></ui-scribble>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver horizontal seperator
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgSeperator', {
+    title: 'Seperator',
+    icon: 'fa fa-minus',
+    category: 'General Decoration'
+  });
+}]).component('mgSeperator', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }],
+  template: "\n\t\t\t<hr/>\n\t\t"
 });
 /**
 * MacGyver table
@@ -3449,6 +3449,54 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<textarea ng-model=\"$ctrl.data\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" minlength=\"{{$ctrl.config.lengthMin}}\" maxlength=\"{{$ctrl.config.lengthMin}}\" rows=\"{{$ctrl.config.rows || 3}}\"/>\n\t\t"
 });
 /**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgUrl', {
+    title: 'URL',
+    icon: 'fa fa-globe',
+    category: 'Simple Inputs',
+    config: {
+      placeholder: {
+        type: 'mgUrl',
+        help: 'Ghost text to display when the textbox has no value'
+      },
+      required: {
+        type: 'mgToggle',
+        "default": false
+      }
+    },
+    format: function format(v) {
+      if (!v) return '';
+      return "<a href=\"".concat(v, "\" target=\"_blank\">").concat(v, "</a>");
+    }
+  });
+}]).component('mgUrl', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.validate = function () {
+      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
+    }; // Adopt default  if no data value is given {{{
+
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"url\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
+});
+/**
 * MacGyver time input
 * @param {Object} config The config specification
 * @param {boolean} [config.required=false] Whether this field is required
@@ -3569,52 +3617,4 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     };
   }],
   template: "\n\t\t\t<div class=\"btn-group\">\n\t\t\t\t<a ng-click=\"$ctrl.data = !$ctrl.data\" class=\"btn\" ng-class=\"!$ctrl.data ? $ctrl.config.offClassActive : $ctrl.config.offClassInactive\">{{$ctrl.config.offText}}</a>\n\t\t\t\t<a ng-click=\"$ctrl.data = !$ctrl.data\" class=\"btn\" ng-class=\"$ctrl.data ? $ctrl.config.onClassActive : $ctrl.config.onClassInactive\">{{$ctrl.config.onText}}</a>\n\t\t\t</div>\n\t\t"
-});
-/**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text to display when the widget is empty
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgUrl', {
-    title: 'URL',
-    icon: 'fa fa-globe',
-    category: 'Simple Inputs',
-    config: {
-      placeholder: {
-        type: 'mgUrl',
-        help: 'Ghost text to display when the textbox has no value'
-      },
-      required: {
-        type: 'mgToggle',
-        "default": false
-      }
-    },
-    format: function format(v) {
-      if (!v) return '';
-      return "<a href=\"".concat(v, "\" target=\"_blank\">").concat(v, "</a>");
-    }
-  });
-}]).component('mgUrl', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.validate = function () {
-      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
-    }; // Adopt default  if no data value is given {{{
-
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"url\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
 });
