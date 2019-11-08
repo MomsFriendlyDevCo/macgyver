@@ -145,18 +145,6 @@ angular
 								.replace(new RegExp('\r', 'g'), '')
 								.replace(new RegExp('\n', 'g'), '<br>')
 								.replace(new RegExp('\t', 'g'), '&nbsp;&nbsp;&nbsp;&nbsp;');
-
-								// Generate any missing ids
-							if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
-
-							// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-							var tryIndex = 1;
-							var tryName = w.type;
-							while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-								tryName = w.type + ++tryIndex;
-							}
-							// }}}
-							w.id = tryName;
 						});
 					});
 					//.catch(e => console.log('ERROR', e.toString()));
@@ -242,17 +230,8 @@ angular
 				var nodeParent = TreeTools.parents($ctrl.config, {id: $ctrl.widgetAddDetails.id}, {childNode: 'items'}).slice(-2).slice(0, 1)[0];
 				var nodeIndex = nodeParent.items.findIndex(i => i.id == node.id);
 
-				// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-				var tryName = $ctrl.widgetAddDetails.type;
-				var tryIndex = 1;
-				while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-					tryName = $ctrl.widgetAddDetails.type + ++tryIndex;
-				}
-				// }}}
-
 				// Insert new widget into parents items collection
 				var prototypeWidget = {
-					id: tryName,
 					type: $ctrl.widgetAddDetails.type,
 					title: $macgyver.widgets[$ctrl.widgetAddDetails.type].title, // Set a default title
 				};
@@ -273,6 +252,7 @@ angular
 						$ctrl.modal.hide().then(()=> $ctrl.widgetEdit(nodeParent.items[insertedIndex]));
 						break;
 					case 'inside':
+						// FIXME: push on undefined? Adding an input widget to an `mgContainer` within an `mgGridRow`.
 						node.items.push(prototypeWidget);
 						$ctrl.modal.hide().then(()=> $ctrl.widgetEdit(node.items[node.items.length-1]));
 						break;
@@ -525,6 +505,36 @@ angular
 				if (!$ctrl.selectedWidget) return;
 				$element.find('.mgFormEditor-mask > .mgFormEditor-mask-buttons .dropdown-toggle').dropdown('toggle');
 			});
+			// }}}
+
+			// De-dupe and generate IDs for every widget {{{
+			$ctrl.recalculateIds = ()=> {
+				// De-dupe existing ids
+				var exists = [];
+				$macgyver.forEach($ctrl.config, w => {
+					if (exists.indexOf(w.id) === -1)
+						return exists.push(w.id);
+					console.log('Duplicate detected', w.id);
+					delete w.id;
+				});
+
+				// Generate any missing ids
+				$macgyver.forEach($ctrl.config, w => {
+					if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
+					
+					// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+					var tryIndex = 1;
+					var tryName = w.type;
+					while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+						tryName = w.type + ++tryIndex;
+					}
+					// }}}
+					w.id = tryName;
+				});
+			};
+
+			// Recalc if spec deeply changes
+			$scope.$watch('$ctrl.config', ()=> $ctrl.recalculateIds(), true);
 			// }}}
 
 			// Verbs {{{
