@@ -170,15 +170,13 @@ angular
 				var grid_cell = parents[grid_idx].items[grid_row].items.indexOf(parents[container_idx]);
 
 				// Duplicate object and strip ids
-				var duplicate = Object.assign({}, parents[container_idx]);
-				delete duplicate.id;
-				duplicate.items = duplicate.items.map(i => {
-					delete i.id;
-					return i;
-				});
+				var clone = JSON.parse(JSON.stringify(parents[container_idx], (k, v) => {
+					if (k !== 'id') return v;
+				}));
 
+				// Replace subsequent rows with cloned object
 				for (var i=grid_row + 1; i<parents[grid_idx].items.length; i++) {
-					parents[grid_idx].items[i].items[grid_cell] = duplicate;
+					parents[grid_idx].items[i].items[grid_cell] = clone;
 				}
 			}
 
@@ -507,32 +505,9 @@ angular
 			});
 			// }}}
 
-			// De-dupe and generate IDs for every widget {{{
+			// Generate IDs for every widget {{{
 			$ctrl.recalculateIds = ()=> {
-				// De-dupe existing ids
-				var exists = [];
-				$macgyver.forEach($ctrl.config, w => {
-					if (!Object.prototype.hasOwnProperty.call(w, 'id')) return;
-					if (exists.indexOf(w.id) === -1)
-						return exists.push(w.id);
-
-					console.log('Duplicate detected', w.id);
-					delete w.id;
-				});
-
-				// Generate any missing ids
-				$macgyver.forEach($ctrl.config, w => {
-					if (Object.prototype.hasOwnProperty.call(w, 'id')) return;
-					
-					// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-					var tryIndex = 1;
-					var tryName = w.type;
-					while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
-						tryName = w.type + ++tryIndex;
-					}
-					// }}}
-					w.id = tryName;
-				});
+				$ctrl.config = $macgyver.neatenSpec($ctrl.config);
 			};
 
 			// Recalc if spec deeply changes

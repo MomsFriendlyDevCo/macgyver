@@ -211,7 +211,7 @@ $macgyver.neatenSpec = function(spec, options) {
 			widget.id = tryId;
 			settings.reporter(
 				(oldId ? `Invalid widget ID ${oldId}` : `Non-existant ID for widget ${widget.type}`)
-				+ `generated new ID as ${widget.id}`
+				+ ` generated new ID as ${widget.id}`
 			);
 			// }}}
 
