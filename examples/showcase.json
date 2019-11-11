@@ -265,6 +265,50 @@
 									]
 								}
 							]
+						},
+						{
+							"id": "demoGrid3",
+							"type": "mgGridRow",
+							"items":  [
+								{
+									"id": "demoGrid31",
+									"type": "mgContainer",
+									"items": [
+										{
+											"id": "row3Pronk",
+											"title": "Pronk",
+											"type": "mgToggle",
+											"showTitle": false
+										}
+									]
+								},
+								{
+									"id": "demoGrid32",
+									"type": "mgContainer",
+									"items": [
+										{
+											"id": "row3Quz",
+											"title": "Quz",
+											"type": "mgHtml",
+											"text": "H<strong>T</strong><em>M</em><u>L</u>",
+											"showTitle": false
+										}
+										
+									]
+								},
+								{
+									"id": "demoGrid33",
+									"type": "mgContainer",
+									"items": [
+										{
+											"id": "row3Flarp",
+											"title": "Flarp",
+											"type": "mgEmail",
+											"showTitle": false
+										}
+									]
+								}
+							]
 						}
 					]
 				}
