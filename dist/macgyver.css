@@ -1,10 +1,5 @@
 .p-t-5 { padding-top: 5px }
 
-/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
-mg-choice-buttons .fa.fa-fw {
-	height: 1em;
-}
-
 @media print {
 	/* Disable dropdown icons when printing */
 	mg-choice-dropdown .selectize-input::after {
@@ -19,6 +14,11 @@ mg-choice-buttons .fa.fa-fw {
 	white-space: nowrap;
 	width: calc(100% - 15px);
 }
+/* BUGFIX: Force buttons to be a consistant height when no icon is actually visible */
+mg-choice-buttons .fa.fa-fw {
+	height: 1em;
+}
+
 /* mgContainerRowLarge {{{ */
 .row.mgContainerRowLarge {
 	font-size: 200%;
