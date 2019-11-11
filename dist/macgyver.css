@@ -29,10 +29,6 @@ mg-choice-buttons .fa.fa-fw {
 }
 /* }}} */
 
-mg-form .form-group {
-	margin-bottom: 10px;
-}
-
 /* Generic helper classes {{{ */
 mg-form-editor .text-nowrap {
 	white-space: nowrap;
@@ -158,6 +154,10 @@ mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .dropdown-menu a {
 }
 /* }}} */
 
+mg-form .form-group {
+	margin-bottom: 10px;
+}
+
 mg-list td {
 	padding: 0 !important;
 }
@@ -231,6 +231,11 @@ mg-placeholder > .placeholder-construction > .placeholder-text {
 }
 /* }}} */
 
+mg-seperator > hr {
+	margin-top: 0px;
+	margin-bottom: 10px;
+}
+
 mg-signature .form-control-static {
 	display: block;
 	width: 250px;
@@ -259,11 +264,6 @@ mg-signature .btn.btn-fab {
 mg-signature .btn.btn-fab > i.fa {
 	margin-left: -2px;
 	margin-top: 6px;
-}
-
-mg-seperator > hr {
-	margin-top: 0px;
-	margin-bottom: 10px;
 }
 
 mg-table td {

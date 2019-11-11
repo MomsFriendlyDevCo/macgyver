@@ -422,7 +422,7 @@ angular.module('macgyver', ['angular-bs-tooltip', 'angular-ui-scribble', 'dragul
         } while (flatSpec[tryId]);
 
         widget.id = tryId;
-        settings.reporter((oldId ? "Invalid widget ID ".concat(oldId) : "Non-existant ID for widget ".concat(widget.type)) + "generated new ID as ".concat(widget.id)); // }}}
+        settings.reporter((oldId ? "Invalid widget ID ".concat(oldId) : "Non-existant ID for widget ".concat(widget.type)) + " generated new ID as ".concat(widget.id)); // }}}
 
         if (settings.checkWidgetContainerIgnoreScope && widget.type == 'mgContainer' && _.isUndefined(widget.ignoreScope)) {
           widget.ignoreScope = true; // Containers - enable ignoreScope also
@@ -573,6 +573,90 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "<div class=\"text-center\">\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"checkbox\"/>\n\t\t</div>"
 });
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {string} [config.itemClassInactive='btn btn-default'] Default item class to use per item (unless an override is present in the item object)
+* @param {string} [config.itemClassActive='btn btn-primary'] Item class to use when item is selected
+* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgChoiceButtons', {
+    title: 'Button multiple-choice',
+    icon: 'fa fa-check-square',
+    category: 'Choice Selectors',
+    config: {
+      "enum": {
+        type: 'mgList',
+        title: 'The list of items to display',
+        "default": ['Foo', 'Bar', 'Baz']
+      },
+      classWrapper: {
+        type: 'mgText',
+        "default": 'btn-group',
+        title: 'Group CSS class',
+        advanced: true
+      },
+      itemClassActive: {
+        type: 'mgText',
+        "default": 'btn btn-primary',
+        advanced: true
+      },
+      itemClassInactive: {
+        type: 'mgText',
+        "default": 'btn btn-default',
+        advanced: true
+      }
+    },
+    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+
+  });
+}]).component('mgChoiceButtons', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+
+    $ctrl.enumIter = []; // Cleaned up version of enum
+
+    $scope.$watchCollection('$ctrl.config.enum', function () {
+      if (!$ctrl.config["enum"]) return; // No data yet
+
+      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
+        // Array of strings
+        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
+          return {
+            id: _.camelCase(i),
+            title: i
+          };
+        });
+      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
+        // Collection
+        $ctrl.enumIter = $ctrl.config["enum"];
+      }
+    }); // }}}
+    // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    });
+
+    $ctrl.$onInit = function () {
+      return $scope.assignConfig('itemClassInactive', 'itemClassActive');
+    }; // }}}
+
+  }],
+  template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
+});
+/**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
 * @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
@@ -670,90 +754,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
-});
-/**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].classSelected] Optional class to display per item when selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {string} [config.itemClassInactive='btn btn-default'] Default item class to use per item (unless an override is present in the item object)
-* @param {string} [config.itemClassActive='btn btn-primary'] Item class to use when item is selected
-* @param {string} [config.classWrapper='btn-group'] The class definition of the outer widget element
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgChoiceButtons', {
-    title: 'Button multiple-choice',
-    icon: 'fa fa-check-square',
-    category: 'Choice Selectors',
-    config: {
-      "enum": {
-        type: 'mgList',
-        title: 'The list of items to display',
-        "default": ['Foo', 'Bar', 'Baz']
-      },
-      classWrapper: {
-        type: 'mgText',
-        "default": 'btn-group',
-        title: 'Group CSS class',
-        advanced: true
-      },
-      itemClassActive: {
-        type: 'mgText',
-        "default": 'btn btn-primary',
-        advanced: true
-      },
-      itemClassInactive: {
-        type: 'mgText',
-        "default": 'btn btn-default',
-        advanced: true
-      }
-    },
-    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-
-  });
-}]).component('mgChoiceButtons', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-
-    $ctrl.enumIter = []; // Cleaned up version of enum
-
-    $scope.$watchCollection('$ctrl.config.enum', function () {
-      if (!$ctrl.config["enum"]) return; // No data yet
-
-      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
-        // Array of strings
-        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
-          return {
-            id: _.camelCase(i),
-            title: i
-          };
-        });
-      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
-        // Collection
-        $ctrl.enumIter = $ctrl.config["enum"];
-      }
-    }); // }}}
-    // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    });
-
-    $ctrl.$onInit = function () {
-      return $scope.assignConfig('itemClassInactive', 'itemClassActive');
-    }; // }}}
-
-  }],
-  template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver selector of an item from a small list of enums
@@ -1012,54 +1012,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"date\" class=\"form-control\"/>\n\t\t"
 });
 /**
-* MacGyver text input
-* @param {Object} config The config specification
-* @param {boolean} [config.required=false] Whether this field is required
-* @param {string} [config.placeholder] Placeholder text when the textbox is empty
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgEmail', {
-    title: 'Email address',
-    icon: 'fa fa-envelope-o',
-    category: 'Simple Inputs',
-    config: {
-      placeholder: {
-        type: 'mgText',
-        help: 'Ghost text to display when the text box has no value'
-      },
-      required: {
-        type: 'mgToggle',
-        "default": false
-      }
-    },
-    format: function format(v) {
-      if (!v) return '';
-      return "<a href=\"mailto:".concat(v, "\">").concat(v, "</a>");
-    }
-  });
-}]).component('mgEmail', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-
-    $ctrl.validate = function () {
-      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
-    }; // Adopt default  if no data value is given {{{
-
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
-});
-/**
 * MacGyver file list display
 * This is an optional component inside mgFileList - if you just want a simple uploader you should see that component instead
 * @param {Object} config The config specification
@@ -1162,6 +1114,54 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<ul ng-if=\"!$ctrl.config.listMode || $ctrl.config.listMode == 'list'\" class=\"list-group\">\n\t\t\t\t<a ng-repeat=\"file in $ctrl.data track by file.name\" class=\"list-group-item\" href=\"{{file.url}}\" target=\"_blank\">\n\t\t\t\t\t<span class=\"badge\">{{file.size | filesize}}</span>\n\t\t\t\t\t<button ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file); $event.preventDefault()\" type=\"button\" class=\"btn btn-danger btn-sm visible-parent-hover pull-right m-t--5 m-r-5\"><i class=\"fa fa-trash\"></i></button>\n\t\t\t\t\t<i ng-class=\"file.icon\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</a>\n\t\t\t\t<li ng-repeat=\"file in $ctrl.uploading\" class=\"list-group-item\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\t{{file.name}}\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t\t<div ng-if=\"$ctrl.config.listMode == 'thumbnails'\" class=\"row\" style=\"display:flex; flex-wrap: wrap\">\n\t\t\t\t<div ng-repeat=\"file in $ctrl.data track by file.name\" class=\"col-xs-6 col-md-3 m-b-10 visible-parent-hover-target\">\n\t\t\t\t\t<a class=\"thumbnail\" href=\"{{file.url}}\" target=\"_blank\" style=\"height: 100%; display: flex; align-items: center; justify-content: center\">\n\t\t\t\t\t\t<img ng-if=\"file.thumbnail\" src=\"{{file.url}}\"/>\n\t\t\t\t\t\t<div ng-if=\"!file.thumbnail\" class=\"text-center\"><i ng-class=\"file.icon\" class=\"fa-5x\"></i></div>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a ng-if=\"$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete\" ng-click=\"$ctrl.delete(file)\" class=\"btn btn-circle btn-danger visible-parent-hover\" style=\"position: absolute; bottom: 15px; right: 20px\">\n\t\t\t\t\t\t<i class=\"fa fa-fw fa-lg fa-trash\"></i>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver text input
+* @param {Object} config The config specification
+* @param {boolean} [config.required=false] Whether this field is required
+* @param {string} [config.placeholder] Placeholder text when the textbox is empty
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgEmail', {
+    title: 'Email address',
+    icon: 'fa fa-envelope-o',
+    category: 'Simple Inputs',
+    config: {
+      placeholder: {
+        type: 'mgText',
+        help: 'Ghost text to display when the text box has no value'
+      },
+      required: {
+        type: 'mgToggle',
+        "default": false
+      }
+    },
+    format: function format(v) {
+      if (!v) return '';
+      return "<a href=\"mailto:".concat(v, "\">").concat(v, "</a>");
+    }
+  });
+}]).component('mgEmail', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+
+    $ctrl.validate = function () {
+      return [$ctrl.config.required && !$ctrl.data && "".concat($ctrl.config.title, " is required")];
+    }; // Adopt default  if no data value is given {{{
+
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<input ng-model=\"$ctrl.data\" type=\"email\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\"/>\n\t\t"
 });
 /**
 * MacGyver file upload
@@ -1439,11 +1439,151 @@ angular.module('macgyver').component('mgFormEditor', {
     $ctrl.widgetAddDetails = {}; // Container for the eventually created new widget
 
     /**
+    * Paste a table of widgets
+    * @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
+    * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+    */
+
+    $ctrl.widgetPaste = function (widget, verb) {
+      // Work out what item we are currently hovering over
+      var node = widget || TreeTools.find($ctrl.config, {
+        id: $ctrl.selectedWidget.id
+      }, {
+        childNode: 'items'
+      });
+      if (!node) return; // Didn't find anything - do nothing
+
+      return navigator.clipboard.readText().then(function (content) {
+        if (!content) return;
+        var layout;
+
+        switch (verb) {
+          case 'JSON':
+            // Flatten first dimension which is a list of separate tables
+            layout = _(JSON.parse(content)).flatten().value();
+            break;
+
+          case 'TSV':
+          default:
+            // LibreOffice: LF delimited, no rows
+            if (content.indexOf('\t') === -1) {
+              // We're unable to tell the difference between cell line-breaks and end-of-row without tab delimiters.
+              throw new Error('Not implemented'); // MS Office: Tab delimited, CRLF rows
+            } else {
+              if (!node.cols || node.cols < 0) return alert('Number of cols must be set to paste tables.');
+              /*
+              // NOTE: Makeshift method which allows for layout within cells. However every cell must be wrapped in `<cell></cell>`
+              var matches = content.match(new RegExp('(?<=\<cell\>)((.|\n|)*?)(?=\<\/cell\>)', 'gm'));
+              layout = _(matches)
+              	.compact()
+              	.chunk(node.cols)
+              	.value();
+              */
+              // Tabs not allowed, last col does not support line-breaks.
+
+              var bytab = _(content).split('\t');
+
+              var reordered = [];
+              bytab.forEach(function (c, i) {
+                if ((reordered.length + 1) % node.cols === 0) {
+                  reordered.push(c.substr(0, c.indexOf('\n')));
+                  reordered.push(c.substr(c.indexOf('\n') + 1));
+                } else {
+                  reordered.push(c);
+                }
+              });
+              layout = _(reordered).chunk(node.cols).value();
+            }
+
+        }
+
+        node.items = layout.map(function (row, rowi) {
+          if (!row || row.length !== node.cols) return;
+          var cols = row.map(function (col) {
+            if (!col) {
+              return {
+                type: 'mgContainer',
+                items: []
+              };
+            } // First row has headings
+
+
+            var type = rowi === 0 ? 'mgHeading' : 'mgHtml';
+            return {
+              type: 'mgContainer',
+              items: [{
+                "type": type,
+                "showTitle": false,
+                "rowClass": "",
+                "title": "",
+                "text": col
+              }]
+            };
+          }); // Add extra cols when paste is larger
+
+          node.cols = Math.max(node.cols, cols.length);
+          return {
+            type: 'mgGridRow',
+            items: cols
+          };
+        });
+        node.items = node.items.filter(function (n) {
+          return typeof n !== 'undefined';
+        });
+        node.rows = node.items.length; // Traverse tree
+
+        $macgyver.forEach(node, function (w) {
+          // Remove markup and re-apply line-breaks or tabs.
+          if (w.text) w.text = w.text.replace('<cell>', '').replace('</cell>', '').replace(new RegExp('\r', 'g'), '').replace(new RegExp('\n', 'g'), '<br>').replace(new RegExp('\t', 'g'), '&nbsp;&nbsp;&nbsp;&nbsp;');
+        });
+      }); //.catch(e => console.log('ERROR', e.toString()));
+    };
+    /**
+    * Duplicate cell contents down an entire column
+    * @params {Object} [widget] Optional widget to paste into, if omitted the currently active DOM element will be used
+    * @todo `verb` in signature for duplicating up/down?
+    * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
+    */
+
+
+    $ctrl.widgetDuplicateCell = function (widget) {
+      // Work out what item we are currently hovering over
+      var node = widget || TreeTools.find($ctrl.config, {
+        id: $ctrl.selectedWidget.id
+      }, {
+        childNode: 'items'
+      });
+      if (!node) return; // Didn't find anything - do nothing
+
+      var parents = TreeTools.parents($ctrl.config, {
+        id: node.id
+      }, {
+        childNode: 'items'
+      });
+      var types = parents.map(function (p) {
+        return p.type;
+      });
+      var grid_idx = types.lastIndexOf('mgGrid');
+      var row_idx = types.lastIndexOf('mgGridRow');
+      var container_idx = types.lastIndexOf('mgContainer');
+      var grid_row = parents[grid_idx].items.indexOf(parents[row_idx]);
+      var grid_cell = parents[grid_idx].items[grid_row].items.indexOf(parents[container_idx]); // Duplicate object and strip ids
+
+      var clone = JSON.parse(JSON.stringify(parents[container_idx], function (k, v) {
+        if (k !== 'id') return v;
+      })); // Replace subsequent rows with cloned object
+
+      for (var i = grid_row + 1; i < parents[grid_idx].items.length; i++) {
+        parents[grid_idx].items[i].items[grid_cell] = clone;
+      }
+    };
+    /**
     * Add a new widget
     * @param {string} [direction='below'] The direction relative to the currently selected DOM element to add from. ENUM: 'above', 'below'
     * @param {Object|string} [widget] Optional widget or widget id to add relative to, if omitted the currently selected DOM element is used
     * @returns {Promise} A promise which will resolve whether a widget was added or if the user cancelled the process
     */
+
 
     $ctrl.widgetAdd = function () {
       var direction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'below';
@@ -1512,23 +1652,9 @@ angular.module('macgyver').component('mgFormEditor', {
       }).slice(-2).slice(0, 1)[0];
       var nodeIndex = nodeParent.items.findIndex(function (i) {
         return i.id == node.id;
-      }); // Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
-
-      var tryName = $ctrl.widgetAddDetails.type;
-      var tryIndex = 1;
-
-      while (TreeTools.find($ctrl.config, {
-        id: tryName
-      }, {
-        childNode: 'items'
-      })) {
-        tryName = $ctrl.widgetAddDetails.type + ++tryIndex;
-      } // }}}
-      // Insert new widget into parents items collection
-
+      }); // Insert new widget into parents items collection
 
       var prototypeWidget = {
-        id: tryName,
         type: $ctrl.widgetAddDetails.type,
         title: $macgyver.widgets[$ctrl.widgetAddDetails.type].title // Set a default title
 
@@ -1556,6 +1682,7 @@ angular.module('macgyver').component('mgFormEditor', {
           break;
 
         case 'inside':
+          // FIXME: push on undefined? Adding an input widget to an `mgContainer` within an `mgGridRow`.
           node.items.push(prototypeWidget);
           $ctrl.modal.hide().then(function () {
             return $ctrl.widgetEdit(node.items[node.items.length - 1]);
@@ -1608,7 +1735,7 @@ angular.module('macgyver').component('mgFormEditor', {
 
 
         if (node.type && typeof node.type == 'string') {
-          $ctrl.widgetName = ' - ' + node.type.replace(/^mg+/i, '').replace(/([A-Z])/g, ' $1').trim();
+          $ctrl.widgetName = ' - ' + node.type.replace(/^mg/i, '').replace(/([A-Z])/g, ' $1').trim();
         } // Select the Angular data element
 
 
@@ -1671,7 +1798,8 @@ angular.module('macgyver').component('mgFormEditor', {
               if (!p.title) p.title = _.startCase(k);
               return p;
             }).value()
-          }].filter(function (widget) {
+          } // }}}
+          ].filter(function (widget) {
             return widget.type != 'mgContainer' || widget.items.length > 0;
           }) // Remove empty containers
 
@@ -1860,6 +1988,16 @@ angular.module('macgyver').component('mgFormEditor', {
       if (!$ctrl.selectedWidget) return;
       $element.find('.mgFormEditor-mask > .mgFormEditor-mask-buttons .dropdown-toggle').dropdown('toggle');
     }); // }}}
+    // Generate IDs for every widget {{{
+
+    $ctrl.recalculateIds = function () {
+      $ctrl.config = $macgyver.neatenSpec($ctrl.config);
+    }; // Recalc if spec deeply changes
+
+
+    $scope.$watch('$ctrl.config', function () {
+      return $ctrl.recalculateIds();
+    }, true); // }}}
     // Verbs {{{
 
     $ctrl.verbs = {
@@ -1873,7 +2011,7 @@ angular.module('macgyver').component('mgFormEditor', {
         return (// Flatten all properties down, if they are a function use the return value of that function
           $macgyver.settings.mgFormEditor.verbs[verbArea].filter(function (verb) {
             return (!verb.selectedWidgetOnly || verb.selectedWidgetOnly && $ctrl.selectedWidget) && ( // Selected widget filtering
-            !verb.show || verb.show($ctrl.selectedWidget));
+            !verb.show || verb.show($ctrl.selectedWidget, $ctrl.config));
           } // Show function? Use it to determine filtering
           ).map(function (verb) {
             return _.mapValues(verb, function (v, k) {
@@ -1917,6 +2055,18 @@ angular.module('macgyver').component('mgFormEditor', {
 
           case 'delete':
             $ctrl.widgetDelete();
+            break;
+
+          case 'pasteTsv':
+            $ctrl.widgetPaste($ctrl.selectedWidget, 'TSV');
+            break;
+
+          case 'pasteJson':
+            $ctrl.widgetPaste($ctrl.selectedWidget, 'JSON');
+            break;
+
+          case 'duplicateCell':
+            $ctrl.widgetDuplicateCell();
             break;
 
           case 'dropdown':
@@ -2208,7 +2358,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
         // Rows has been set - probably by the user editing the widget properties
         if ($ctrl.config.rows < $ctrl.config.items.length) {
           // Removing some items
-          debugger;
           $ctrl.config.items = $ctrl.config.items.slice(0, $ctrl.config.rows);
         } else if ($ctrl.config.rows > $ctrl.config.items.length) {
           // Adding some rows
@@ -2718,29 +2867,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'slider'\">\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"range\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'bumpers'\" class=\"input-group\">\n\t\t\t\t<a ng-click=\"$ctrl.add(-1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperDownClass\"></a>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<a ng-click=\"$ctrl.add(1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperUpClass\"></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'input'\" class=\"input-group\">\n\t\t\t\t<div ng-if=\"$ctrl.config.prefix\" ng-class=\"$ctrl.config.prefixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.prefix}}</div></div>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<div ng-if=\"$ctrl.config.suffix\" ng-class=\"$ctrl.config.suffixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.suffix}}</div></div>\n\t\t\t</div>\n\t\t"
 });
 /**
-* MacGyver horizontal seperator
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgSeperator', {
-    title: 'Seperator',
-    icon: 'fa fa-minus',
-    category: 'General Decoration'
-  });
-}]).component('mgSeperator', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-  }],
-  template: "\n\t\t\t<hr/>\n\t\t"
-});
-/**
 * MacGyver placeholder
 * @param {Object} config The config specification
 * @param {string} [config.text] The text to display in the alert if data is falsy
@@ -2785,6 +2911,29 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     $macgyver.inject($scope, $ctrl);
   }],
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.style || 'placeholder-box'\" style=\"height: {{$ctrl.config.height || 'auto'}}\">\n\t\t\t\t<div ng-if=\"$ctrl.config.text\" class=\"placeholder-text\" ng-bind=\"$ctrl.config.text\"></div>\n\t\t\t</div>\n\t\t"
+});
+/**
+* MacGyver horizontal seperator
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgSeperator', {
+    title: 'Seperator',
+    icon: 'fa fa-minus',
+    category: 'General Decoration'
+  });
+}]).component('mgSeperator', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }],
+  template: "\n\t\t\t<hr/>\n\t\t"
 });
 /**
 * MacGyver Signature directive

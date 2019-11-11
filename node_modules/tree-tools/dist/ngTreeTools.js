@@ -15,7 +15,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * Find a single node deeply within a tree structure
     * This method is really just a convenience wrapper around parents(tree, query, {limit: 1})
     * @param {Object|array} tree The tree structure to search (assumed to be a collection)
-    * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
+    * @param {Object|function} query A valid Lodash query to run (anything valid via _.find()) or a matching function to be run on each node
     * @param {Object} [options] Optional options object passed to parents() finder
     * @return {array|undefined} A generation list of all parents decending to the found item
     */
@@ -34,7 +34,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * NOTE: This function seeks downwards, so any parent that does not match will also omit its child nodes
     *
     * @param {Object|array} tree The tree structure to search (assumed to be a collection)
-    * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
+    * @param {Object|function} query A valid Lodash query to run (anything valid via _.find()) or a matching function to be run on each node
     * @param {Object} [options] Options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     */
@@ -104,7 +104,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * Utility function to deep search a tree structure for a matching query and find parents up to the given query
     * If found this function will return an array of all generations with the found branch as the last element of the array (i.e. root -> grandchildren order)
     * @param {Object|array} tree The tree structure to search
-    * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
+    * @param {Object|function} query A valid Lodash query to run (anything valid via _.find()) or a matching function to be run on each node
     * @param {Object} [options] Optional options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {array} A generation list of all parents decending to the found item
@@ -150,7 +150,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * Utility function to deep search a tree structure for a matching query and find all children after the given query
     * If found this function will return an array of all child elements NOT including the query element
     * @param {Object|array} tree The tree structure to search (assumed to be a collection)
-    * @param {Object|function|null} [query] A valid lodash query to run (anything valid via _.find()) or a callback function. If null the entire flattened tree is returned
+    * @param {Object|function|null} [query] A valid Lodash query to run (anything valid via _.find()) or a callback function. If null the entire flattened tree is returned
     * @param {Object} [options] Optional options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {array} An array of all child elements under that item
@@ -201,10 +201,10 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 
     /**
     * Utility function to deep scan a tree and return if any of it contains a matching element
-    * This works the same as a deep version of the lodash `_.has()` function combined with `some()`
+    * This works the same as a deep version of the Lodash `_.has()` function combined with `some()`
     * This function will exit as soon as the first element matches
     * @param {Object|array} tree The tree structure to search
-    * @param {Object|function} query A valid lodash query to run
+    * @param {Object|function} query A valid Lodash query to run
     * @return {boolean} Boolean indicating that at least one sub-element matches the query
     */
     hasSome: function hasSome(tree, query) {
@@ -224,7 +224,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
     * @param {boolean} [options.splice=true] Support splicing arrays (arrays are collapsed into their parents rather than returned as is)
     * @param {function} [options.isSplice] Function used to determine if a node should be spliced. Called as (node, path, tree). Default bechaviour is to return true if both the node and the parents are arrays - i.e. only support array -> object -> array striping not array -> array
-    * @param {function} [options.wrapper=Promise.resolve] Wrap the promise in this function before resolving. Called as (nodeFunction, path, tree). Should return a promise or something that has 'that' compatibility
+    * @param {function} [options.wrapper=Promise.resolve] Wrap the promise in this function before resolving. Called as (nodeFunction, path, tree). Should return a promise or something that has 'then' compatibility
     * @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
     */
     resolve: function resolve(tree, options) {

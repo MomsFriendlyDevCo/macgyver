@@ -2,7 +2,7 @@ var app = angular.module("app", [
 	'macgyver',
 ]);
 
-app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
+app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope, TreeTools) {
 	$scope.data = {};
 	$scope.config = {}; // Populated via $http.get()
 
@@ -28,6 +28,24 @@ app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope) {
 				],
 				dropdown: [
 					{action: 'edit', icon: 'fa fa-fw fa-pencil', title: 'Edit', selectedWidgetOnly: true},
+					// TODO: Also support tables for paste operation?
+					{action: 'pasteTsv', icon: 'fa fa-fw fa-paste', title: 'Paste TSV table',
+						show: widget => (widget && widget.type === 'mgGrid'),
+						selectedWidgetOnly: true
+					},
+					{action: 'pasteJson', icon: 'fa fa-fw fa-paste', title: 'Paste JSON table',
+						show: widget => (widget && widget.type === 'mgGrid'),
+						selectedWidgetOnly: true
+					},
+					{action: 'duplicateCell', icon: 'fa fa-fw fa-arrow-down', title: 'Duplicate cell',
+						show: widget => {
+							// Only show when within an mgGridRow
+							return (TreeTools.parents($scope.config, {id: widget.id}, {childNode: 'items'})
+								.map(p => p.type)
+								.indexOf('mgGridRow') !== -1);
+						},
+						selectedWidgetOnly: true
+					},
 					{action: 'delete', icon: 'fa fa-fw fa-trash', title: 'Delete widget', selectedWidgetOnly: true},
 					{title: '-'},
 					{
