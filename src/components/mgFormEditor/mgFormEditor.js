@@ -174,9 +174,9 @@ angular
 					if (k !== 'id') return v;
 				}));
 
-				// Replace subsequent rows with cloned object
+				// Replace subsequent rows with new instance of cloned object
 				for (var i=grid_row + 1; i<parents[grid_idx].items.length; i++) {
-					parents[grid_idx].items[i].items[grid_cell] = clone;
+					parents[grid_idx].items[i].items[grid_cell] = JSON.parse(JSON.stringify(clone));
 				}
 			}
 
