@@ -1,6 +1,6 @@
 {
   "name": "@momsfriendlydevco/macgyver",
-  "version": "0.0.63",
+  "version": "0.0.64",
   "description": "Dynamic form widgets for Angular",
   "main": "src/shared.js",
   "repository": {
