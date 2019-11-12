@@ -228,8 +228,18 @@ angular
 				var nodeParent = TreeTools.parents($ctrl.config, {id: $ctrl.widgetAddDetails.id}, {childNode: 'items'}).slice(-2).slice(0, 1)[0];
 				var nodeIndex = nodeParent.items.findIndex(i => i.id == node.id);
 
+				// NOTE: An ID is required at this point or `widgetAdd` will fail.
+				// Locate the next available id. (e.g. 'widget', 'widget2', 'widget3'...) {{{
+				var tryName = $ctrl.widgetAddDetails.type;
+				var tryIndex = 1;
+				while (TreeTools.find($ctrl.config, {id: tryName}, {childNode: 'items'})) {
+					tryName = $ctrl.widgetAddDetails.type + ++tryIndex;
+				}
+				// }}}
+
 				// Insert new widget into parents items collection
 				var prototypeWidget = {
+					id: tryName,
 					type: $ctrl.widgetAddDetails.type,
 					title: $macgyver.widgets[$ctrl.widgetAddDetails.type].title, // Set a default title
 				};
