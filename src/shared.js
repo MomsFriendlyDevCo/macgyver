@@ -154,6 +154,8 @@ $macgyver.flatten = function(root, options) {
 * @returns {Object} The original spec with alerations
 */
 $macgyver.neatenSpec = function(spec, options) {
+	if (!spec) return;
+
 	var settings = _.defaults(options, {
 		checkRootNoId: true,
 		checkRootShowTitle: true,
