@@ -368,6 +368,8 @@ angular.module('macgyver', ['angular-bs-tooltip', 'angular-ui-scribble', 'dragul
 
 
   $macgyver.neatenSpec = function (spec, options) {
+    if (!spec) return;
+
     var settings = _.defaults(options, {
       checkRootNoId: true,
       checkRootShowTitle: true,
@@ -657,6 +659,67 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
 });
 /**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].icon] Optional icon to display for each item
+* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgChoiceRadio', {
+    title: 'Radio multiple-choice',
+    icon: 'fa fa-list-ul',
+    category: 'Choice Selectors',
+    config: {
+      "enum": {
+        type: 'mgList',
+        title: 'The list of items to display',
+        "default": ['Foo', 'Bar', 'Baz']
+      }
+    },
+    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+
+  });
+}]).component('mgChoiceRadio', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+
+    $ctrl.enumIter = []; // Cleaned up version of enum
+
+    $scope.$watchCollection('$ctrl.config.enum', function () {
+      if (!$ctrl.config["enum"]) return; // No data yet
+
+      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
+        // Array of strings
+        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
+          return {
+            id: _.camelCase(i),
+            title: i
+          };
+        });
+      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
+        // Collection
+        $ctrl.enumIter = $ctrl.config["enum"];
+      }
+    }); // }}}
+    // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
+});
+/**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
 * @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
@@ -754,67 +817,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     }); // }}}
   }],
   template: "\n\t\t\t<ui-select ng-model=\"$ctrl.data\" title=\"{{$ctrl.config.textPrompt || 'Choose an item...'}}\">\n\t\t\t\t<ui-select-match placeholder=\"{{$ctrl.config.textInnerPrompt || 'Select an item...'}}\">{{$select.selected[$ctrl.config.displayPrimaryField || 'title']}}</ui-select-match>\n\t\t\t\t<ui-select-choices repeat=\"item.id as item in $ctrl.enumIter | filter:$select.search track by item.id\" group-by=\"$ctrl.config.groupBy\">\n\t\t\t\t\t<div ng-bind-html=\"item[$ctrl.config.displayPrimaryField || 'title'] | highlight:$select.search\"></div>\n\t\t\t\t\t<small ng-if=\"$ctrl.config.displaySecondaryField\" ng-bind-html=\"item[$ctrl.config.displaySecondaryField] | highlight:$select.search\"></small>\n\t\t\t\t</ui-select-choices>\n\t\t\t</ui-select>\n\t\t"
-});
-/**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgChoiceRadio', {
-    title: 'Radio multiple-choice',
-    icon: 'fa fa-list-ul',
-    category: 'Choice Selectors',
-    config: {
-      "enum": {
-        type: 'mgList',
-        title: 'The list of items to display',
-        "default": ['Foo', 'Bar', 'Baz']
-      }
-    },
-    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-
-  });
-}]).component('mgChoiceRadio', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-
-    $ctrl.enumIter = []; // Cleaned up version of enum
-
-    $scope.$watchCollection('$ctrl.config.enum', function () {
-      if (!$ctrl.config["enum"]) return; // No data yet
-
-      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
-        // Array of strings
-        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
-          return {
-            id: _.camelCase(i),
-            title: i
-          };
-        });
-      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
-        // Collection
-        $ctrl.enumIter = $ctrl.config["enum"];
-      }
-    }); // }}}
-    // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver component loader
@@ -2499,132 +2501,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div class=\"form-control-static\" ng-bind-html=\"$ctrl.data || $ctrl.config.text\"></div>\n\t\t"
 });
 /**
-* MacGyver Image directive
-* @require angular-ui-scribble
-* @param {Object} config The config specification
-* @param {string} [config.showList=true] Whether to automatically display a file list
-* @param {string} [config.listMode='thumbnails'] The list mode display to use
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgImage', {
-    title: 'Image',
-    icon: 'fa fa-pencil-square',
-    category: 'Files and uploads',
-    config: {
-      title: {
-        type: 'mgText',
-        "default": 'Attach image'
-      },
-      allowDelete: {
-        type: 'mgToggle',
-        "default": true
-      },
-      showList: {
-        type: 'mgToggle',
-        "default": true,
-        help: 'Show a list of images already uploaded'
-      },
-      listMode: {
-        type: 'mgChoiceButtons',
-        "enum": ['list', 'thumbnails'],
-        "default": 'thumbnails'
-      } // NOTE: This is really just inherited by the mgFileList child element
-
-    }
-  });
-}]).component('mgImage', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // URL storage {{{
-
-    $ctrl.urls = {}; // These all get their defaults in $onInit
-
-    $ctrl.getUrl = function (type, context) {
-      if (_.isString($ctrl.urls[type])) {
-        return url[type]; // Already a string - just return
-      } else if (_.isFunction($ctrl.urls[type])) {
-        // Resolve it using a context
-        return $ctrl.urls[type](Object.assign({}, {
-          type: type,
-          widget: 'mgImage',
-          path: $macgyver.getPath($scope)
-        }, context));
-      } else {
-        throw new Error('Unknown URL type: ' + type);
-      }
-    }; // }}}
-    // Init {{{
-
-
-    $ctrl.$onInit = function () {
-      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
-        return "/api/widgets/".concat(o.path);
-      }; // Setup the child list widget with the same path as this object
-
-
-      $ctrl.listConfig = angular.extend({
-        listMode: 'thumbnails'
-      }, $ctrl.config, {
-        mgPath: $macgyver.getPath($scope)
-      });
-    }; // }}}
-    // Deal with uploads {{{
-
-
-    $ctrl.isUploading = false;
-
-    $ctrl.getImage = function (dataURI, blob) {
-      var sigBlob = new Blob([blob], {
-        type: 'image/png'
-      });
-      var formData = new FormData();
-      formData.append('file', sigBlob);
-      $http.post($ctrl.getUrl('upload', {
-        file: new Date().toISOString() + '.png'
-      }), formData, {
-        headers: {
-          'Content-Type': undefined
-        },
-        // Need to override the headers so that angular changes them over into multipart/mime
-        transformRequest: angular.identity
-      }).then(function () {
-        $ctrl.isUploading = false;
-        $macgyver.broadcast($scope, 'mg.refreshUploads'); // Tell all file displays to refresh their contents
-      });
-      $ctrl.showModal(false);
-      $ctrl.isUploading = true;
-    }; // }}}
-    // Deal with modal {{{
-
-
-    $ctrl.modalShown = false;
-
-    $ctrl.showModal = function (show) {
-      if (show) {
-        angular.element('#modal-mgImage-' + $ctrl.config.id).on('shown.bs.modal', function () {
-          return $scope.$apply(function () {
-            return $ctrl.modalShown = true;
-          });
-        }).on('hidden.bs.modal', function () {
-          return $scope.$apply(function () {
-            return $ctrl.modalShown = false;
-          });
-        }).modal('show');
-      } else {
-        angular.element('#modal-mgImage-' + $ctrl.config.id).modal('hide');
-      }
-    }; // }}}
-
-  }],
-  template: "\n\t\t\t<div id=\"modal-mgImage-{{$ctrl.config.id}}\" class=\"modal\">\n\t\t\t\t<div class=\"modal-dialog modal-lg\">\n\t\t\t\t\t<div class=\"modal-content\">\n\t\t\t\t\t\t<div class=\"modal-header\">\n\t\t\t\t\t\t\t<h4 class=\"modal-title\">{{$ctrl.config.title || 'Attach image'}}</h4>\n\t\t\t\t\t\t\t<a class=\"close\" data-dismiss=\"modal\"><i class=\"fa fa-times\"></i></a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"modal-body\">\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.modalShown\">\n\t\t\t\t\t\t\t\t<ui-scribble editable=\"true\" callback=\"$ctrl.getImage(dataURI, blob)\" width=\"100%\" height=\"600\"></ui-scribble>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"modal-footer\">\n\t\t\t\t\t\t\t<button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.showList === undefined || $ctrl.config.showList\">\n\t\t\t\t<mg-file-list config=\"$ctrl.listConfig\" data=\"$ctrl.data\"></mg-file-list>\n\t\t\t</div>\n\t\t\t<div ng-if=\"!$ctrl.files || !$ctrl.files.length\" class=\"hidden-print\">\n\t\t\t\t<div ng-if=\"$ctrl.isUploading\" class=\"alert alert-info font-lg\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<a ng-click=\"$ctrl.showModal(true)\" class=\"btn btn-success\">\n\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\tAdd image\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
-});
-/**
 * MacGyver static label
 * This is simple display of read-only text. The text content is loaded either from the data feed or the `config.text` property in that order
 * @param {Object} config The config specification
@@ -2756,6 +2632,132 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 
   }],
   template: "\n\t\t\t<form ng-submit=\"$ctrl.addItem()\">\n\t\t\t\t<table class=\"table table-bordered table-hover\">\n\t\t\t\t\t<tbody>\n\t\t\t\t\t\t<tr ng-repeat=\"row in $ctrl.data track by $index\">\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.numbered == undefined || $ctrl.config.numbered\" class=\"text-center font-md\">{{$index + 1 | number}}</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model=\"row\" ng-change=\"$ctrl.changeItem($index, row)\" type=\"text\" class=\"form-control\"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.allowDelete == undefined || $ctrl.config.allowDelete\">\n\t\t\t\t\t\t\t\t<a ng-click=\"$ctrl.removeItem($index)\" class=\"btn btn-danger btn-sm visible-parent-hover\"><i class=\"fa fa-trash-o\"></i></a>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tbody>\n\t\t\t\t\t<tfoot class=\"hidden-print\">\n\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t<td ng-if=\"$ctrl.config.numbered == undefined || $ctrl.config.numbered\" class=\"text-center\" width=\"30px\">\n\t\t\t\t\t\t\t\t<button type=\"submit\" ng-class=\"$ctrl.listNewItem.text ? $ctrl.config.addButtonActiveClass : $ctrl.config.addButtonInactiveClass\"></button>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t<input ng-model=\"$ctrl.listNewItem.text\" type=\"text\" class=\"form-control\"/>\n\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t<td width=\"35px\">&nbsp;</td>\n\t\t\t\t\t\t</tr>\n\t\t\t\t\t</tfoot>\n\t\t\t\t</table>\n\t\t\t</form>\n\t\t"
+});
+/**
+* MacGyver Image directive
+* @require angular-ui-scribble
+* @param {Object} config The config specification
+* @param {string} [config.showList=true] Whether to automatically display a file list
+* @param {string} [config.listMode='thumbnails'] The list mode display to use
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgImage', {
+    title: 'Image',
+    icon: 'fa fa-pencil-square',
+    category: 'Files and uploads',
+    config: {
+      title: {
+        type: 'mgText',
+        "default": 'Attach image'
+      },
+      allowDelete: {
+        type: 'mgToggle',
+        "default": true
+      },
+      showList: {
+        type: 'mgToggle',
+        "default": true,
+        help: 'Show a list of images already uploaded'
+      },
+      listMode: {
+        type: 'mgChoiceButtons',
+        "enum": ['list', 'thumbnails'],
+        "default": 'thumbnails'
+      } // NOTE: This is really just inherited by the mgFileList child element
+
+    }
+  });
+}]).component('mgImage', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$http", "$macgyver", "$scope", function controller($http, $macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // URL storage {{{
+
+    $ctrl.urls = {}; // These all get their defaults in $onInit
+
+    $ctrl.getUrl = function (type, context) {
+      if (_.isString($ctrl.urls[type])) {
+        return url[type]; // Already a string - just return
+      } else if (_.isFunction($ctrl.urls[type])) {
+        // Resolve it using a context
+        return $ctrl.urls[type](Object.assign({}, {
+          type: type,
+          widget: 'mgImage',
+          path: $macgyver.getPath($scope)
+        }, context));
+      } else {
+        throw new Error('Unknown URL type: ' + type);
+      }
+    }; // }}}
+    // Init {{{
+
+
+    $ctrl.$onInit = function () {
+      $ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function (o) {
+        return "/api/widgets/".concat(o.path);
+      }; // Setup the child list widget with the same path as this object
+
+
+      $ctrl.listConfig = angular.extend({
+        listMode: 'thumbnails'
+      }, $ctrl.config, {
+        mgPath: $macgyver.getPath($scope)
+      });
+    }; // }}}
+    // Deal with uploads {{{
+
+
+    $ctrl.isUploading = false;
+
+    $ctrl.getImage = function (dataURI, blob) {
+      var sigBlob = new Blob([blob], {
+        type: 'image/png'
+      });
+      var formData = new FormData();
+      formData.append('file', sigBlob);
+      $http.post($ctrl.getUrl('upload', {
+        file: new Date().toISOString() + '.png'
+      }), formData, {
+        headers: {
+          'Content-Type': undefined
+        },
+        // Need to override the headers so that angular changes them over into multipart/mime
+        transformRequest: angular.identity
+      }).then(function () {
+        $ctrl.isUploading = false;
+        $macgyver.broadcast($scope, 'mg.refreshUploads'); // Tell all file displays to refresh their contents
+      });
+      $ctrl.showModal(false);
+      $ctrl.isUploading = true;
+    }; // }}}
+    // Deal with modal {{{
+
+
+    $ctrl.modalShown = false;
+
+    $ctrl.showModal = function (show) {
+      if (show) {
+        angular.element('#modal-mgImage-' + $ctrl.config.id).on('shown.bs.modal', function () {
+          return $scope.$apply(function () {
+            return $ctrl.modalShown = true;
+          });
+        }).on('hidden.bs.modal', function () {
+          return $scope.$apply(function () {
+            return $ctrl.modalShown = false;
+          });
+        }).modal('show');
+      } else {
+        angular.element('#modal-mgImage-' + $ctrl.config.id).modal('hide');
+      }
+    }; // }}}
+
+  }],
+  template: "\n\t\t\t<div id=\"modal-mgImage-{{$ctrl.config.id}}\" class=\"modal\">\n\t\t\t\t<div class=\"modal-dialog modal-lg\">\n\t\t\t\t\t<div class=\"modal-content\">\n\t\t\t\t\t\t<div class=\"modal-header\">\n\t\t\t\t\t\t\t<h4 class=\"modal-title\">{{$ctrl.config.title || 'Attach image'}}</h4>\n\t\t\t\t\t\t\t<a class=\"close\" data-dismiss=\"modal\"><i class=\"fa fa-times\"></i></a>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"modal-body\">\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.modalShown\">\n\t\t\t\t\t\t\t\t<ui-scribble editable=\"true\" callback=\"$ctrl.getImage(dataURI, blob)\" width=\"100%\" height=\"600\"></ui-scribble>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"modal-footer\">\n\t\t\t\t\t\t\t<button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.showList === undefined || $ctrl.config.showList\">\n\t\t\t\t<mg-file-list config=\"$ctrl.listConfig\" data=\"$ctrl.data\"></mg-file-list>\n\t\t\t</div>\n\t\t\t<div ng-if=\"!$ctrl.files || !$ctrl.files.length\" class=\"hidden-print\">\n\t\t\t\t<div ng-if=\"$ctrl.isUploading\" class=\"alert alert-info font-lg\">\n\t\t\t\t\t<i class=\"fa fa-spinner fa-spin\"></i>\n\t\t\t\t\tUploading signature...\n\t\t\t\t</div>\n\t\t\t\t<a ng-click=\"$ctrl.showModal(true)\" class=\"btn btn-success\">\n\t\t\t\t\t<i class=\"fa fa-plus\"></i>\n\t\t\t\t\tAdd image\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver text input
