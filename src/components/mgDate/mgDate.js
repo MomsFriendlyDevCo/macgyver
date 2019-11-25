@@ -46,7 +46,7 @@ angular
 					$ctrl.data = $ctrl.config.default;
 
 				// Ensure output is date object
-				if (!$ctrl.data instanceof Date)
+				if (!($ctrl.data instanceof Date))
 					$ctrl.data = new Date($ctrl.data);
 			});
 		},
