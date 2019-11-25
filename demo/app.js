@@ -3,7 +3,10 @@ var app = angular.module("app", [
 ]);
 
 app.controller("macgyverExampleCtrl", function($http, $macgyver, $scope, TreeTools) {
-	$scope.data = {};
+	$scope.data = {
+		// Initialise with a date to test formatting
+		demoDate: "2019-01-01T00:00:00.000Z"
+	};
 	$scope.config = {}; // Populated via $http.get()
 
 	// Configure where to place the editor mask
