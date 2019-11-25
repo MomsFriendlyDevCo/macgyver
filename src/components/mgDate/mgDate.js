@@ -40,9 +40,15 @@ angular
 				$ctrl.config.max && _.isString($ctrl.data) && $ctrl.data > $ctrl.config.max && `${$ctrl.config.title} is too late (latest date is ${$ctrl.config.max})`,
 			];
 
-			// Adopt default  if no data value is given {{{
-			$scope.$watch('$ctrl.data', ()=> { if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config.default });
-			// }}}
+			$scope.$watch('$ctrl.data', ()=> {
+				// Adopt default when no data value is given
+				if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default'))
+					$ctrl.data = $ctrl.config.default;
+
+				// Ensure output is date object
+				if (!$ctrl.data instanceof Date)
+					$ctrl.data = new Date($ctrl.data);
+			});
 		},
 		template: `
 			<input ng-model="$ctrl.data" type="date" class="form-control"/>
