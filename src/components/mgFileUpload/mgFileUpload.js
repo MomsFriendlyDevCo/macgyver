@@ -78,6 +78,7 @@ angular
 					var filename = $(this).val().replace(/\\/g,'/').replace( /.*\//,''); // Tidy up the file name
 
 					var formData = new FormData();
+					// FIXME: Validate files is an array with an element
 					formData.append('file', this.files[0]);
 
 					$ctrl.uploading.push({

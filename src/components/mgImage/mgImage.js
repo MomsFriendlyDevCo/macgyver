@@ -33,7 +33,7 @@ angular
 
 			$ctrl.getUrl = (type, context) => {
 				if (_.isString($ctrl.urls[type])) {
-					return url[type]; // Already a string - just return
+					return $ctrl.urls[type]; // Already a string - just return
 				} else if (_.isFunction($ctrl.urls[type])) { // Resolve it using a context
 					return $ctrl.urls[type](Object.assign({}, {
 						type,
