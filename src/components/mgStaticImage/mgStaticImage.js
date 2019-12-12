@@ -52,7 +52,7 @@ angular
 					$ctrl.data = $ctrl.data;
 				} else { // Fetch data via URL
 					$http.get($ctrl.getUrl('query'))
-						.then(data => $ctrl.data = data.data.pop());
+						.then(data => $ctrl.data = _.isArray(data.data) ? data.data.pop() : data.data);
 				}
 			};
 			// }}}
