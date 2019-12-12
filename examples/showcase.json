@@ -423,6 +423,14 @@
 			"showTitle": false,
 			"items": [
 				{
+					"id": "demoStaticImage",
+					"type": "mgStaticImage",
+					"title": "Static image",
+					"urlQuery": "examples/images/index.json",
+					"urlDelete": "/api/debug/403",
+					"urlUpload": "/api/debug/403"
+				},
+				{
 					"id": "demoFile",
 					"type": "mgFileUpload",
 					"title": "File upload",
