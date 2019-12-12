@@ -64,9 +64,10 @@ angular
 			// Init {{{
 			$ctrl.$onInit = ()=> {
 				$ctrl.urls.query = $ctrl.config.urlQuery || $macgyver.settings.urlResolver || '/api/widgets';
+				$ctrl.urls.upload = $ctrl.config.urlUpload || $macgyver.settings.urlResolver || function(o) { return `/api/widgets/${o.path}` };
 
 				// Setup the child mgFileUpload widget with config from this widget
-				$ctrl.config.file = angular.extend({}, $ctrl.config);
+				$macgyver.widgets['mgStaticImage'].config.file.urlUpload = $ctrl.urls.upload;
 
 				$ctrl.refresh();
 			};
@@ -74,8 +75,7 @@ angular
 		},
 		template: `
 			<div ng-class="$ctrl.config.style || 'staticimage-box'">
-				||{{$ctrl.data}}||
-				<img ng-if="$ctrl.data.url" class="staticimage-content" ng-src="{{$ctrl.data.url}}">
+				<img ng-if="$ctrl.data && $ctrl.data.url" class="staticimage-content" ng-src="{{$ctrl.data.url}}">
 			</div>
 		`,
 	})
