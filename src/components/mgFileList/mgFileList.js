@@ -102,7 +102,7 @@ angular
 			<div ng-if="$ctrl.config.listMode == 'thumbnails'" class="row" style="display:flex; flex-wrap: wrap">
 				<div ng-repeat="file in $ctrl.data track by file.name" class="col-xs-6 col-md-3 m-b-10 visible-parent-hover-target">
 					<a class="thumbnail" href="{{file.url}}" target="_blank" style="height: 100%; display: flex; align-items: center; justify-content: center">
-						<img ng-if="file.thumbnail" src="{{file.url}}"/>
+						<img ng-if="file.thumbnail" ng-src="{{file.url}}"/>
 						<div ng-if="!file.thumbnail" class="text-center"><i ng-class="file.icon" class="fa-5x"></i></div>
 					</a>
 					<a ng-if="$ctrl.config.allowDelete === undefined || $ctrl.config.allowDelete" ng-click="$ctrl.delete(file)" class="btn btn-circle btn-danger visible-parent-hover" style="position: absolute; bottom: 15px; right: 20px">
