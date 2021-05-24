@@ -11,7 +11,10 @@ angular
 		category: 'Simple Inputs',
 		config: {
 		},
-		format: v => v ? 'Yes' : 'No',
+		format: v => {
+			console.log('mgCheckBox format', v)
+			return v ? 'Yes' : 'No'
+		},
 		formatAlign: 'center',
 	}))
 	.component('mgCheckBox', {
