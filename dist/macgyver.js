@@ -1,12 +1,16 @@
 "use strict";
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 angular.module('macgyver', ['angular-bs-tooltip', 'angular-ui-scribble', 'dragularModule', 'ngSanitize', 'ngTreeTools', 'ui.select']).provider('$macgyver', function () {
   var $macgyver = this;
@@ -659,67 +663,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.classWrapper || 'btn-group'\">\n\t\t\t\t<a ng-repeat=\"item in $ctrl.enumIter track by item.id\" ng-class=\"\n\t\t\t\t\t$ctrl.data == item.id\n\t\t\t\t\t? item.classSelected || $ctrl.config.itemClassActive\n\t\t\t\t\t: item.class || $ctrl.config.itemClassInactive\n\t\t\t\t\" ng-click=\"$ctrl.data = item.id\">\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t"
 });
 /**
-* MacGyver selector of an item from a small list of enums
-* @param {Object} config The config specification
-* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
-* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
-* @param {string} [config.enum[].icon] Optional icon to display for each item
-* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
-* @param {string} [config.enum[].title] Optional title to display within each element
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgChoiceRadio', {
-    title: 'Radio multiple-choice',
-    icon: 'fa fa-list-ul',
-    category: 'Choice Selectors',
-    config: {
-      "enum": {
-        type: 'mgList',
-        title: 'The list of items to display',
-        "default": ['Foo', 'Bar', 'Baz']
-      }
-    },
-    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
-
-  });
-}]).component('mgChoiceRadio', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
-
-    $ctrl.enumIter = []; // Cleaned up version of enum
-
-    $scope.$watchCollection('$ctrl.config.enum', function () {
-      if (!$ctrl.config["enum"]) return; // No data yet
-
-      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
-        // Array of strings
-        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
-          return {
-            id: _.camelCase(i),
-            title: i
-          };
-        });
-      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
-        // Collection
-        $ctrl.enumIter = $ctrl.config["enum"];
-      }
-    }); // }}}
-    // Adopt default if no data value is given {{{
-
-    $scope.$watch('$ctrl.data', function () {
-      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
-    }); // }}}
-  }],
-  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
-});
-/**
 * MacGyver selector of an item from a list of enums
 * @param {Object} config The config specification
 * @param {array} [config.enum] A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be translated into a collection automatically
@@ -832,6 +775,7 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 * @param {string} [config.items[].title] Optional title to display for the widget
 * @param {string} config.items[].type The type of the object to render. This corresponds to a `mg*` component
 * @param {*} data The state data
+* @param {string} mode Either display components or render via format() ENUM: form, view
 */
 
 angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
@@ -840,7 +784,7 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     icon: 'fa fa-dropbox',
     category: 'Layout',
     isContainer: true,
-    template: '<mg-container config="w" data="$ctrl.data"></mg-container>',
+    template: '<mg-container config="w" data="$ctrl.data" mode="form"></mg-container>',
     // Template to use per widget injection
     config: {
       // items: undefined, // Intentionally hidden - mgFormEditor provides functionality to edit this
@@ -934,28 +878,103 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
 }]).component('mgContainer', {
   bindings: {
     config: '<',
-    data: '='
+    data: '=',
+    mode: '@'
   },
   controller: ["$element", "$macgyver", "$scope", function controller($element, $macgyver, $scope) {
     var $ctrl = this;
     $macgyver.inject($scope, $ctrl);
+    $ctrl.$macgyver = $macgyver;
     $ctrl.isEditing = !!$element.closest('mg-form-editor').length;
 
     $ctrl.widgetAddChild = function () {
       return $scope.$emit('mg.mgFormEditor.widgetAdd', 'inside', $ctrl.config.id);
     };
+
+    $ctrl.$onInit = function () {
+      if (angular.isUndefined($ctrl.mode) || ctrl.mode === null) $ctrl.mode = 'form';
+    };
   }],
   template: ["$macgyver", function template($macgyver) {
-    return "\n\t\t\t<div ng-switch=\"$ctrl.config.layout\">\n\t\t\t\t<div ng-switch-when=\"panel\">\n\t\t\t\t\t<div class=\"panel\" ng-class=\"[$ctrl.config.layoutStyle ? 'panel-' + $ctrl.config.layoutStyle : 'panel-default', $ctrl.config.layoutColorful ? 'panel-colorful' : undefined]\">\n\t\t\t\t\t\t<div class=\"panel-heading\">{{$ctrl.config.title}}</div>\n\t\t\t\t\t\t<div class=\"panel-body\">\n\t\t\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
-      return "<div ng-switch-when=\"".concat(w.id, "\">") + w.template + '</div>';
-    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'\">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when=\"card\">\n\t\t\t\t\t<div class=\"card\" ng-class=\"[$ctrl.config.layoutStyle ? 'card-' + $ctrl.config.layoutStyle : 'card-default', $ctrl.config.layoutColorful ? 'card-colorful' : undefined]\">\n\t\t\t\t\t\t<div class=\"card-header\">{{$ctrl.config.title}}</div>\n\t\t\t\t\t\t<div class=\"card-body\">\n\t\t\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
-      return "<div ng-switch-when=\"".concat(w.id, "\">") + w.template + '</div>';
-    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'\">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when=\"columns\">\n\t\t\t\t\t<table class=\"table table-bordered\" style=\"width: 100%\">\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th ng-repeat=\"w in $ctrl.config.items track by w.id\">{{w.title}}</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type\" data-path=\"{{w.id}}\" class=\"form-group mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
-      return "<div ng-switch-when=\"".concat(w.id, "\">").concat(w.template, "</div>");
-    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\">{{w.help}}</div>\n\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-default>\n\t\t\t\t\t<div ng-click=\"$ctrl.widgetAddChild()\" ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
-      return "<div ng-switch-when=\"".concat(w.id, "\">").concat(w.template, "</div>");
+    return "\n\t\t\t<div ng-switch=\"$ctrl.config.layout\">\n\t\t\t\t<div ng-switch-when=\"panel\">\n\t\t\t\t\t<div class=\"panel\" ng-class=\"[$ctrl.config.layoutStyle ? 'panel-' + $ctrl.config.layoutStyle : 'panel-default', $ctrl.config.layoutColorful ? 'panel-colorful' : undefined]\">\n\t\t\t\t\t\t<div class=\"panel-heading\">{{$ctrl.config.title}}</div>\n\t\t\t\t\t\t<div class=\"panel-body\">\n\t\t\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type + '-' + $ctrl.mode\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-form\">") + w.template + '</div>';
+    }).join('\n') + "\n\t\t\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-view\">") + (_.isFunction(w.format) ? '{{$ctrl.$macgyver.widgets[w.type].format($ctrl.data[w.id])}}' : w.format === true ? '{{$ctrl.data[w.id]}}' : '') + '</div>';
+    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'\">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when=\"card\">\n\t\t\t\t\t<div class=\"card\" ng-class=\"[$ctrl.config.layoutStyle ? 'card-' + $ctrl.config.layoutStyle : 'card-default', $ctrl.config.layoutColorful ? 'card-colorful' : undefined]\">\n\t\t\t\t\t\t<div class=\"card-header\">{{$ctrl.config.title}}</div>\n\t\t\t\t\t\t<div class=\"card-body\">\n\t\t\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type + '-' + $ctrl.mode\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-form\">") + w.template + '</div>';
+    }).join('\n') + "\n\t\t\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-view\">") + (_.isFunction(w.format) ? '{{$ctrl.$macgyver.widgets[w.type].format($ctrl.data[w.id])}}' : w.format === true ? '{{$ctrl.data[w.id]}}' : '') + '</div>';
+    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'\">{{w.help}}</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-when=\"columns\">\n\t\t\t\t\t<table class=\"table table-bordered\" style=\"width: 100%\">\n\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<th ng-repeat=\"w in $ctrl.config.items track by w.id\">{{w.title}}</th>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t<td ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type + '-' + $ctrl.mode\" data-path=\"{{w.id}}\" class=\"form-group mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-form\">") + w.template + '</div>';
+    }).join('\n') + "\n\t\t\n\t\t\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-view\">") + (_.isFunction(w.format) ? '{{$ctrl.$macgyver.widgets[w.type].format($ctrl.data[w.id])}}' : w.format === true ? '{{$ctrl.data[w.id]}}' : '') + '</div>';
+    }).join('\n') + "\n\t\t\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\">{{w.help}}</div>\n\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div ng-switch-default>\n\t\t\t\t\t<div ng-click=\"$ctrl.widgetAddChild()\" ng-if=\"$ctrl.isEditing && !$ctrl.config.items.length\" class=\"text-center\">\n\t\t\t\t\t\t<mg-form-editor-inserter config=\"$ctrl.config\" data=\"$ctrl.data\"></mg-form-editor-inserter>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div ng-repeat=\"w in $ctrl.config.items track by w.id\" ng-switch=\"w.type + '-' + $ctrl.mode\" data-path=\"{{w.id}}\" class=\"form-group row mgComponent\" ng-class=\"[w.mgValidation == 'error' ? 'has-error' : '', w.rowClass]\">\n\t\t\t\t\t\t<label ng-if=\"w.showTitle || w.showTitle===undefined\" class=\"control-label text-left\" ng-class=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text) ? 'col-sm-3' : 'col-sm-12'\">{{w.title}}</label>\n\t\t\t\t\t\t<div ng-if=\"!(w.type=='mgLabel' || w.type=='mgHtml') || ($ctrl.data[w.id] || w.text)\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9' : 'col-sm-12'\">\n\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-form\">") + w.template + '</div>';
+    }).join('\n') + "\n\n\t\t\t\t\t\t\t" + _.map($macgyver.widgets, function (w) {
+      return "<div ng-switch-when=\"".concat(w.id, "-view\">") + (_.isFunction(w.format) ? '{{$ctrl.$macgyver.widgets[w.type].format($ctrl.data[w.id])}}' : w.format === true ? '{{$ctrl.data[w.id]}}' : '') + '</div>';
     }).join('\n') + "\n\t\t\t\t\t\t\t<div ng-switch-default class=\"alert alert-danger\">Unknown MacGyver widget type : \"{{w.type}}\"</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"help-block\" ng-if=\"w.help\" ng-class=\"w.showTitle || w.showTitle===undefined ? 'col-sm-9 col-sm-offset-3' : 'col-sm-12'\">{{w.help}}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t";
   }]
+});
+/**
+* MacGyver selector of an item from a small list of enums
+* @param {Object} config The config specification
+* @param {array} config.enum A collection of items to choose from, each must be an object with at least an 'id'. If this is an array of strings it will be traslated into a collection automaitcally
+* @param {string} [config.enum[].class] Optional class to display per item, if omitted the item ID is used
+* @param {string} [config.enum[].icon] Optional icon to display for each item
+* @param {string} [config.enum[].iconSelected] Icon to display for each item when item is selected
+* @param {string} [config.enum[].title] Optional title to display within each element
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgChoiceRadio', {
+    title: 'Radio multiple-choice',
+    icon: 'fa fa-list-ul',
+    category: 'Choice Selectors',
+    config: {
+      "enum": {
+        type: 'mgList',
+        title: 'The list of items to display',
+        "default": ['Foo', 'Bar', 'Baz']
+      }
+    },
+    format: true // FIXME: Not sure about this, what if we need to lookup the value by the enum ID?
+
+  });
+}]).component('mgChoiceRadio', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl); // Translate $ctrl.enum -> $ctrl.enumIter (convert arrays of strings for example) {{{
+
+    $ctrl.enumIter = []; // Cleaned up version of enum
+
+    $scope.$watchCollection('$ctrl.config.enum', function () {
+      if (!$ctrl.config["enum"]) return; // No data yet
+
+      if (_.isArray($ctrl.config["enum"]) && _.isString($ctrl.config["enum"][0])) {
+        // Array of strings
+        $ctrl.enumIter = $ctrl.config["enum"].map(function (i) {
+          return {
+            id: _.camelCase(i),
+            title: i
+          };
+        });
+      } else if (_.isArray($ctrl.config["enum"]) && _.isObject($ctrl.config["enum"][0])) {
+        // Collection
+        $ctrl.enumIter = $ctrl.config["enum"];
+      }
+    }); // }}}
+    // Adopt default if no data value is given {{{
+
+    $scope.$watch('$ctrl.data', function () {
+      if (_.isUndefined($ctrl.data) && _.has($ctrl, 'config.default')) $ctrl.data = $ctrl.config["default"];
+    }); // }}}
+  }],
+  template: "\n\t\t\t<div class=\"radio\" ng-repeat=\"item in $ctrl.enumIter track by item.id\">\n\t\t\t\t<label>\n\t\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"radio\" name=\"{{$ctrl.config.id}}\" value=\"{{item.id}}\"/>\n\t\t\t\t\t{{item.title}}\n\t\t\t\t</label>\n\t\t\t</div>\n\t\t"
 });
 /**
 * MacGyver date input
@@ -2887,6 +2906,29 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
   template: "\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'slider'\">\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"range\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'bumpers'\" class=\"input-group\">\n\t\t\t\t<a ng-click=\"$ctrl.add(-1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperDownClass\"></a>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<a ng-click=\"$ctrl.add(1)\" class=\"hidden-print\" ng-class=\"$ctrl.config.bumperUpClass\"></a>\n\t\t\t</div>\n\t\t\t<div ng-if=\"$ctrl.config.interface == 'input'\" class=\"input-group\">\n\t\t\t\t<div ng-if=\"$ctrl.config.prefix\" ng-class=\"$ctrl.config.prefixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.prefix}}</div></div>\n\t\t\t\t<input ng-model=\"$ctrl.data\" type=\"number\" class=\"form-control\" placeholder=\"{{$ctrl.config.placeholder}}\" min=\"{{$ctrl.config.min}}\" max=\"{{$ctrl.config.max}}\" step=\"{{$ctrl.config.step}}\"/>\n\t\t\t\t<div ng-if=\"$ctrl.config.suffix\" ng-class=\"$ctrl.config.suffixClass || 'input-group-addon'\"><div class=\"input-group-text\">{{$ctrl.config.suffix}}</div></div>\n\t\t\t</div>\n\t\t"
 });
 /**
+* MacGyver horizontal seperator
+* @param {Object} config The config specification
+* @param {*} data The state data
+*/
+
+angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
+  return $macgyverProvider.register('mgSeperator', {
+    title: 'Seperator',
+    icon: 'fa fa-minus',
+    category: 'General Decoration'
+  });
+}]).component('mgSeperator', {
+  bindings: {
+    config: '<',
+    data: '='
+  },
+  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
+    var $ctrl = this;
+    $macgyver.inject($scope, $ctrl);
+  }],
+  template: "\n\t\t\t<hr/>\n\t\t"
+});
+/**
 * MacGyver placeholder
 * @param {Object} config The config specification
 * @param {string} [config.text] The text to display in the alert if data is falsy
@@ -2931,29 +2973,6 @@ angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvi
     $macgyver.inject($scope, $ctrl);
   }],
   template: "\n\t\t\t<div ng-class=\"$ctrl.config.style || 'placeholder-box'\" style=\"height: {{$ctrl.config.height || 'auto'}}\">\n\t\t\t\t<div ng-if=\"$ctrl.config.text\" class=\"placeholder-text\" ng-bind=\"$ctrl.config.text\"></div>\n\t\t\t</div>\n\t\t"
-});
-/**
-* MacGyver horizontal seperator
-* @param {Object} config The config specification
-* @param {*} data The state data
-*/
-
-angular.module('macgyver').config(["$macgyverProvider", function ($macgyverProvider) {
-  return $macgyverProvider.register('mgSeperator', {
-    title: 'Seperator',
-    icon: 'fa fa-minus',
-    category: 'General Decoration'
-  });
-}]).component('mgSeperator', {
-  bindings: {
-    config: '<',
-    data: '='
-  },
-  controller: ["$macgyver", "$scope", function controller($macgyver, $scope) {
-    var $ctrl = this;
-    $macgyver.inject($scope, $ctrl);
-  }],
-  template: "\n\t\t\t<hr/>\n\t\t"
 });
 /**
 * MacGyver Signature directive
