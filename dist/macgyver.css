@@ -29,10 +29,6 @@ mg-choice-buttons .fa.fa-fw {
 }
 /* }}} */
 
-mg-form .form-group {
-	margin-bottom: 10px;
-}
-
 /* Generic helper classes {{{ */
 mg-form-editor .text-nowrap {
 	white-space: nowrap;
@@ -157,6 +153,10 @@ mg-form-editor .mgFormEditor-mask .mgFormEditor-mask-buttons .dropdown-menu a {
 	padding: 3px 10px;
 }
 /* }}} */
+
+mg-form .form-group {
+	margin-bottom: 10px;
+}
 
 mg-list td {
 	padding: 0 !important;
