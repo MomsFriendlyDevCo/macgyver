@@ -74,7 +74,7 @@ angular
 			$ctrl.widgetAddChild = ()=> $scope.$emit('mg.mgFormEditor.widgetAdd', 'inside', $ctrl.config.id);
 
 			$ctrl.$onInit = () => {
-				if (angular.isUndefined($ctrl.mode) || ctrl.mode === null)
+				if (angular.isUndefined($ctrl.mode) || $ctrl.mode === null)
 					$ctrl.mode = 'form';
 			}
 		},
